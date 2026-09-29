@@ -1,0 +1,75 @@
+{
+  "name": "HR Core E2E - Welcome Email Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "user-registered",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "id": "e6fbb2a0-4d5c-4f76-90f7-ebf0e0bc8761",
+      "name": "Webhook: NestJS User Register",
+      "webhookId": "hr-welcome-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst user = body.user || {};\n\nconst emailSubject = `🎉 Chào mừng ${user.fullName || 'bạn'} gia nhập đại gia đình công ty!`;\nconst emailHtml = `\n  <div style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden;\">\n    <div style=\"background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 24px; text-align: center; color: white;\">\n      <h1 style=\"margin: 0; font-size: 22px;\">Human Resources AI Platform</h1>\n      <p style=\"margin: 6px 0 0; font-size: 13px; opacity: 0.9;\">Hệ thống Quản trị & Hội nhập Tự động</p>\n    </div>\n    <div style=\"padding: 24px;\">\n      <h2 style=\"color: #1e1b4b; font-size: 18px;\">Xin chào <strong>${user.fullName || 'bạn'}</strong>,</h2>\n      <p>Chúc mừng bạn đã tạo tài khoản thành công trên nền tảng Nhân sự của chúng tôi!</p>\n      <table style=\"width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px;\">\n        <tr style=\"background: #f8fafc;\"><td style=\"padding: 10px; font-weight: bold;\">Email:</td><td style=\"padding: 10px;\">${user.email}</td></tr>\n        <tr><td style=\"padding: 10px; font-weight: bold;\">Vai trò:</td><td style=\"padding: 10px;\"><span style=\"background: #e0e7ff; color: #3730a3; padding: 3px 8px; border-radius: 4px; font-weight: bold;\">${user.role}</span></td></tr>\n        <tr style=\"background: #f8fafc;\"><td style=\"padding: 10px; font-weight: bold;\">Phòng ban:</td><td style=\"padding: 10px;\">${user.department || 'Chưa phân bổ'}</td></tr>\n      </table>\n      <p>🤖 <strong>AI Onboarding Agent</strong> sẽ tự động đồng hành cùng bạn để chuẩn bị checklist làm việc, cấp quyền công cụ và lộ trình đào tạo ngày đầu tiên.</p>\n      <p style=\"margin-top: 24px; color: #64748b; font-size: 12px;\">Trân trọng,<br><strong>Đội ngũ Nhân sự & 5 AI Agents</strong></p>\n    </div>\n  </div>\n`;\n\nreturn {\n  recipientEmail: user.email,\n  recipientName: user.fullName,\n  subject: emailSubject,\n  html: emailHtml,\n  receivedAt: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "id": "c1f7a080-60b2-482a-9e12-b9b66c9ff99a",
+      "name": "Format Welcome Email Template"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        300
+      ],
+      "id": "670c399b-4351-41be-8fa7-fef3c5917812",
+      "name": "Respond Success & Log Event"
+    }
+  ],
+  "connections": {
+    "Webhook: NestJS User Register": {
+      "main": [
+        [
+          {
+            "node": "Format Welcome Email Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Welcome Email Template": {
+      "main": [
+        [
+          {
+            "node": "Respond Success & Log Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
