@@ -2,6 +2,7 @@
 
 # project files
 .env
+/uploads
 
 # compiled output
 /dist
