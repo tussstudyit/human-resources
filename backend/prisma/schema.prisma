@@ -40,3 +40,49 @@ model User {
 
   @@map("users")
 }
+
+enum JobStatus {
+  OPEN
+  CLOSED
+}
+
+enum AiStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+model JobPost {
+  id           String      @id @default(uuid())
+  title        String
+  description  String      @db.Text
+  requirements String      @db.Text
+  status       JobStatus   @default(OPEN)
+  candidates   Candidate[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+  @@map("job_posts")
+}
+
+model Candidate {
+  id               String    @id @default(uuid())
+  name             String
+  email            String
+  phone            String?
+  cvUrl            String
+  parsedSkillsJson Json?
+  matchScore       Float?
+  experienceYears  Int?
+  summary          String?   @db.Text
+  aiStatus         AiStatus  @default(PENDING)
+  jobId            String
+  job              JobPost   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([email, jobId])
+  @@index([jobId])
+  @@map("candidates")
+}
