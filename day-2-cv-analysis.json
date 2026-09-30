@@ -1,0 +1,308 @@
+{
+  "name": "HR Core Day 2 - AI Recruitment CV Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "process-cv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        -192
+      ],
+      "id": "60848a88-ad3f-45b8-95c3-a078c6a15523",
+      "name": "Webhook: Receive CV Application",
+      "webhookId": "process-cv-webhook"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body?.fileUrl || $json.fileUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1248,
+        -192
+      ],
+      "id": "49501ac2-ee66-4298-b7db-7849c6d019b3",
+      "name": "Download CV File"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {
+          "joinPages": true,
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        -192
+      ],
+      "id": "274c2852-4308-434b-9362-8e3581816382",
+      "name": "Extract Text From PDF"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c71e0cb9-3a68-45be-b4db-4b48b6c0082f",
+              "leftValue": "={{ ($json.text || '').trim().length }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -768,
+        -192
+      ],
+      "id": "976fb667-f639-42d2-b6f7-5bf51da6b640",
+      "name": "CV Has Content?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $('Webhook: Receive CV Application').first().json.body || $('Webhook: Receive CV Application').first().json;\nconst candidateId = webhookData.candidateId;\nconst jobTitle = webhookData.jobTitle || 'Chưa rõ chức danh';\nconst jobDescription = webhookData.jobDescription || '';\nconst jobRequirements = webhookData.jobRequirements || '';\nconst cvText = ($json.text || '').trim();\n\nconst promptText = `Bạn là Chuyên gia Tuyển dụng Nhân sự cao cấp và Trợ lý AI Đánh giá CV (AI Recruitment Specialist).\nNhiệm vụ của bạn là phân tích CV của ứng viên so với bản mô tả công việc (JD) và các yêu cầu tuyển dụng được cung cấp dưới đây.\n\n=== BẢN MÔ TẢ CÔNG VIỆC ===\n- Vị trí: ${jobTitle}\n- Mô tả công việc:\n${jobDescription}\n- Yêu cầu ứng viên:\n${jobRequirements}\n\n=== NỘI DUNG CV CỦA ỨNG VIÊN ===\n${cvText}\n\n=== HƯỚNG DẪN ĐÁNH GIÁ ===\n1. matchScore: Điểm phù hợp của ứng viên từ 0 đến 100 (số thực hoặc số nguyên). Hãy đánh giá công tâm, dựa trên kỹ năng kỹ thuật, kinh nghiệm và độ tương thích với yêu cầu.\n2. experienceYears: Số năm kinh nghiệm làm việc ước tính của ứng viên trong ngành/vị trí liên quan (số nguyên >= 0).\n3. summary: Nhận xét ngắn gọn, sắc sảo bằng tiếng Việt (khoảng 2-4 câu) nêu rõ điểm mạnh, điểm còn thiếu và mức độ phù hợp tổng thể của ứng viên.\n4. parsedSkillsJson: Mảng các kỹ năng cốt lõi (hard skills, soft skills, công nghệ, công cụ) được bóc tách từ CV của ứng viên (mảng chuỗi string).\n\nBẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP trả về DUY NHẤT một chuỗi JSON thuần (STRICT JSON), KHÔNG kèm bất kỳ lời giải thích nào khác ngoài cấu trúc JSON sau:\n{\n  \"matchScore\": 85,\n  \"experienceYears\": 3,\n  \"summary\": \"Nhận xét tiếng Việt...\",\n  \"parsedSkillsJson\": [\"Kỹ năng 1\", \"Kỹ năng 2\"]\n}`;\n\nreturn [{\n  json: {\n    candidateId,\n    promptText\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        -304
+      ],
+      "id": "d3a6a912-c9b6-48aa-b104-b0f14db1096b",
+      "name": "Build Gemini Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": {{ JSON.stringify($json.promptText) }}\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.2,\n    \"responseMimeType\": \"application/json\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -272,
+        -304
+      ],
+      "id": "13612b05-e76a-4a73-aa9e-df0307c4a236",
+      "name": "Gemini AI: Analyze CV",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "fSA4vgwQa63FUDAB",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidateId = $('Build Gemini Prompt').first().json.candidateId;\nconst responseJson = $json;\n\n// Trích xuất text từ response Gemini\nconst rawText = responseJson.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\n\n// Làm sạch markdown nếu có\nlet cleanedText = rawText.trim();\nif (cleanedText.startsWith('```json')) {\n  cleanedText = cleanedText.replace(/^```json\\s*/, '').replace(/\\s*```$/, '');\n} else if (cleanedText.startsWith('```')) {\n  cleanedText = cleanedText.replace(/^```\\s*/, '').replace(/\\s*```$/, '');\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleanedText);\n} catch (e) {\n  parsed = {\n    matchScore: 0,\n    experienceYears: 0,\n    summary: \"Lỗi phân tích cú pháp từ phản hồi AI: \" + e.message,\n    parsedSkillsJson: []\n  };\n}\n\n// Đảm bảo kiểu dữ liệu khớp chính xác với DTO của Backend\nlet matchScore = typeof parsed.matchScore === 'number' ? parsed.matchScore : (parseFloat(parsed.matchScore) || 0);\nif (matchScore > 100) matchScore = 100;\nif (matchScore < 0) matchScore = 0;\n\nlet experienceYears = typeof parsed.experienceYears === 'number' ? Math.round(parsed.experienceYears) : (parseInt(parsed.experienceYears, 10) || 0);\nif (experienceYears < 0) experienceYears = 0;\n\nconst summary = typeof parsed.summary === 'string' && parsed.summary.trim().length > 0 \n  ? parsed.summary.trim() \n  : \"Đã hoàn thành đánh giá hồ sơ ứng viên.\";\n\nconst parsedSkillsJson = Array.isArray(parsed.parsedSkillsJson) \n  ? parsed.parsedSkillsJson \n  : (typeof parsed.parsedSkillsJson === 'object' && parsed.parsedSkillsJson !== null ? parsed.parsedSkillsJson : []);\n\nreturn [{\n  json: {\n    candidateId,\n    matchScore,\n    experienceYears,\n    summary,\n    parsedSkillsJson\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -304
+      ],
+      "id": "6a7176c0-7c0c-41fd-89bd-b9dfb0857103",
+      "name": "Parse AI Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $('Webhook: Receive CV Application').first().json.body || $('Webhook: Receive CV Application').first().json;\nconst candidateId = webhookData.candidateId;\n\nreturn [{\n  json: {\n    candidateId,\n    matchScore: 0,\n    experienceYears: 0,\n    summary: \"CV trống hoặc không đọc được nội dung văn bản (file PDF dạng ảnh scan hoặc không có chữ).\",\n    parsedSkillsJson: []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        -48
+      ],
+      "id": "6f3d2492-bb16-4672-aac4-0322de17f632",
+      "name": "Empty CV Result Node"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:3001/recruitment/candidates/{{ $json.candidateId }}/ai-evaluation",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"matchScore\": {{ $json.matchScore }},\n  \"experienceYears\": {{ $json.experienceYears }},\n  \"summary\": {{ JSON.stringify($json.summary) }},\n  \"parsedSkillsJson\": {{ JSON.stringify($json.parsedSkillsJson) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        -192
+      ],
+      "id": "944730cc-ab21-4d5a-b0d0-c68f91a28821",
+      "name": "Update Backend Node"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: Receive CV Application": {
+      "main": [
+        [
+          {
+            "node": "Download CV File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CV File": {
+      "main": [
+        [
+          {
+            "node": "Extract Text From PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text From PDF": {
+      "main": [
+        [
+          {
+            "node": "CV Has Content?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CV Has Content?": {
+      "main": [
+        [
+          {
+            "node": "Build Gemini Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Empty CV Result Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Gemini Prompt": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI: Analyze CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI: Analyze CV": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Update Backend Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empty CV Result Node": {
+      "main": [
+        [
+          {
+            "node": "Update Backend Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f8b1bfdd-713a-47a1-a5a2-e2de278447fb",
+  "meta": {
+    "instanceId": "d513a217739c970f06ba5b7905d56e04f8bf5bbc9d4fc9cc5d08fdd4d8b7ae7b"
+  },
+  "nodeGroups": [],
+  "id": "SPbqZlQMSoHpoqRx",
+  "tags": []
+}
