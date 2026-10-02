@@ -12,7 +12,6 @@ import {
   HeartHandshake,
   LayoutDashboard,
   Building2,
-  Settings,
   Sparkles,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -28,6 +27,7 @@ export default function Sidebar() {
       icon: Briefcase,
       color: 'text-amber-500',
       bgColor: 'bg-amber-50',
+      href: '/careers',
     },
     {
       name: 'AI Onboarding Agent',
@@ -100,22 +100,39 @@ export default function Sidebar() {
           <div className="space-y-1">
             {agents.map((agent) => {
               const Icon = agent.icon;
+              const content = (
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg ${agent.bgColor} ${agent.color}`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-bold text-slate-200 group-hover:text-white truncate">
+                      {agent.name}
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate mt-0.5">{agent.desc}</p>
+                  </div>
+                </div>
+              );
+
+              if (agent.href) {
+                return (
+                  <Link
+                    key={agent.name}
+                    href={agent.href}
+                    className="block p-2.5 rounded-xl hover:bg-slate-800/80 transition cursor-pointer group"
+                    title={`Mở ${agent.name}`}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
               return (
                 <div
                   key={agent.name}
                   className="p-2.5 rounded-xl hover:bg-slate-800/80 transition cursor-pointer group"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${agent.bgColor} ${agent.color}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-slate-200 group-hover:text-white truncate">
-                        {agent.name}
-                      </div>
-                      <p className="text-[11px] text-slate-400 truncate mt-0.5">{agent.desc}</p>
-                    </div>
-                  </div>
+                  {content}
                 </div>
               );
             })}
