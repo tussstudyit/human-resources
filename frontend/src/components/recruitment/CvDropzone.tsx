@@ -145,49 +145,52 @@ export default function CvDropzone({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 outline-none ${
+          className={`relative border-2 border-dashed rounded-[12px] p-6 text-center cursor-pointer transition-all duration-200 ease-out outline-none ${
             disabled
-              ? 'border-slate-200 bg-slate-50 cursor-not-allowed opacity-60'
+              ? 'border-[#E2E8F0] bg-slate-50 cursor-not-allowed opacity-60'
               : isDragging
-              ? 'border-indigo-600 bg-indigo-50/70 scale-[1.01]'
+              ? 'border-[#78C64C] bg-[#ACE77E]/10'
               : error
               ? 'border-rose-300 bg-rose-50/40 hover:bg-rose-50/60'
-              : 'border-slate-300 bg-slate-50/50 hover:bg-slate-50 hover:border-indigo-400 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2'
+              : 'border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#92D861] focus:ring-2 focus:ring-[#ACE77E] focus:ring-offset-2'
           }`}
         >
           <div className="flex flex-col items-center justify-center space-y-2">
             <div
-              className={`p-3 rounded-2xl ${
+              className={`p-3 rounded-[12px] ${
                 isDragging
-                  ? 'bg-indigo-600 text-white animate-bounce'
-                  : 'bg-indigo-50 text-indigo-600'
-              } transition-colors`}
+                  ? 'bg-[#ACE77E] text-[#0F172A]'
+                  : 'bg-slate-100 text-[#475569]'
+              } transition-colors duration-150`}
             >
               <UploadCloud className="h-6 w-6" />
             </div>
 
             <div className="space-y-0.5">
-              <p className="text-sm font-bold text-slate-800">
-                <span className="text-indigo-600 hover:underline">Nhấn để chọn tệp</span> hoặc kéo thả vào đây
+              <p className="text-sm font-bold text-[#0F172A]">
+                <span className="text-[#0F172A] underline underline-offset-2 hover:text-slate-700">
+                  Nhấn để chọn tệp
+                </span>{' '}
+                hoặc kéo thả vào đây
               </p>
-              <p className="text-xs text-slate-500">
-                Chỉ chấp nhận tệp định dạng <span className="font-semibold text-slate-700">PDF (.pdf)</span>, dung lượng tối đa <span className="font-semibold text-slate-700">10MB</span>
+              <p className="text-xs text-[#64748B]">
+                Chỉ chấp nhận tệp định dạng <span className="font-semibold text-[#475569]">PDF (.pdf)</span>, dung lượng tối đa <span className="font-semibold text-[#475569]">10MB</span>
               </p>
             </div>
           </div>
         </div>
       ) : (
         /* Khi đã chọn file */
-        <div className="flex items-center justify-between p-4 bg-indigo-50/50 border border-indigo-200/80 rounded-2xl">
+        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[12px] transition-all">
           <div className="flex items-center space-x-3 min-w-0 pr-2">
-            <div className="h-11 w-11 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0 border border-red-200 shadow-xs">
-              <FileText className="h-6 w-6" />
+            <div className="h-10 w-10 rounded-[10px] bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
+              <FileText className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate" title={file.name}>
+              <p className="text-xs font-bold text-[#0F172A] truncate" title={file.name}>
                 {file.name}
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+              <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">
                 {formatFileSize(file.size)} • PDF Document
               </p>
             </div>
@@ -197,7 +200,7 @@ export default function CvDropzone({
             type="button"
             onClick={handleRemove}
             disabled={disabled}
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition shrink-0"
+            className="p-2 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-[10px] transition duration-150 shrink-0"
             title="Xóa tệp và chọn lại"
             aria-label="Xóa tệp và chọn lại"
           >

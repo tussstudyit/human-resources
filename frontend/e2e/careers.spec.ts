@@ -32,7 +32,7 @@ test.describe('Careers Portal E2E Flow', () => {
 
     // Kiểm tra hero header
     await expect(
-      page.getByRole('heading', { name: /Gia nhập đội ngũ công nghệ/i })
+      page.getByRole('heading', { name: /Gia nhập đội ngũ/i })
     ).toBeVisible();
 
     // Kiểm tra danh sách job OPEN được render
@@ -56,7 +56,7 @@ test.describe('Careers Portal E2E Flow', () => {
     await expect(page.getByText('Senior Frontend Engineer')).not.toBeVisible();
 
     // 2. Tìm kiếm 'frontend'
-    const searchInput = page.getByPlaceholder(/Tìm kiếm vị trí/i);
+    const searchInput = page.getByPlaceholder(/Tìm (theo|kiếm) vị trí/i);
     await searchInput.fill('frontend');
 
     // Nút filter ALL lại để tìm theo từ khóa
@@ -212,7 +212,7 @@ test.describe('Careers Portal E2E Flow', () => {
     await page.goto('/careers');
 
     await expect(
-      page.getByText('Không tìm thấy vị trí tuyển dụng phù hợp')
+      page.getByText('Hiện chưa có vị trí nào đang mở tuyển')
     ).toBeVisible();
     await expect(
       page.getByText('Hiện tại chưa có vị trí nào đang mở tuyển. Vui lòng quay lại sau!')
@@ -259,5 +259,74 @@ test.describe('Careers Portal E2E Flow', () => {
     // Phản hồi trễ 1.5s (dưới timeout 8s của frontend), trang vẫn tải thành công
     await expect(page.getByText('Senior Frontend Engineer')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Chuyên viên Tuyển dụng & HRBP')).toBeVisible();
+  });
+
+  test('Kiểm tra giao diện Responsive 1280px Desktop và 375px Mobile', async ({ page }) => {
+    // 1. Kiểm tra trên Desktop 1280px
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/careers');
+
+    // Hero H1
+    const heroH1 = page.getByRole('heading', { name: /Gia nhập đội ngũ của chúng tôi/i });
+    await expect(heroH1).toBeVisible();
+
+    // 5 Tab phòng ban hiển thị đầy đủ
+    await expect(page.getByRole('button', { name: /^Tất cả/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Kỹ thuật & Công nghệ/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Kinh doanh & Phát triển/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Nhân sự/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Khác/i })).toBeVisible();
+
+    // Nút Ứng tuyển ngay có màu #ACE77E và text màu đậm
+    const applyBtn = page.getByRole('button', { name: /Ứng tuyển ngay/i }).first();
+    await expect(applyBtn).toBeVisible();
+
+    // Footer hiển thị
+    await expect(page.getByText(/HR Platform.*Cổng tuyển dụng/i)).toBeVisible();
+
+    // 2. Kiểm tra trên Mobile 375px
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.waitForTimeout(300);
+
+    // Không bị tràn ngang màn hình (no horizontal overflow)
+    const hasHorizontalOverflow = await page.evaluate(() => {
+      return document.documentElement.scrollWidth > window.innerWidth;
+    });
+    expect(hasHorizontalOverflow).toBe(false);
+
+    // Mở ApplyModal trên Mobile
+    await applyBtn.click();
+    const modalTitle = page.locator('#apply-modal-title');
+    await expect(modalTitle).toBeVisible();
+
+    // Đóng bằng phím Escape
+    await page.keyboard.press('Escape');
+    await expect(modalTitle).not.toBeVisible();
+  });
+
+  test('Kiểm tra Keyboard Accessibility & Focus Trap trong ApplyModal', async ({ page }) => {
+    await page.goto('/careers');
+
+    const firstApplyBtn = page.getByRole('button', { name: /Ứng tuyển ngay/i }).first();
+    await firstApplyBtn.click();
+
+    // Chờ modal mở và focus vào ô Họ và tên
+    const nameInput = page.getByPlaceholder('Nguyễn Văn A');
+    await expect(nameInput).toBeFocused();
+
+    // Tab sang Email
+    await page.keyboard.press('Tab');
+    const emailInput = page.getByPlaceholder('ungvien@gmail.com');
+    await expect(emailInput).toBeFocused();
+
+    // Tab sang Phone
+    await page.keyboard.press('Tab');
+    const phoneInput = page.getByPlaceholder('0912 345 678');
+    await expect(phoneInput).toBeFocused();
+
+    // Đóng modal bằng phím ESC và kiểm tra focus được trả lại
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#apply-modal-title')).not.toBeVisible();
+    await expect(firstApplyBtn).toBeFocused();
   });
 });

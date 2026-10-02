@@ -122,6 +122,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       const buffer = Buffer.concat(body);
       const str = buffer.toString('utf-8');
+      console.log(`[Mock Backend] Nhận yêu cầu nộp CV mới (${buffer.length} bytes)`);
 
       // Kịch bản rate_limit (429)
       if (currentScenario === 'rate_limit') {

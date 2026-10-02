@@ -8,19 +8,26 @@ import PublicHeader from './PublicHeader';
 import { inferDepartment } from '@/lib/recruitment-utils';
 import {
   Search,
-  Sparkles,
   Briefcase,
-  Layers,
-  Bot,
   RefreshCw,
-  SlidersHorizontal,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 
 interface CareersClientProps {
   initialJobs: JobPost[];
   initialError?: boolean;
 }
+
+const DEPARTMENTS = [
+  'Tất cả',
+  'Kỹ thuật & Công nghệ',
+  'Kinh doanh & Phát triển',
+  'Nhân sự',
+  'Khác',
+] as const;
+
+type DepartmentFilter = (typeof DEPARTMENTS)[number];
 
 /**
  * Loại bỏ dấu tiếng Việt để tìm kiếm không phân biệt dấu
@@ -32,6 +39,16 @@ function removeVietnameseAccents(str: string): string {
     .replace(/đ/g, 'd')
     .replace(/Đ/g, 'D')
     .toLowerCase();
+}
+
+/**
+ * Chuẩn hóa phòng ban theo 4 danh mục chính hoặc 'Khác'
+ */
+function normalizeDepartment(deptName: string): DepartmentFilter {
+  if (deptName === 'Kỹ thuật & Công nghệ') return 'Kỹ thuật & Công nghệ';
+  if (deptName === 'Kinh doanh & Phát triển') return 'Kinh doanh & Phát triển';
+  if (deptName === 'Nhân sự') return 'Nhân sự';
+  return 'Khác';
 }
 
 export default function CareersClient({
@@ -49,7 +66,7 @@ export default function CareersClient({
   // Search input & debounce
   const [searchInput, setSearchInput] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [selectedDept, setSelectedDept] = useState<string>('ALL');
+  const [selectedDept, setSelectedDept] = useState<string>('Tất cả');
 
   // Modal ứng tuyển
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
@@ -65,26 +82,41 @@ export default function CareersClient({
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Danh sách phòng ban duy nhất để lọc
-  const departmentList = useMemo(() => {
-    const depts = new Set<string>();
+  // Đếm số lượng việc làm cho từng tab phòng ban
+  const deptCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      'Tất cả': jobs.length,
+      'Kỹ thuật & Công nghệ': 0,
+      'Kinh doanh & Phát triển': 0,
+      'Nhân sự': 0,
+      Khác: 0,
+    };
+
     for (const job of jobs) {
-      const d = job.department || inferDepartment(job.title);
-      depts.add(d);
+      const rawDept = job.department || inferDepartment(job.title);
+      const cat = normalizeDepartment(rawDept);
+      counts[cat] = (counts[cat] || 0) + 1;
     }
-    return Array.from(depts);
+
+    return counts;
   }, [jobs]);
 
   // Lọc việc làm theo từ khóa và phòng ban
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
-      // Lọc phòng ban
-      if (selectedDept !== 'ALL') {
-        const dept = job.department || inferDepartment(job.title);
-        if (dept !== selectedDept) return false;
+      const rawDept = job.department || inferDepartment(job.title);
+
+      // Lọc theo tab phòng ban
+      if (selectedDept !== 'Tất cả' && selectedDept !== 'ALL') {
+        const cat = normalizeDepartment(rawDept);
+        if (selectedDept === 'Khác') {
+          if (cat !== 'Khác') return false;
+        } else if (rawDept !== selectedDept && cat !== selectedDept) {
+          return false;
+        }
       }
 
-      // Lọc từ khóa tìm kiếm
+      // Lọc từ khóa tìm kiếm (case insensitive, accent insensitive)
       if (!debouncedQuery) return true;
 
       const normalizedQuery = removeVietnameseAccents(debouncedQuery);
@@ -109,7 +141,7 @@ export default function CareersClient({
       const data = await getJobs();
       setJobs(data);
     } catch {
-      setError('Không thể làm mới danh sách việc làm. Vui lòng thử lại sau.');
+      setError('Không thể tải danh sách việc làm từ máy chủ. Vui lòng thử lại sau.');
     } finally {
       setIsRefreshing(false);
     }
@@ -130,43 +162,44 @@ export default function CareersClient({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans">
+      {/* 1. Header (Desktop 72px, Mobile 64px) */}
       <PublicHeader />
 
-      <main className="flex-1 pb-16">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-950 text-white pt-12 pb-20 px-4 sm:px-8 border-b border-slate-800">
-          <div className="max-w-5xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold backdrop-blur-xs">
-              <Sparkles className="h-4 w-4" />
-              <span>Tuyển dụng thông minh kết hợp AI Agent</span>
+      <main className="flex-1 pb-20">
+        {/* 2. Hero Section: Light Mode, White Space, H1: "Gia nhập đội ngũ của chúng tôi" */}
+        <section className="bg-white border-b border-[#E2E8F0] pt-12 pb-14 sm:pt-16 sm:pb-16 px-4 sm:px-8">
+          <div className="max-w-[1184px] mx-auto text-center space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[12px] bg-slate-100 border border-[#E2E8F0] text-[#475569] text-xs font-semibold">
+              <span className="h-2 w-2 rounded-full bg-[#78C64C]"></span>
+              <span>Tuyển dụng nhân sự công nghệ</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight max-w-3xl mx-auto">
-              Gia nhập đội ngũ công nghệ kiến tạo tương lai
+            <h1 className="text-[36px] sm:text-[48px] md:text-[60px] md:leading-[1.12] font-black tracking-tight text-[#0F172A] max-w-4xl mx-auto">
+              Gia nhập đội ngũ của chúng tôi
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-              Khám phá các cơ hội nghề nghiệp hấp dẫn. Nộp hồ sơ nhanh chóng, hệ thống AI Recruitment Agent tự động phân tích kỹ năng và phản hồi tức thì.
+            <p className="text-sm sm:text-base text-[#475569] max-w-2xl mx-auto leading-relaxed font-normal">
+              Khám phá các cơ hội nghề nghiệp công nghệ hấp dẫn và cùng chúng tôi kiến tạo những sản phẩm giá trị.
             </p>
 
-            {/* Ô tìm kiếm trung tâm */}
-            <div className="max-w-2xl mx-auto pt-3">
+            {/* 3. Search: "Tìm theo vị trí hoặc kỹ năng" */}
+            <div className="max-w-2xl mx-auto pt-2">
               <div className="relative flex items-center">
-                <Search className="absolute left-4 h-5 w-5 text-slate-400 pointer-events-none" />
+                <Search className="absolute left-4 h-5 w-5 text-[#64748B] pointer-events-none" />
                 <input
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Tìm kiếm vị trí (ví dụ: Senior Software, Python, Cybersecurity...)"
-                  className="w-full pl-12 pr-10 py-3.5 sm:py-4 bg-white text-slate-900 placeholder:text-slate-400 rounded-2xl text-sm font-medium shadow-2xl focus:outline-none focus:ring-4 focus:ring-indigo-500/30 transition"
-                  aria-label="Tìm kiếm vị trí việc làm"
+                  placeholder="Tìm theo vị trí hoặc kỹ năng"
+                  className="w-full pl-12 pr-10 py-3 sm:py-3.5 bg-[#F8FAFC] hover:bg-white text-[#0F172A] placeholder:text-[#64748B] border border-[#E2E8F0] focus:border-[#78C64C] rounded-[12px] text-sm font-medium shadow-xs focus:outline-none focus:ring-2 focus:ring-[#ACE77E] transition duration-150"
+                  aria-label="Tìm theo vị trí hoặc kỹ năng"
                 />
                 {searchInput && (
                   <button
                     type="button"
                     onClick={() => setSearchInput('')}
-                    className="absolute right-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 transition"
+                    className="absolute right-3.5 p-1 rounded-[8px] text-[#64748B] hover:text-[#0F172A] hover:bg-slate-200/60 transition"
                     aria-label="Xóa nội dung tìm kiếm"
                   >
                     <X className="h-4 w-4" />
@@ -174,62 +207,28 @@ export default function CareersClient({
                 )}
               </div>
             </div>
-
-            {/* Chỉ số nhanh */}
-            <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-300">
-              <span className="flex items-center gap-1.5 font-medium">
-                <Briefcase className="h-4 w-4 text-indigo-400" />
-                <strong className="text-white font-bold">{jobs.length}</strong> vị trí đang mở tuyển
-              </span>
-              <span className="hidden sm:inline text-slate-600">•</span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <Bot className="h-4 w-4 text-emerald-400" />
-                Đánh giá tự động bởi AI Recruitment Agent
-              </span>
-              <span className="hidden sm:inline text-slate-600">•</span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <Layers className="h-4 w-4 text-amber-400" />
-                Phản hồi minh bạch & nhanh chóng
-              </span>
-            </div>
           </div>
         </section>
 
-        {/* Nội dung danh sách việc làm */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 -mt-6">
-          {/* Bộ lọc phòng ban */}
-          <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-200/80 mb-8 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
-              <span className="text-xs font-bold text-slate-500 flex items-center gap-1 pl-1 pr-2 shrink-0">
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                <span>Phòng ban:</span>
-              </span>
+        {/* 4. Department Filter & Job Grid Container (Desktop 1280px max-width 1184px, Mobile 16px padding) */}
+        <div className="max-w-[1184px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+          {/* 4. Department Filter: Desktop inline, Mobile horizontal scroll */}
+          <div className="flex items-center justify-between gap-3 mb-8">
+            <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none max-w-full">
+              {DEPARTMENTS.map((dept) => {
+                const isSelected =
+                  selectedDept === dept || (dept === 'Tất cả' && selectedDept === 'ALL');
+                const count = deptCounts[dept] ?? 0;
 
-              <button
-                type="button"
-                onClick={() => setSelectedDept('ALL')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
-                  selectedDept === 'ALL'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Tất cả ({jobs.length})
-              </button>
-
-              {departmentList.map((dept) => {
-                const count = jobs.filter(
-                  (j) => (j.department || inferDepartment(j.title)) === dept
-                ).length;
                 return (
                   <button
                     key={dept}
                     type="button"
                     onClick={() => setSelectedDept(dept)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
-                      selectedDept === dept
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    className={`px-3.5 py-2 rounded-[12px] text-xs font-semibold transition-colors duration-150 shrink-0 border ${
+                      isSelected
+                        ? 'bg-[#ACE77E] border-[#ACE77E] text-[#0F172A] shadow-xs'
+                        : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-slate-100 hover:text-[#0F172A]'
                     }`}
                   >
                     {dept} ({count})
@@ -242,7 +241,7 @@ export default function CareersClient({
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition disabled:opacity-50 ml-auto shrink-0"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B] hover:text-[#0F172A] px-3 py-2 rounded-[12px] bg-white border border-[#E2E8F0] hover:bg-slate-100 transition disabled:opacity-50 ml-auto shrink-0 shadow-xs"
               title="Làm mới danh sách"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -250,23 +249,35 @@ export default function CareersClient({
             </button>
           </div>
 
-          {/* Lỗi hiển thị nếu fetch thất bại */}
+          {/* Error State */}
           {error && (
-            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-6 text-center space-y-3 mb-8">
-              <p className="text-sm font-bold text-rose-800">{error}</p>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition"
-              >
-                Thử lại
-              </button>
+            <div className="bg-white border border-rose-200 rounded-[12px] p-6 text-center space-y-3 mb-8 shadow-xs">
+              <div className="h-12 w-12 rounded-[12px] bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-[#0F172A]">
+                  Không thể tải danh sách việc làm
+                </h3>
+                <p className="text-xs text-[#64748B] max-w-md mx-auto">
+                  {error}
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="px-5 py-2.5 bg-[#ACE77E] hover:bg-[#92D861] active:bg-[#78C64C] text-[#0F172A] text-xs font-bold rounded-[12px] shadow-xs transition duration-150"
+                >
+                  Thử lại
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Danh sách việc làm */}
+          {/* 5. Job Grid: Desktop 3 columns, gap 24px (gap-6), Mobile 1 column */}
           {filteredJobs.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredJobs.map((job) => (
                 <JobCard
                   key={job.id}
@@ -277,30 +288,34 @@ export default function CareersClient({
             </div>
           ) : (
             /* Empty State */
-            <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-4 shadow-xs">
-              <div className="h-16 w-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-                <Briefcase className="h-8 w-8" />
+            <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-12 text-center space-y-4 shadow-xs">
+              <div className="h-14 w-14 rounded-[12px] bg-slate-100 text-[#64748B] flex items-center justify-center mx-auto">
+                <Briefcase className="h-7 w-7" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-bold text-slate-900">
-                  Không tìm thấy vị trí tuyển dụng phù hợp
+              <div className="space-y-1.5">
+                <h3 className="text-base font-bold text-[#0F172A]">
+                  {jobs.length === 0
+                    ? 'Hiện chưa có vị trí nào đang mở tuyển'
+                    : 'Không tìm thấy vị trí tuyển dụng phù hợp'}
                 </h3>
-                <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  {debouncedQuery || selectedDept !== 'ALL'
+                <p className="text-xs text-[#64748B] max-w-md mx-auto leading-relaxed">
+                  {jobs.length === 0
+                    ? 'Hiện tại chưa có vị trí nào đang mở tuyển. Vui lòng quay lại sau!'
+                    : debouncedQuery || selectedDept !== 'Tất cả'
                     ? 'Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn phòng ban khác để xem các vị trí mở tuyển.'
                     : 'Hiện tại chưa có vị trí nào đang mở tuyển. Vui lòng quay lại sau!'}
                 </p>
               </div>
 
-              {(debouncedQuery || selectedDept !== 'ALL') && (
+              {(debouncedQuery || (selectedDept !== 'Tất cả' && selectedDept !== 'ALL')) && (
                 <div className="pt-2">
                   <button
                     type="button"
                     onClick={() => {
                       setSearchInput('');
-                      setSelectedDept('ALL');
+                      setSelectedDept('Tất cả');
                     }}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#0F172A] text-xs font-semibold rounded-[12px] transition duration-150"
                   >
                     Xóa bộ lọc tìm kiếm
                   </button>
@@ -310,6 +325,20 @@ export default function CareersClient({
           )}
         </div>
       </main>
+
+      {/* 6. Footer: Minimal, clean, light mode */}
+      <footer className="bg-white border-t border-[#E2E8F0] py-8 px-4 sm:px-8 mt-auto">
+        <div className="max-w-[1184px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B]">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-[#0F172A]">HR Platform</span>
+            <span>•</span>
+            <span>Cổng tuyển dụng nhân tài công nghệ Việt Nam</span>
+          </div>
+          <div>
+            <p>© {new Date().getFullYear()} HR Platform. Bảo lưu mọi quyền.</p>
+          </div>
+        </div>
+      </footer>
 
       {/* Modal ứng tuyển */}
       <ApplyModal

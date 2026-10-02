@@ -14,7 +14,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Briefcase,
 } from 'lucide-react';
 
 interface ApplyModalProps {
@@ -219,13 +218,13 @@ export default function ApplyModal({
       showToast({
         type: 'success',
         title: 'Nộp hồ sơ thành công!',
-        message: 'AI Recruitment Agent đã tiếp nhận và đang tiến hành chấm điểm CV.',
+        message: 'AI Agent đang phân tích CV của bạn.',
       });
     } catch (err: unknown) {
       const apiErr = err as ApplyApiError;
 
       if (apiErr.status === 409) {
-        // 409 Conflict: Hiển thị INLINE nổi bật, KHÔNG bắn toast
+        // 409 Conflict: Hiển thị INLINE nổi bật, KHÔNG gọi toast
         setInlineConflict(true);
       } else if (apiErr.status === 429) {
         // 429 Rate Limit
@@ -256,7 +255,7 @@ export default function ApplyModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-6 overflow-y-auto bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150"
       onClick={handleClose}
       role="dialog"
       aria-modal="true"
@@ -264,7 +263,7 @@ export default function ApplyModal({
     >
       <div
         ref={modalRef}
-        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-200/80 p-6 sm:p-8 overflow-hidden transition-all my-8 max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-lg bg-white rounded-t-[16px] sm:rounded-[12px] shadow-2xl border border-[#E2E8F0] p-6 sm:p-8 overflow-hidden transition-all my-0 sm:my-8 max-sm:mt-auto max-sm:max-h-[92vh] max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Nút đóng modal */}
@@ -272,32 +271,35 @@ export default function ApplyModal({
           ref={closeButtonRef}
           type="button"
           onClick={handleClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+          className="absolute top-4 sm:top-5 right-4 sm:right-5 p-2 rounded-[10px] text-[#64748B] hover:text-[#0F172A] hover:bg-slate-100 transition duration-150"
           aria-label="Đóng cửa sổ"
           disabled={isSubmitting}
         >
           <X className="h-5 w-5" />
         </button>
 
-        {/* Màn hình thành công */}
+        {/* Màn hình thành công (HTTP 201) */}
         {isSuccess ? (
-          <div className="py-10 text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <CheckCircle2 className="h-10 w-10 animate-in zoom-in-75 duration-300" />
+          <div className="py-8 text-center space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="mx-auto h-16 w-16 rounded-[12px] bg-[#ACE77E] text-[#0F172A] flex items-center justify-center shadow-xs">
+              <CheckCircle2 className="h-10 w-10 animate-in zoom-in-75 duration-200" />
             </div>
             <div className="space-y-1.5">
-              <h3 className="text-xl font-black text-slate-900">
+              <h3 className="text-xl font-bold text-[#0F172A]">
                 Ứng tuyển thành công!
               </h3>
-              <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
-                Hồ sơ của bạn cho vị trí <span className="font-bold text-slate-800">{job.title}</span> đã được ghi nhận. AI Recruitment Agent sẽ tự động chấm điểm kỹ năng và liên hệ với bạn qua email.
+              <p className="text-sm font-semibold text-[#475569]">
+                AI Agent đang phân tích CV
+              </p>
+              <p className="text-xs text-[#64748B] max-w-sm mx-auto leading-relaxed pt-1">
+                Hồ sơ của bạn cho vị trí <span className="font-semibold text-[#0F172A]">{job.title}</span> đã được lưu trữ thành công.
               </p>
             </div>
             <div className="pt-2">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition"
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-[#0F172A] text-xs font-semibold rounded-[12px] transition duration-150"
               >
                 Đóng thông báo
               </button>
@@ -308,31 +310,30 @@ export default function ApplyModal({
           <>
             {/* Header modal */}
             <div className="mb-5 pr-8">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold mb-2">
-                <Briefcase className="h-3 w-3" />
-                <span>Nộp hồ sơ ứng tuyển</span>
-              </div>
               <h3
                 id="apply-modal-title"
-                className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-snug"
+                className="text-base sm:text-lg font-bold text-[#0F172A] tracking-tight leading-snug"
               >
-                {job.title}
+                <span className="block text-xs font-semibold text-[#64748B] mb-0.5">
+                  Ứng tuyển vị trí
+                </span>
+                <span>{job.title}</span>
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-[#64748B] mt-1">
                 Vui lòng điền thông tin và tải lên CV dạng PDF để hệ thống AI đánh giá.
               </p>
             </div>
 
-            {/* Thông báo lỗi 409 Conflict INLINE nổi bật */}
+            {/* Thông báo lỗi 409 Conflict INLINE nổi bật, KHÔNG toast */}
             {inlineConflict && (
               <div
                 role="alert"
-                className="mb-4 p-4 rounded-2xl bg-rose-50 border border-rose-300 text-rose-800 flex items-start space-x-3 text-xs shadow-xs animate-in slide-in-from-top-2 duration-200"
+                className="mb-4 p-4 rounded-[12px] bg-amber-50 border border-amber-300 text-amber-900 flex items-start space-x-3 text-xs shadow-xs animate-in slide-in-from-top-1 duration-150"
               >
-                <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-bold text-rose-900">Không thể gửi lại hồ sơ</p>
-                  <p className="leading-relaxed">
+                <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold text-amber-900">Không thể gửi lại hồ sơ</p>
+                  <p className="leading-relaxed text-amber-800">
                     Bạn đã nộp hồ sơ ứng tuyển vào vị trí này rồi. Hệ thống đã lưu trữ thông tin của bạn.
                   </p>
                 </div>
@@ -343,9 +344,9 @@ export default function ApplyModal({
             {inlineError && !inlineConflict && (
               <div
                 role="alert"
-                className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center space-x-2.5 text-xs animate-in slide-in-from-top-1 duration-150"
+                className="mb-4 p-3.5 rounded-[12px] bg-rose-50 border border-rose-200 text-rose-700 flex items-center space-x-2.5 text-xs animate-in slide-in-from-top-1 duration-150"
               >
-                <AlertCircle className="h-4 w-4 shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
                 <span>{inlineError}</span>
               </div>
             )}
@@ -368,11 +369,11 @@ export default function ApplyModal({
 
               {/* Trường họ tên */}
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                   Họ và tên <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <User className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
                   <input
                     ref={nameInputRef}
                     type="text"
@@ -381,18 +382,18 @@ export default function ApplyModal({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Nguyễn Văn A"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs transition disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white text-[#0F172A] placeholder:text-[#64748B] border border-[#E2E8F0] rounded-[12px] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:border-[#78C64C] shadow-xs transition duration-150 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Trường email */}
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                   Email liên hệ <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <Mail className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
                   <input
                     type="email"
                     required
@@ -400,32 +401,32 @@ export default function ApplyModal({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ungvien@gmail.com"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs transition disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white text-[#0F172A] placeholder:text-[#64748B] border border-[#E2E8F0] rounded-[12px] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:border-[#78C64C] shadow-xs transition duration-150 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Trường số điện thoại (tuỳ chọn) */}
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                  Số điện thoại <span className="text-slate-400 font-normal">(Tùy chọn)</span>
+                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
+                  Số điện thoại <span className="text-[#64748B] font-normal">(Tùy chọn)</span>
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                  <Phone className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
                   <input
                     type="tel"
                     disabled={isSubmitting}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0912 345 678"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-xs transition disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white text-[#0F172A] placeholder:text-[#64748B] border border-[#E2E8F0] rounded-[12px] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:border-[#78C64C] shadow-xs transition duration-150 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Khu vực upload CV */}
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                <label className="block text-xs font-semibold text-[#0F172A] mb-1.5">
                   Đính kèm CV (PDF) <span className="text-rose-500">*</span>
                 </label>
                 <CvDropzone
@@ -442,16 +443,16 @@ export default function ApplyModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 px-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-5 bg-[#ACE77E] hover:bg-[#92D861] active:bg-[#78C64C] text-[#0F172A] rounded-[12px] text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm flex items-center justify-center space-x-2 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin text-[#0F172A]" />
                       <span>Đang nộp hồ sơ & gửi AI xử lý...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4" />
+                      <Send className="h-4 w-4 text-[#0F172A]" />
                       <span>Nộp hồ sơ ứng tuyển</span>
                     </>
                   )}

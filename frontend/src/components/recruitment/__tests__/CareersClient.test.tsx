@@ -57,7 +57,7 @@ describe('CareersClient', () => {
   it('tìm kiếm không phân biệt dấu tiếng Việt', async () => {
     render(<CareersClient initialJobs={mockJobs} initialError={false} />);
 
-    const searchInput = screen.getByPlaceholderText(/Tìm kiếm vị trí/i);
+    const searchInput = screen.getByPlaceholderText(/Tìm (theo|kiếm) vị trí/i);
 
     // Gõ không dấu 'nhan su'
     fireEvent.change(searchInput, { target: { value: 'nhan su' } });
@@ -72,7 +72,7 @@ describe('CareersClient', () => {
   it('hiển thị empty state khi không có kết quả phù hợp', async () => {
     render(<CareersClient initialJobs={mockJobs} initialError={false} />);
 
-    const searchInput = screen.getByPlaceholderText(/Tìm kiếm vị trí/i);
+    const searchInput = screen.getByPlaceholderText(/Tìm (theo|kiếm) vị trí/i);
     fireEvent.change(searchInput, { target: { value: 'vi-tri-khong-ton-tai' } });
 
     await waitFor(() => {
