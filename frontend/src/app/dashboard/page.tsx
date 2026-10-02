@@ -33,11 +33,20 @@ interface Employee {
   } | null;
 }
 
+interface Department {
+  id: string;
+  name: string;
+  description?: string | null;
+  _count?: {
+    users?: number;
+  } | null;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, initAuth } = useAuthStore();
 
-  const [departments, setDepartments] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
