@@ -25,18 +25,21 @@ model Department {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
-  password     String
-  fullName     String
-  role         Role        @default(EMPLOYEE)
-  isActive     Boolean     @default(true)
+  id              String                   @id @default(uuid())
+  email           String                   @unique
+  password        String
+  fullName        String
+  role            Role                     @default(EMPLOYEE)
+  isActive        Boolean                  @default(true)
 
-  departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  departmentId    String?
+  department      Department?              @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  // Day 4: Onboarding Tasks của User
+  onboardingTasks EmployeeOnboardingTask[]
+
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
 
   @@map("users")
 }
@@ -50,6 +53,13 @@ enum AiStatus {
   PENDING
   DONE
   FAILED
+}
+
+enum CandidateStatus {
+  APPLIED
+  INTERVIEW
+  HIRED
+  REJECTED
 }
 
 model JobPost {
@@ -67,7 +77,7 @@ model JobPost {
 }
 
 model Candidate {
-  id               String    @id @default(uuid())
+  id               String          @id @default(uuid())
   name             String
   email            String
   phone            String?
@@ -75,14 +85,45 @@ model Candidate {
   parsedSkillsJson Json?
   matchScore       Float?
   experienceYears  Int?
-  summary          String?   @db.Text
-  aiStatus         AiStatus  @default(PENDING)
+  summary          String?         @db.Text
+  aiStatus         AiStatus        @default(PENDING)
+  status           CandidateStatus @default(APPLIED)
   jobId            String
-  job              JobPost   @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  job              JobPost         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   @@unique([email, jobId])
   @@index([jobId])
   @@map("candidates")
+}
+
+// ==========================================
+// DAY 4: ONBOARDING MODULE MODELS
+// ==========================================
+
+model OnboardingTemplate {
+  id          String   @id @default(uuid())
+  taskName    String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("onboarding_templates")
+}
+
+model EmployeeOnboardingTask {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskName    String
+  description String?
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("employee_onboarding_tasks")
 }

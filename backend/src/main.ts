@@ -1,33 +1,13 @@
 import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from './app.module.js';
-
-import { existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  // On Day 8 deployment behind Nginx reverse proxy, enable trust proxy for rate limiting & client IP:
-  // (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
-
   app.enableCors();
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-
-  // Ensure CV upload directory exists
-  const cvUploadsDir = join(process.cwd(), 'uploads', 'cv');
-  if (!existsSync(cvUploadsDir)) {
-    mkdirSync(cvUploadsDir, { recursive: true });
-  }
-
-  const port = process.env.PORT ?? 3001;
-  await app.listen(port, '0.0.0.0');
-  console.log(`Backend server running on http://localhost:${port}`);
+  app.useGlobalPipes(new ValidationPipe());
+  await app.listen(3001);
+  console.log('Backend server running on http://localhost:3001');
 }
-await bootstrap();
+
+bootstrap();
