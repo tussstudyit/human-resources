@@ -1,0 +1,348 @@
+{
+  "name": "[HR] 02 - Automated Wellbeing Action Dispatcher & Gemini AI Intervention",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wellbeing-action-trigger",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        140,
+        320
+      ],
+      "id": "wf2-webhook-wellbeing",
+      "name": "Webhook: Kích Hoạt Can Thiệp Wellbeing"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Employee_Wellbeing_History",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        360,
+        320
+      ],
+      "id": "wf2-gsheet-history",
+      "name": "Google Sheets: Tra Cứu Lịch Sử Sức Khỏe"
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelSearch": {
+          "mode": "list",
+          "value": "models/gemini-1.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\"Bạn là Chuyên gia Phúc lợi & Sức khỏe Tinh thần Nhân sự AI (AI Wellbeing Strategist).\nNhiệm vụ: Căn cứ vào tình trạng của nhân viên: \" + $json.employeeName + \" (Phòng: \" + $json.department + \"), Điểm cảm xúc: \" + ($json.sentimentScore || -0.6) + \".\n\nHãy chọn 1 trong 3 hành động can thiệp tối ưu:\n1. COFFEE_VOUCHER: Tặng voucher cafe & nghỉ ngơi 30 phút (cho stress nhẹ).\n2. COUNSELING_CHAT: Buổi trò chuyện 1-on-1 kín đáo với HR Lead (cho kiệt sức nặng).\n3. WORKLOAD_RELIEF: Đề xuất quản lý giảm 20% deadline và gửi bộ cẩm nang Mindfulness.\n\nTrả về định dạng JSON thuần:\n{\\\"actionType\\\": \\\"COFFEE_VOUCHER\\\", \\\"packageTitle\\\": \\\"...\\\", \\\"reason\\\": \\\"...\\\"}\"",
+              "role": "user"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        600,
+        320
+      ],
+      "id": "wf2-gemini-advisor",
+      "name": "Google Gemini: Đề Xuất Phác Thảo Chăm Sóc Đời Sống"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItem = $input.item(0).json;\nlet geminiRaw = inputItem.content || inputItem.text || '';\nlet parsed = null;\n\ntry {\n  const jsonMatch = geminiRaw.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);\n} catch (e) {\n  parsed = null;\n}\n\nconst original = $('Google Sheets: Tra Cứu Lịch Sử Sức Khỏe').first()?.json || {\n  employeeName: 'Nguyễn Văn A',\n  employeeEmail: 'nguyen.vana@company.com',\n  department: 'Phòng Kỹ thuật & AI',\n  sentimentScore: -0.6\n};\n\nlet actionType = parsed?.actionType || 'COFFEE_VOUCHER';\nlet packageTitle = parsed?.packageTitle || 'Gói Phục Hồi Năng Lượng: E-Voucher Highlands & Half-day Rest';\nlet actionCode = 'ACT_GEMINI_' + Date.now();\n\nif (!parsed) {\n  if (Number(original.sentimentScore || -0.5) <= -0.7) {\n    actionType = 'COUNSELING_CHAT';\n    packageTitle = 'Buổi Trò Chuyện Tâm Lý 1-on-1 Bảo Mật với HR Lead';\n  } else if (original.department && original.department.includes('Kỹ thuật')) {\n    actionType = 'WORKLOAD_RELIEF';\n    packageTitle = 'Điều Phối Giảm Tải Sprint & Cẩm Nang Mindfulness Chống Burnout';\n  }\n}\n\nreturn {\n  ...original,\n  actionCode,\n  actionType,\n  packageTitle,\n  executedAt: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        320
+      ],
+      "id": "wf2-enrich-plan",
+      "name": "Đóng Gói Gói Hỗ Trợ Đời Sống"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.actionType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "COFFEE_VOUCHER",
+              "output": 0
+            },
+            {
+              "value2": "COUNSELING_CHAT",
+              "output": 1
+            },
+            {
+              "value2": "WORKLOAD_RELIEF",
+              "output": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        320
+      ],
+      "id": "wf2-switch-action",
+      "name": "Switch: Phân Loại Gói Chăm Sóc"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.employeeEmail || 'employee@company.com' }}",
+        "subject": "☕ [HR Care] Thư giãn cùng một ly Cafe - Tặng bạn Voucher nạp năng lượng!",
+        "message": "=Thân gửi {{ $json.employeeName }},<br/><br/>Công ty luôn trân trọng mọi nỗ lực và cống hiến của bạn. Để giúp bạn lấy lại năng lượng, HR xin gửi tặng bạn <b>Mã Voucher Cafe: GEMINI-CARE-2026</b>.<br/>Hãy dành cho mình 30 phút nghỉ ngơi thư thái nhé!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        160
+      ],
+      "id": "wf2-gmail-voucher",
+      "name": "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C06HR_COUNSELING",
+          "mode": "name"
+        },
+        "text": "=🌿 [YÊU CẦU 1-ON-1 TÂM LÝ] Gemini Agent đã lên lịch mời trò chuyện kín đáo cùng nhân sự {{ $json.employeeName }} ({{ $json.employeeEmail }}) nhằm lắng nghe và giải tỏa căng thẳng công việc."
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        320
+      ],
+      "id": "wf2-slack-counseling",
+      "name": "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.employeeEmail || 'employee@company.com' }}",
+        "subject": "🧘 [HR Wellness] Cẩm nang Mindfulness & Kế hoạch cân bằng công việc",
+        "message": "=Chào {{ $json.employeeName }},<br/><br/>HR đã thống nhất cùng Trưởng bộ phận của bạn để xem xét lại tiến độ các đầu việc tuần này, giúp bạn có thêm thời gian thở và tái tạo sức lao động.<br/>Đính kèm là cẩm nang 5 bài tập thư giãn nhanh tại bàn làm việc.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        480
+      ],
+      "id": "wf2-gmail-wellness",
+      "name": "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Wellbeing_Actions_Log",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        320
+      ],
+      "id": "wf2-gsheet-log",
+      "name": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/engagement/wellbeing-action-sync",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        320
+      ],
+      "id": "wf2-sync-db",
+      "name": "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, actionCode: $json.actionCode, packageTitle: $json.packageTitle, actionType: $json.actionType }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2080,
+        320
+      ],
+      "id": "wf2-respond",
+      "name": "Phản Hồi Hoàn Tất Can Thiệp (200 OK)"
+    }
+  ],
+  "connections": {
+    "Webhook: Kích Hoạt Can Thiệp Wellbeing": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Tra Cứu Lịch Sử Sức Khỏe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Tra Cứu Lịch Sử Sức Khỏe": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini: Đề Xuất Phác Thảo Chăm Sóc Đời Sống",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini: Đề Xuất Phác Thảo Chăm Sóc Đời Sống": {
+      "main": [
+        [
+          {
+            "node": "Đóng Gói Gói Hỗ Trợ Đời Sống",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Đóng Gói Gói Hỗ Trợ Đời Sống": {
+      "main": [
+        [
+          {
+            "node": "Switch: Phân Loại Gói Chăm Sóc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Phân Loại Gói Chăm Sóc": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc": {
+      "main": [
+        [
+          {
+            "node": "Phản Hồi Hoàn Tất Can Thiệp (200 OK)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

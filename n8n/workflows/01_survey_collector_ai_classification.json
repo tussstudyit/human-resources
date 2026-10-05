@@ -1,0 +1,352 @@
+{
+  "name": "[HR] 01 - Smart Survey Intake, Google Sheets Sync & Gemini AI Multi-Category",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "employee-survey-response",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        140,
+        320
+      ],
+      "id": "wf1-webhook",
+      "name": "Webhook: Tiếp Nhận Bài Khảo Sát"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  responseId: body.responseId || ('resp_' + Date.now()),\n  employeeId: body.employeeId || 'EMP-2026-08',\n  employeeName: body.employeeName || 'Nguyễn Văn A',\n  employeeEmail: body.employeeEmail || 'nguyen.vana@company.com',\n  department: body.department || 'Phòng Kỹ thuật & AI',\n  surveyTitle: body.surveyTitle || 'Khảo sát Hạnh phúc & Gắn kết Q4',\n  rating: Number(body.rating || 6),\n  textAnswer: body.textAnswer || 'Dạo này dự án chạy nước rút, liên tục OT cuối tuần nên tôi cảm thấy khá mệt mỏi và kiệt sức. Cần sự hỗ trợ cân đối lại khối lượng việc.',\n  submittedAt: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        320
+      ],
+      "id": "wf1-sanitize",
+      "name": "Chuẩn Hóa & Tiền Xử Lý Dữ Liệu"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Raw_Survey_Responses",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        580,
+        320
+      ],
+      "id": "wf1-gsheet-raw",
+      "name": "Google Sheets: Lưu Dữ Liệu Gốc"
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelSearch": {
+          "mode": "list",
+          "value": "models/gemini-1.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\"Bạn là Chuyên gia Tâm lý & Nhân sự AI (AI Employee Engagement & Wellbeing Analyst).\nNhiệm vụ: Phân tích phản hồi khảo sát của nhân viên sau:\n- Nhân viên: \" + $json.employeeName + \" (Phòng: \" + $json.department + \")\n- Điểm đánh giá: \" + $json.rating + \"/10\n- Ý kiến phản hồi: \\\"\" + $json.textAnswer + \"\\\"\n\nHãy phân loại vào 1 trong 5 danh mục:\n1. WORKLOAD_STRESS (Áp lực công việc & Kiệt sức OT)\n2. COMPENSATION_BENEFITS (Lương thưởng & Chế độ đãi ngộ)\n3. MANAGEMENT_LEADERSHIP (Phong cách quản lý & Quan hệ cấp trên)\n4. CULTURE_ENVIRONMENT (Văn hóa công ty & Đồng nghiệp)\n5. CAREER_GROWTH (Cơ hội học tập & Thăng tiến)\n\nĐánh giá:\n- sentimentScore (từ -1.0 đến +1.0)\n- burnoutRisk (LOW, MEDIUM, HIGH, CRITICAL)\n- riskLevel (THẤP, VỪA, CAO, NGUY CẤP)\n- actionRecommendation (Đề xuất can thiệp cho HR)\n\nTrả về định dạng JSON thuần không markdown:\n{\\\"category\\\": \\\"WORKLOAD_STRESS\\\", \\\"sentimentScore\\\": -0.65, \\\"burnoutRisk\\\": \\\"HIGH\\\", \\\"riskLevel\\\": \\\"CAO\\\", \\\"actionRecommendation\\\": \\\"...\\\"}\"",
+              "role": "user"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        820,
+        320
+      ],
+      "id": "wf1-gemini-classify",
+      "name": "Google Gemini: Phân Loại Chủ Đề & Đánh Giá Cảm Xúc"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Xử lý và phân tích kết quả trả về từ Google Gemini (Tự động fallback an toàn nếu test offline)\nconst inputItem = $input.item(0).json;\nlet geminiRaw = inputItem.content || inputItem.text || '';\nlet parsed = null;\n\ntry {\n  const jsonMatch = geminiRaw.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  }\n} catch (e) {\n  parsed = null;\n}\n\n// Lấy thông tin gốc từ node Chuẩn Hóa Dữ Liệu\nconst original = $('Chuẩn Hóa & Tiền Xử Lý Dữ Liệu').first().json;\nconst text = (original.textAnswer || '').toLowerCase();\n\nlet category = parsed?.category || 'WORKLOAD_STRESS';\nlet sentimentScore = parsed?.sentimentScore !== undefined ? parsed.sentimentScore : -0.65;\nlet burnoutRisk = parsed?.burnoutRisk || 'HIGH';\nlet riskLevel = parsed?.riskLevel || 'CAO';\nlet actionRecommendation = parsed?.actionRecommendation || 'Cần hỗ trợ điều phối lại công việc và bố trí buổi trò chuyện 1-on-1.';\n\nif (!parsed) {\n  if (text.includes('lương') || text.includes('thưởng') || text.includes('tiền')) {\n    category = 'COMPENSATION_BENEFITS';\n    sentimentScore = -0.4;\n    burnoutRisk = 'MEDIUM';\n    riskLevel = 'VỪA';\n    actionRecommendation = 'HR xem xét lại thang bảng lương và giải thích chính sách đãi ngộ.';\n  } else if (text.includes('vui') || text.includes('hài lòng') || original.rating >= 8) {\n    category = 'CULTURE_ENVIRONMENT';\n    sentimentScore = 0.85;\n    burnoutRisk = 'LOW';\n    riskLevel = 'THẤP';\n    actionRecommendation = 'Ghi nhận đóng góp tích cực và lan tỏa tinh thần gắn kết.';\n  }\n}\n\nreturn {\n  ...original,\n  aiAnalysis: {\n    engine: 'Google Gemini 1.5 Flash',\n    category,\n    sentimentScore,\n    burnoutRisk,\n    riskLevel,\n    isUrgent: (burnoutRisk === 'HIGH' || burnoutRisk === 'CRITICAL'),\n    actionRecommendation,\n    analyzedAt: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        320
+      ],
+      "id": "wf1-parse-ai",
+      "name": "Bóc Tách & Chuẩn Hóa Kết Quả AI"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Gemini_AI_Analytics",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1300,
+        320
+      ],
+      "id": "wf1-gsheet-analytics",
+      "name": "Google Sheets: Cập Nhật Báo Cáo AI"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/engagement/webhook-response",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        320
+      ],
+      "id": "wf1-sync-backend",
+      "name": "PostgreSQL: Đồng Bộ DB Backend"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.aiAnalysis.isUrgent }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        320
+      ],
+      "id": "wf1-if-risk",
+      "name": "IF: Nguy Cơ Kiệt Sức / Bất Mãn Cao?"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C06HR_WELLBEING_ALERTS",
+          "mode": "name"
+        },
+        "text": "=🚨 [CẢNH BÁO KIỆT SỨC - GEMINI AI AGENT]\\nNhân viên: {{ $json.employeeName }} (Phòng: {{ $json.department }})\\nChủ đề: {{ $json.aiAnalysis.category }}\\nMức độ rủi ro: {{ $json.aiAnalysis.riskLevel }} (Điểm: {{ $json.aiAnalysis.sentimentScore }})\\nNội dung: \\\"{{ $json.textAnswer }}\\\"\\nKhuyến nghị Gemini: {{ $json.aiAnalysis.actionRecommendation }}"
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        2020,
+        200
+      ],
+      "id": "wf1-slack-alert",
+      "name": "Slack: Cảnh Báo Khẩn Tới HR Lead"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.employeeEmail }}",
+        "subject": "🌿 [HR Wellbeing Care] Chúng tôi luôn đồng hành và lắng nghe bạn",
+        "message": "=Xin chào {{ $json.employeeName }},<br/><br/>Hệ thống Chăm sóc Đời sống Nhân viên nhận thấy thời gian gần đây bạn đang chịu khá nhiều áp lực trong công việc. HR muốn gửi tới bạn một lời nhắn quan tâm chân thành và đề xuất một buổi trò chuyện 1-on-1 hoàn toàn bảo mật để hỗ trợ bạn cân bằng lại.<br/><br/>Trân trọng,<br/><b>Ban Chăm sóc Nhân sự & Đời sống</b>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2260,
+        200
+      ],
+      "id": "wf1-gmail-support",
+      "name": "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  status: 'STABLE_OR_POSITIVE',\n  message: 'Phản hồi thuộc nhóm an toàn/tích cực. Đã ghi nhận vào chỉ số gắn kết tuần.',\n  employee: $json.employeeName\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2020,
+        440
+      ],
+      "id": "wf1-log-positive",
+      "name": "Ghi Nhận Mức Độ Gắn Kết Tốt"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, responseId: $json.responseId, aiAnalysis: $json.aiAnalysis }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2500,
+        320
+      ],
+      "id": "wf1-respond",
+      "name": "Phản Hồi Webhook Realtime"
+    }
+  ],
+  "connections": {
+    "Webhook: Tiếp Nhận Bài Khảo Sát": {
+      "main": [
+        [
+          {
+            "node": "Chuẩn Hóa & Tiền Xử Lý Dữ Liệu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chuẩn Hóa & Tiền Xử Lý Dữ Liệu": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Lưu Dữ Liệu Gốc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Lưu Dữ Liệu Gốc": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini: Phân Loại Chủ Đề & Đánh Giá Cảm Xúc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini: Phân Loại Chủ Đề & Đánh Giá Cảm Xúc": {
+      "main": [
+        [
+          {
+            "node": "Bóc Tách & Chuẩn Hóa Kết Quả AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bóc Tách & Chuẩn Hóa Kết Quả AI": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: Cập Nhật Báo Cáo AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: Cập Nhật Báo Cáo AI": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL: Đồng Bộ DB Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgreSQL: Đồng Bộ DB Backend": {
+      "main": [
+        [
+          {
+            "node": "IF: Nguy Cơ Kiệt Sức / Bất Mãn Cao?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Nguy Cơ Kiệt Sức / Bất Mãn Cao?": {
+      "main": [
+        [
+          {
+            "node": "Slack: Cảnh Báo Khẩn Tới HR Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ghi Nhận Mức Độ Gắn Kết Tốt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Cảnh Báo Khẩn Tới HR Lead": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1": {
+      "main": [
+        [
+          {
+            "node": "Phản Hồi Webhook Realtime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ghi Nhận Mức Độ Gắn Kết Tốt": {
+      "main": [
+        [
+          {
+            "node": "Phản Hồi Webhook Realtime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
