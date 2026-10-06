@@ -1,0 +1,127 @@
+{
+  "name": "[HR] WF_05 - Smart Interview Scheduler & Google Meet Invitation (Score >= 80%)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "schedule-interview",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        300
+      ],
+      "id": "wf5-webhook-intake",
+      "name": "Webhook: Tiếp Nhận Ứng Viên Xuất Sắc"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_01';\nconst candidateName = body.name || body.candidateName || 'Ứng viên tiềm năng';\nconst candidateEmail = body.email || body.candidateEmail || 'candidate@example.com';\nconst jobTitle = body.jobTitle || 'Senior Software Engineer';\nconst matchScore = Number(body.matchScore || 85);\nconst skills = Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson.join(', ') : (body.parsedSkillsJson || 'React, TypeScript, Node.js');\n\n// Đề xuất ngày phỏng vấn sau 3 ngày làm việc vào lúc 09:30 AM (GMT+7)\nconst interviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);\ninterviewDate.setHours(9, 30, 0, 0);\nconst formattedDate = interviewDate.toLocaleDateString('vi-VN', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\nconst formattedTime = '09:30 - 10:30 (Giờ Việt Nam)';\n\n// Tạo link Google Meet tự động\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst googleMeetUrl = `https://meet.google.com/${randomRoomId}`;\n\n// Soạn email HTML chuyên nghiệp\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;\">THƯ MỜI PHỎNG VẤN TRỰC TUYẾN</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;\">AI Recruitment Agent • HR Tech Platform</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6; margin-top: 0;\">Kính gửi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Chúc mừng bạn! Hồ sơ ứng tuyển của bạn cho vị trí <strong>${jobTitle}</strong> đã được hệ thống <strong>AI Recruitment Agent</strong> đánh giá rất cao với điểm tương thích ấn tượng <strong><span style=\"color: #16a34a; font-size: 16px;\">${matchScore}%</span></strong>.\n    </p>\n    <div style=\"background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 24px 0;\">\n      <h3 style=\"margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; color: #4f46e5; font-weight: 700;\">Chi tiết buổi phỏng vấn</h3>\n      <table style=\"width: 100%; font-size: 13px; line-height: 1.8; color: #475569;\">\n        <tr><td style=\"width: 130px; font-weight: 600;\">Vị trí:</td><td>${jobTitle}</td></tr>\n        <tr><td style=\"font-weight: 600;\">Thời gian:</td><td><strong>${formattedTime}</strong>, ${formattedDate}</td></tr>\n        <tr><td style=\"font-weight: 600;\">Hình thức:</td><td>Trực tuyến qua Google Meet</td></tr>\n        <tr><td style=\"font-weight: 600;\">Đường dẫn phòng:</td><td><a href=\"${googleMeetUrl}\" style=\"color: #4f46e5; font-weight: 700; text-decoration: none;\">${googleMeetUrl}</a></td></tr>\n      </table>\n    </div>\n    <div style=\"text-align: center; margin: 30px 0;\">\n      <a href=\"${googleMeetUrl}\" style=\"background: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);\">Tham gia phòng họp Google Meet</a>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b; line-height: 1.6;\">\n      Vui lòng kiểm tra camera và micro trước giờ phỏng vấn 5 phút. Nếu cần thay đổi thời gian, bạn có thể phản hồi trực tiếp qua email này.\n    </p>\n    <p style=\"font-size: 13px; color: #64748b; margin-bottom: 0;\">Trân trọng,<br><strong>Ban Tuyển dụng & AI Recruitment Squad</strong></p>\n  </div>\n</div>\n`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    formattedDate,\n    formattedTime,\n    googleMeetUrl,\n    emailSubject: `[HR Platform] Thư mời phỏng vấn vị trí ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ],
+      "id": "wf5-generate-meet-schedule",
+      "name": "Tạo Lịch Phỏng Vấn & Phòng Google Meet"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"HR Recruitment <recruitment@company.com>\",\n  \"to\": [\"{{ $json.candidateEmail }}\"],\n  \"subject\": \"{{ $json.emailSubject }}\",\n  \"html\": {{ JSON.stringify($json.emailHtml) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        220
+      ],
+      "id": "wf5-send-email",
+      "name": "Gửi Email Mời Phỏng Vấn",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const scheduleData = $('Tạo Lịch Phỏng Vấn & Phòng Google Meet').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    action: 'INTERVIEW_SCHEDULED',\n    candidateId: scheduleData.candidateId,\n    candidateName: scheduleData.candidateName,\n    candidateEmail: scheduleData.candidateEmail,\n    jobTitle: scheduleData.jobTitle,\n    matchScore: scheduleData.matchScore,\n    interviewTime: scheduleData.formattedTime,\n    interviewDate: scheduleData.formattedDate,\n    googleMeetUrl: scheduleData.googleMeetUrl,\n    scheduledAt: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ],
+      "id": "wf5-log-calendar",
+      "name": "Ghi Nhận Lịch Vào Hệ Thống"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        300
+      ],
+      "id": "wf5-response",
+      "name": "Phản Hồi Webhook Kết Quả"
+    }
+  ],
+  "connections": {
+    "Webhook: Tiếp Nhận Ứng Viên Xuất Sắc": {
+      "main": [
+        [
+          {
+            "node": "Tạo Lịch Phỏng Vấn & Phòng Google Meet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tạo Lịch Phỏng Vấn & Phòng Google Meet": {
+      "main": [
+        [
+          {
+            "node": "Gửi Email Mời Phỏng Vấn",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ghi Nhận Lịch Vào Hệ Thống",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ghi Nhận Lịch Vào Hệ Thống": {
+      "main": [
+        [
+          {
+            "node": "Phản Hồi Webhook Kết Quả",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "name": "[HR] WF_06 - Polite Rejection Notification & Talent Pool Retention (Score < 80%)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rejection-notification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        160,
+        300
+      ],
+      "id": "wf6-webhook-intake",
+      "name": "Webhook: Tiếp Nhận Hồ Sơ"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_02';\nconst candidateName = body.name || body.candidateName || 'Ứng viên';\nconst candidateEmail = body.email || body.candidateEmail || 'candidate@example.com';\nconst jobTitle = body.jobTitle || 'Software Engineer';\nconst matchScore = Number(body.matchScore || 65);\nconst skills = Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson.join(', ') : (body.parsedSkillsJson || 'Kỹ năng chuyên môn');\n\n// Soạn email cảm ơn và từ chối trang trọng, tạo thiện cảm lớn\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;\">THƯ CẢM ƠN & PHẢN HỒI HỒ SƠ ỨNG TUYỂN</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 13px; opacity: 0.85;\">AI Recruitment Agent • HR Tech Platform</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6; margin-top: 0;\">Kính gửi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Lời đầu tiên, chúng tôi xin chân thành cảm ơn bạn đã quan tâm và dành thời gian nộp hồ sơ ứng tuyển vị trí <strong>${jobTitle}</strong> tại công ty chúng tôi.\n    </p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Hệ thống AI Recruitment Agent và Hội đồng tuyển dụng đã xem xét kỹ lưỡng hồ sơ cùng những kinh nghiệm quý báu của bạn trong các lĩnh vực: <em>${skills}</em>. Tuy nhiên, sau khi cân nhắc các tiêu chuẩn đặc thù cho dự án ở giai đoạn hiện tại, chúng tôi rất tiếc phải thông báo hiện chưa thể sắp xếp cơ hội hợp tác phù hợp ngay lúc này.\n    </p>\n    <div style=\"background: #f8fafc; border-left: 4px solid #6366f1; border-radius: 8px; padding: 16px; margin: 24px 0;\">\n      <h4 style=\"margin: 0 0 8px 0; font-size: 13px; color: #4338ca; font-weight: 700;\">Lưu trữ vào Mạng lưới Nhân tài (Talent Pool)</h4>\n      <p style=\"font-size: 13px; line-height: 1.6; color: #475569; margin: 0;\">\n        Chúng tôi rất trân trọng năng lực chuyên môn của bạn và xin phép được <strong>chủ động lưu trữ hồ sơ của bạn vào hệ thống Talent Pool</strong>. Khi có các dự án mới mở rộng hoặc vị trí phù hợp hơn với thế mạnh của bạn, đội ngũ tuyển dụng sẽ ưu tiên liên hệ trực tiếp với bạn trước tiên.\n      </p>\n    </div>\n    <p style=\"font-size: 14px; color: #334155; line-height: 1.6;\">\n      Chúc bạn luôn dồi dào sức khỏe, gặt hái nhiều thành công rực rỡ trên con đường sự nghiệp phía trước!\n    </p>\n    <p style=\"font-size: 13px; color: #64748b; margin-bottom: 0;\">Trân trọng,<br><strong>Ban Tuyển dụng & AI Recruitment Squad</strong></p>\n  </div>\n</div>\n`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    status: 'TALENT_POOL_SAVED',\n    emailSubject: `[HR Platform] Cảm ơn bạn đã ứng tuyển vị trí ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ],
+      "id": "wf6-generate-rejection-talentpool",
+      "name": "Soạn Thư Cảm Ơn & Phân Loại Talent Pool"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"HR Recruitment <recruitment@company.com>\",\n  \"to\": [\"{{ $json.candidateEmail }}\"],\n  \"subject\": \"{{ $json.emailSubject }}\",\n  \"html\": {{ JSON.stringify($json.emailHtml) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        220
+      ],
+      "id": "wf6-send-rejection-email",
+      "name": "Gửi Email Cảm Ơn & Từ Chối Lịch Sự",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidate = $('Soạn Thư Cảm Ơn & Phân Loại Talent Pool').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    action: 'TALENT_POOL_ARCHIVED',\n    candidateId: candidate.candidateId,\n    candidateName: candidate.candidateName,\n    candidateEmail: candidate.candidateEmail,\n    jobTitle: candidate.jobTitle,\n    matchScore: candidate.matchScore,\n    skills: candidate.skills,\n    archivedAt: new Date().toISOString(),\n    retentionNote: 'Đã lưu trữ vào Talent Pool dự phòng, ưu tiên liên hệ khi có vị trí tương đồng.'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ],
+      "id": "wf6-sync-talent-pool",
+      "name": "Lưu Trữ Vào Talent Pool"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        300
+      ],
+      "id": "wf6-response",
+      "name": "Phản Hồi Webhook Kết Quả"
+    }
+  ],
+  "connections": {
+    "Webhook: Tiếp Nhận Hồ Sơ": {
+      "main": [
+        [
+          {
+            "node": "Soạn Thư Cảm Ơn & Phân Loại Talent Pool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soạn Thư Cảm Ơn & Phân Loại Talent Pool": {
+      "main": [
+        [
+          {
+            "node": "Gửi Email Cảm Ơn & Từ Chối Lịch Sự",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Lưu Trữ Vào Talent Pool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lưu Trữ Vào Talent Pool": {
+      "main": [
+        [
+          {
+            "node": "Phản Hồi Webhook Kết Quả",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
