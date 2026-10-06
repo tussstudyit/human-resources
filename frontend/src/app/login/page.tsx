@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Sparkles, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { Sparkles, Lock, Mail, ArrowRight, AlertCircle, Briefcase } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -89,6 +89,23 @@ export default function LoginPage() {
           Chưa có tài khoản nhân viên?{' '}
           <Link href="/register" className="text-indigo-600 font-bold hover:underline">
             Đăng ký tại đây
+          </Link>
+        </div>
+
+        {/* Banner dẫn tới trang tuyển dụng công khai */}
+        <div className="mt-4 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between text-xs text-slate-700">
+          <div className="flex items-center space-x-2.5">
+            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+              <Briefcase className="h-4 w-4" />
+            </div>
+            <span className="font-medium text-slate-600">Bạn là ứng viên?</span>
+          </div>
+          <Link
+            href="/careers"
+            className="text-indigo-600 font-bold hover:text-indigo-700 inline-flex items-center gap-1 hover:underline"
+          >
+            <span>Xem việc làm</span>
+            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { LogOut, User, Shield, Building2 } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
