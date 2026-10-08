@@ -25,18 +25,72 @@ model Department {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
-  password     String
-  fullName     String
-  role         Role        @default(EMPLOYEE)
-  isActive     Boolean     @default(true)
+  id       String  @id @default(uuid())
+  email    String  @unique
+  password String
+  fullName String
+  role     Role    @default(EMPLOYEE)
+  isActive Boolean @default(true)
 
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
 
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  onboardingTasks  OnboardingTask[]
+  kpiMetrics       KpiMetric[]
+  feedbackGiven    Feedback[]       @relation("FeedbackGiven")
+  feedbackReceived Feedback[]       @relation("FeedbackReceived")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model OnboardingTask {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  isCompleted Boolean   @default(false)
+  dueDate     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("onboarding_tasks")
+}
+
+model KpiMetric {
+  id          String @id @default(uuid())
+  userId      String
+  metricName  String
+  targetValue Float
+  actualValue Float
+  period      String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("kpi_metrics")
+}
+
+model Feedback {
+  id         String  @id @default(uuid())
+  reviewerId String
+  revieweeId String
+  score      Int
+  comment    String?
+  period     String
+
+  reviewer User @relation("FeedbackGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee User @relation("FeedbackReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("feedbacks")
 }
