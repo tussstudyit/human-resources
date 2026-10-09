@@ -89,7 +89,7 @@
       "typeVersion": 1,
       "position": [
         1040,
-        240
+        140
       ],
       "id": "wf3-switch-channel",
       "name": "Switch: Kênh Gửi Khảo Sát (Email vs Slack)"
@@ -105,7 +105,7 @@
       "typeVersion": 2.1,
       "position": [
         1280,
-        140
+        80
       ],
       "id": "wf3-gmail-survey",
       "name": "Gmail: Gửi Thư Mời Khảo Sát Tuần",
@@ -125,7 +125,7 @@
       "typeVersion": 2.2,
       "position": [
         1280,
-        340
+        200
       ],
       "id": "wf3-slack-survey",
       "name": "Slack: Gửi Khảo Sát Vào Kênh Team",
@@ -138,8 +138,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1540,
-        240
+        1040,
+        360
       ],
       "id": "wf3-calc-enps",
       "name": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết"
@@ -164,8 +164,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        1780,
-        240
+        1280,
+        360
       ],
       "id": "wf3-gemini-executive",
       "name": "Google Gemini: Phân Tích Xu Hướng & Báo Cáo Lãnh Đạo"
@@ -182,8 +182,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2040,
-        240
+        1540,
+        360
       ],
       "id": "wf3-gsheet-enps-report",
       "name": "Sheets: Lưu Báo Cáo eNPS Executive"
@@ -201,8 +201,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
-        2280,
-        240
+        1780,
+        360
       ],
       "id": "wf3-slack-report",
       "name": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
@@ -251,6 +251,11 @@
             "node": "Switch: Kênh Gửi Khảo Sát (Email vs Slack)",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -267,28 +272,6 @@
         [
           {
             "node": "Slack: Gửi Khảo Sát Vào Kênh Team",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gmail: Gửi Thư Mời Khảo Sát Tuần": {
-      "main": [
-        [
-          {
-            "node": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Slack: Gửi Khảo Sát Vào Kênh Team": {
-      "main": [
-        [
-          {
-            "node": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết",
             "type": "main",
             "index": 0
           }
