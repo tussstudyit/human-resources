@@ -137,7 +137,7 @@ export default function RecruitmentKanbanBoard({
             <div className="flex-1 p-2.5 space-y-2.5 overflow-y-auto max-h-[calc(100vh-270px)] bg-[#fafafa]/50">
               {col.items.length === 0 ? (
                 <div className="h-32 flex flex-col items-center justify-center text-[#8f8f8f] text-[11px] font-mono border border-dashed border-[#ebebeb] rounded-[8px] p-4 text-center space-y-1">
-                  <span className="text-[#a1a1a1]">// CHƯA CÓ ỨNG VIÊN</span>
+                  <span className="text-[#a1a1a1]">Chưa có ứng viên</span>
                   <span className="text-[10px] text-[#8f8f8f] font-sans">
                     Kéo thả hoặc chuyển giai đoạn để thêm vào đây
                   </span>

@@ -101,7 +101,7 @@ export default function JobManageModal({
         <div className="px-6 py-4 border-b border-[#ebebeb] flex items-center justify-between bg-white">
           <div>
             <div className="font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider">
-              // JOB_POSITION_MANAGEMENT
+              QUẢN LÝ VỊ TRÍ TUYỂN DỤNG
             </div>
             <h2 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
               {isEditing ? 'Chỉnh Sửa Vị Trí Tuyển Dụng' : 'Tạo Vị Trí Tuyển Dụng Mới'}
@@ -172,7 +172,7 @@ export default function JobManageModal({
               className="w-full px-3 py-2 rounded-[6px] bg-white border border-[#ebebeb] text-[#171717] placeholder-[#8f8f8f] text-xs focus:outline-none focus:border-[#171717] transition-colors leading-relaxed resize-y shadow-[0px_1px_1px_rgba(0,0,0,0.04)]"
             />
             <p className="font-mono text-[10px] text-[#8f8f8f] mt-1">
-              // AI Agent sẽ dựa vào tiêu chí này để đối sánh và xếp hạng Match Score.
+              AI Agent sẽ dựa vào tiêu chí này để đối sánh và xếp hạng Match Score.
             </p>
           </div>
 

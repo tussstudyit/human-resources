@@ -81,7 +81,7 @@ export default function Sidebar() {
         {/* Overview section */}
         <div>
           <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider px-2.5 mb-1.5">
-            // Overview
+            Tổng quan
           </div>
           <Link
             href="/dashboard"
@@ -99,7 +99,7 @@ export default function Sidebar() {
         {/* AI AGENT LIST */}
         <div>
           <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider px-2.5 mb-1.5 flex items-center justify-between">
-            <span>// AI Agent</span>
+            <span>AI Agents</span>
             <span className="flex items-center gap-1 text-[9px] text-emerald-600 font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               ONLINE
@@ -169,7 +169,7 @@ export default function Sidebar() {
         {/* Administration Section */}
         <div>
           <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider px-2.5 mb-1.5">
-            // Management
+            Quản trị hệ thống
           </div>
           <div className="space-y-0.5">
             <Link

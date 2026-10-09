@@ -88,7 +88,7 @@ export default function LoginPage() {
 
           <div className="pt-2">
             <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider mb-1">
-              // AUTHENTICATION_GATEWAY
+              XÁC THỰC TÀI KHOẢN
             </div>
             <h1 className="text-xl font-semibold text-[#171717] tracking-tight">
               Đăng nhập hệ thống
@@ -195,7 +195,7 @@ export default function LoginPage() {
             </div>
             <div>
               <p className="font-semibold text-[#171717]">Bạn là ứng viên?</p>
-              <p className="text-[10px] text-[#8f8f8f] font-mono">// CỔNG_VIỆC_LÀM</p>
+              <p className="text-[10px] text-[#8f8f8f] font-mono">CỔNG TUYỂN DỤNG</p>
             </div>
           </div>
           <Link

@@ -211,7 +211,7 @@ export default function RecruitmentAdminClient() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider mb-1">
-              <span>// RECRUITMENT_ATS_PIPELINE</span>
+              <span>QUY TRÌNH TUYỂN DỤNG ATS</span>
               <span>•</span>
               <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-0.5 animate-pulse" />
@@ -382,7 +382,7 @@ export default function RecruitmentAdminClient() {
         {jobs.length > 0 && !loadingCandidates && (
           <div className="bg-white rounded-[10px] p-3.5 border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider">// PIPELINE_KPI:</span>
+              <span className="font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider">CHỈ SỐ PIPELINE:</span>
               <span className="font-semibold text-[#171717]">
                 {currentJob?.title || 'Tất cả vị trí'}
               </span>

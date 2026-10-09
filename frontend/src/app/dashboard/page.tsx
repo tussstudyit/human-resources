@@ -209,7 +209,7 @@ export default function DashboardPage() {
             <div className="space-y-1">
               <div className="inline-flex items-center space-x-2 font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider">
                 <Sparkles className="h-3 w-3 text-[#0070f3]" aria-hidden="true" />
-                <span>// ENTERPRISE_CONSOLE_OVERVIEW</span>
+                <span>TRUNG TÂM ĐIỀU HÀNH DOANH NGHIỆP</span>
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 font-mono">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
                   AI RECRUITMENT ONLINE (100%)
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                   +8.5%
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">// TĂNG TRƯỞNG THÁNG NÀY</p>
+              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">TĂNG TRƯỞNG THÁNG NÀY</p>
             </div>
 
             {/* Card 2: Phòng ban */}
@@ -280,7 +280,7 @@ export default function DashboardPage() {
                   Đang hoạt động
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">// CƠ CẤU TỔ CHỨC</p>
+              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">CƠ CẤU TỔ CHỨC</p>
             </div>
 
             {/* Card 3: AI Agent */}
@@ -300,7 +300,7 @@ export default function DashboardPage() {
                   ONLINE (ACTIVE)
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">// 5 TÁC TỬ TỰ ĐỘNG HÓA</p>
+              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">5 TÁC TỬ TỰ ĐỘNG HÓA</p>
             </div>
 
             {/* Card 4: Phòng ban của bạn */}
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">
-                // {recruitmentStats ? `ĐIỂM TB: ${recruitmentStats.avgMatchScore}%` : 'ĐỒNG BỘ N8N'}
+                {recruitmentStats ? `ĐIỂM TB: ${recruitmentStats.avgMatchScore}%` : 'ĐỒNG BỘ N8N'}
               </p>
             </div>
           </div>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#ebebeb]">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // MULTI_AGENT_SYSTEM
+                  HỆ THỐNG MULTI-AGENT
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   5 Tác Tử AI Doanh Nghiệp (Multi-Agent Squad)
@@ -484,7 +484,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#ebebeb]">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // RECRUITMENT_PIPELINE_CONVERSION
+                  TIẾN ĐỘ PHỄU TUYỂN DỤNG
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   Phễu Tuyển Dụng & Sàng Lọc AI (5 Giai đoạn Đồng Bộ)
@@ -534,7 +534,7 @@ export default function DashboardPage() {
             <div className="mb-3.5 flex items-center justify-between">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // AUTOMATION_SYSTEM
+                  HỆ THỐNG TỰ ĐỘNG HÓA
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   Tác Tử AI Tuyển Dụng Thông Minh (Live Agent)
@@ -594,7 +594,7 @@ export default function DashboardPage() {
               {/* 3 Live Connected Workflows */}
               <div className="pt-5">
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider mb-3">
-                  // QUY_TRINH_TU_DONG_HOA_N8N_DANG_CHAY (3 ACTIVE WORKFLOWS)
+                  QUY TRÌNH TỰ ĐỘNG HÓA N8N ĐANG HOẠT ĐỘNG (3 WORKFLOWS)
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-[#0070f3]/40 transition-colors">
@@ -664,7 +664,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#ebebeb]">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    // N8N_GEMINI_LIVE_EVALUATIONS
+                    ĐÁNH GIÁ TRỰC TIẾP N8N & GEMINI AI
                   </div>
                   <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                     Hồ Sơ Được Thẩm Định Gần Nhất Qua n8n & Gemini AI
@@ -770,7 +770,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    // EMPLOYEES
+                    NHÂN SỰ
                   </div>
                   <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                     Danh Sách Nhân Sự Tổ Chức
@@ -871,7 +871,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-[#4d4d4d]">
-                        {emp.department?.name || <span className="text-[#8f8f8f] font-mono">// UNASSIGNED</span>}
+                        {emp.department?.name || <span className="text-[#8f8f8f] font-mono">Chưa phân bổ</span>}
                       </td>
                       <td className="px-5 py-3 text-center">
                         <span className="font-mono text-[10px] text-[#166534] bg-[#f0fdf4] border border-[#bbf7d0] px-2 py-0.5 rounded-[4px]">
@@ -888,7 +888,7 @@ export default function DashboardPage() {
                             <Search className="h-4 w-4" aria-hidden="true" />
                           </div>
                           <p className="font-mono text-xs text-[#8f8f8f]">
-                            // NO_EMPLOYEES_FOUND
+                            Không tìm thấy nhân sự
                           </p>
                           <p className="text-xs text-[#4d4d4d]">
                             Không tìm thấy nhân viên nào phù hợp với bộ lọc hiện tại.
@@ -918,7 +918,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // DEPARTMENTS
+                  PHÒNG BAN
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   Cơ Cấu Phòng Ban
