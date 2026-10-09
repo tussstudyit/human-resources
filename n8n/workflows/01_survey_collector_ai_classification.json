@@ -32,27 +32,21 @@
     },
     {
       "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Raw_Survey_Responses",
-          "mode": "name"
-        },
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyZ0mR5bNNA2PRIX_jcD2qNjqyDWIT307tDZgNb6T2vFhZl9ipL4WM03CgmxHx2Uxim/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  sheet: 'Raw_Survey_Responses',\n  row: [\n    $json.responseId,\n    $json.employeeId,\n    $json.employeeName,\n    $json.employeeEmail,\n    $json.department,\n    $json.surveyTitle,\n    $json.rating,\n    $json.textAnswer,\n    $json.submittedAt\n  ]\n}) }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         580,
         320
       ],
       "id": "wf1-gsheet-raw",
-      "name": "Google Sheets: Lưu Dữ Liệu Gốc"
+      "name": "Sheets: Lưu Dữ Liệu Gốc"
     },
     {
       "parameters": {
@@ -95,27 +89,21 @@
     },
     {
       "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Gemini_AI_Analytics",
-          "mode": "name"
-        },
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyZ0mR5bNNA2PRIX_jcD2qNjqyDWIT307tDZgNb6T2vFhZl9ipL4WM03CgmxHx2Uxim/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  sheet: 'Gemini_AI_Analytics',\n  row: [\n    $json.responseId,\n    $json.employeeName,\n    $json.department,\n    $json.aiAnalysis.category,\n    $json.aiAnalysis.sentimentScore,\n    $json.aiAnalysis.burnoutRisk,\n    $json.aiAnalysis.riskLevel,\n    $json.aiAnalysis.isUrgent,\n    $json.aiAnalysis.actionRecommendation,\n    $json.aiAnalysis.analyzedAt\n  ]\n}) }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1300,
         320
       ],
       "id": "wf1-gsheet-analytics",
-      "name": "Google Sheets: Cập Nhật Báo Cáo AI"
+      "name": "Sheets: Cập Nhật Báo Cáo AI"
     },
     {
       "parameters": {
@@ -133,7 +121,8 @@
         320
       ],
       "id": "wf1-sync-backend",
-      "name": "PostgreSQL: Đồng Bộ DB Backend"
+      "name": "PostgreSQL: Đồng Bộ DB Backend",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -172,7 +161,8 @@
         200
       ],
       "id": "wf1-slack-alert",
-      "name": "Slack: Cảnh Báo Khẩn Tới HR Lead"
+      "name": "Slack: Cảnh Báo Khẩn Tới HR Lead",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -188,7 +178,8 @@
         200
       ],
       "id": "wf1-gmail-support",
-      "name": "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1"
+      "name": "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -235,14 +226,14 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Lưu Dữ Liệu Gốc",
+            "node": "Sheets: Lưu Dữ Liệu Gốc",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets: Lưu Dữ Liệu Gốc": {
+    "Sheets: Lưu Dữ Liệu Gốc": {
       "main": [
         [
           {
@@ -268,14 +259,14 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Cập Nhật Báo Cáo AI",
+            "node": "Sheets: Cập Nhật Báo Cáo AI",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets: Cập Nhật Báo Cáo AI": {
+    "Sheets: Cập Nhật Báo Cáo AI": {
       "main": [
         [
           {
