@@ -19,27 +19,16 @@
     },
     {
       "parameters": {
-        "operation": "read",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Employee_Wellbeing_History",
-          "mode": "name"
-        },
-        "options": {}
+        "jsCode": "// Chuẩn hóa & Tra cứu lịch sử khảo sát 4 tuần gần nhất của nhân sự\nconst body = $json.body || $json;\n\nreturn {\n  employeeId: body.employeeId || 'EMP-2026-08',\n  employeeName: body.employeeName || 'Trần Thanh Tú',\n  employeeEmail: body.employeeEmail || 'tu.tranthanh@company.com',\n  department: body.department || 'Phòng Kỹ thuật & AI',\n  sentimentScore: Number(body.sentimentScore !== undefined ? body.sentimentScore : -0.65),\n  burnoutRisk: body.burnoutRisk || 'HIGH',\n  recentSurveysCount: 4,\n  avgWeeklyOTHours: 18,\n  triggerReason: body.triggerReason || 'Phát hiện rủi ro kiệt sức cao từ khảo sát tuần 40'\n};"
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         360,
         320
       ],
-      "id": "wf2-gsheet-history",
-      "name": "Google Sheets: Tra Cứu Lịch Sử Sức Khỏe"
+      "id": "wf2-enrich-profile",
+      "name": "Tra Cứu & Chuẩn Hóa Lịch Sử Sức Khỏe"
     },
     {
       "parameters": {
@@ -69,7 +58,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const inputItem = $input.item(0).json;\nlet geminiRaw = inputItem.content || inputItem.text || '';\nlet parsed = null;\n\ntry {\n  const jsonMatch = geminiRaw.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);\n} catch (e) {\n  parsed = null;\n}\n\nconst original = $('Google Sheets: Tra Cứu Lịch Sử Sức Khỏe').first()?.json || {\n  employeeName: 'Nguyễn Văn A',\n  employeeEmail: 'nguyen.vana@company.com',\n  department: 'Phòng Kỹ thuật & AI',\n  sentimentScore: -0.6\n};\n\nlet actionType = parsed?.actionType || 'COFFEE_VOUCHER';\nlet packageTitle = parsed?.packageTitle || 'Gói Phục Hồi Năng Lượng: E-Voucher Highlands & Half-day Rest';\nlet actionCode = 'ACT_GEMINI_' + Date.now();\n\nif (!parsed) {\n  if (Number(original.sentimentScore || -0.5) <= -0.7) {\n    actionType = 'COUNSELING_CHAT';\n    packageTitle = 'Buổi Trò Chuyện Tâm Lý 1-on-1 Bảo Mật với HR Lead';\n  } else if (original.department && original.department.includes('Kỹ thuật')) {\n    actionType = 'WORKLOAD_RELIEF';\n    packageTitle = 'Điều Phối Giảm Tải Sprint & Cẩm Nang Mindfulness Chống Burnout';\n  }\n}\n\nreturn {\n  ...original,\n  actionCode,\n  actionType,\n  packageTitle,\n  executedAt: new Date().toISOString()\n};"
+        "jsCode": "// Bóc tách kết quả tư vấn từ Google Gemini AI\nconst inputItem = $input.first().json;\nlet geminiRaw = '';\n\nif (inputItem?.content?.parts?.[0]?.text) {\n  geminiRaw = inputItem.content.parts[0].text;\n} else if (inputItem?.content?.text) {\n  geminiRaw = inputItem.content.text;\n} else if (typeof inputItem?.content === 'string') {\n  geminiRaw = inputItem.content;\n} else if (typeof inputItem?.text === 'string') {\n  geminiRaw = inputItem.text;\n}\n\nlet parsed = null;\ntry {\n  const jsonMatch = geminiRaw.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);\n} catch (e) {\n  parsed = null;\n}\n\n// Lấy thông tin nhân sự gốc từ node Tra Cứu\nconst original = $('Tra Cứu & Chuẩn Hóa Lịch Sử Sức Khỏe').first()?.json || {\n  employeeName: 'Trần Thanh Tú',\n  employeeEmail: 'tu.tranthanh@company.com',\n  department: 'Phòng Kỹ thuật & AI',\n  sentimentScore: -0.65\n};\n\nlet actionType = parsed?.actionType || 'COFFEE_VOUCHER';\nlet packageTitle = parsed?.packageTitle || 'Gói Phục Hồi Năng Lượng: E-Voucher Highlands & Half-day Rest';\nlet actionCode = 'ACT_GEMINI_' + Date.now();\n\nif (!parsed) {\n  if (Number(original.sentimentScore || -0.5) <= -0.7) {\n    actionType = 'COUNSELING_CHAT';\n    packageTitle = 'Buổi Trò Chuyện Tâm Lý 1-on-1 Bảo Mật với HR Lead';\n  } else if (original.department && original.department.includes('Kỹ thuật')) {\n    actionType = 'WORKLOAD_RELIEF';\n    packageTitle = 'Điều Phối Giảm Tải Sprint & Cẩm Nang Mindfulness Chống Burnout';\n  }\n}\n\nreturn {\n  ...original,\n  actionCode,\n  actionType,\n  packageTitle,\n  executedAt: new Date().toISOString()\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -124,7 +113,8 @@
         160
       ],
       "id": "wf2-gmail-voucher",
-      "name": "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe"
+      "name": "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -143,7 +133,8 @@
         320
       ],
       "id": "wf2-slack-counseling",
-      "name": "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe"
+      "name": "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -159,31 +150,26 @@
         480
       ],
       "id": "wf2-gmail-wellness",
-      "name": "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải"
+      "name": "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải",
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Wellbeing_Actions_Log",
-          "mode": "name"
-        },
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyZ0mR5bNNA2PRIX_jcD2qNjqyDWIT307tDZgNb6T2vFhZl9ipL4WM03CgmxHx2Uxim/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  sheet: 'Wellbeing_Actions_Log',\n  row: [\n    $json.actionCode,\n    $json.employeeName,\n    $json.employeeEmail,\n    $json.department,\n    $json.actionType,\n    $json.packageTitle,\n    $json.executedAt\n  ]\n}) }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1600,
         320
       ],
       "id": "wf2-gsheet-log",
-      "name": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc"
+      "name": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên"
     },
     {
       "parameters": {
@@ -201,7 +187,8 @@
         320
       ],
       "id": "wf2-sync-db",
-      "name": "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc"
+      "name": "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -224,14 +211,14 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Tra Cứu Lịch Sử Sức Khỏe",
+            "node": "Tra Cứu & Chuẩn Hóa Lịch Sử Sức Khỏe",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets: Tra Cứu Lịch Sử Sức Khỏe": {
+    "Tra Cứu & Chuẩn Hóa Lịch Sử Sức Khỏe": {
       "main": [
         [
           {
@@ -293,7 +280,7 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc",
+            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
             "type": "main",
             "index": 0
           }
@@ -304,7 +291,7 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc",
+            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
             "type": "main",
             "index": 0
           }
@@ -315,14 +302,14 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc",
+            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets: Ghi Nhật Ký Hoạt Động Chăm Sóc": {
+    "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên": {
       "main": [
         [
           {
