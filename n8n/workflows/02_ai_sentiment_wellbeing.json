@@ -93,8 +93,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        1080,
-        320
+        1100,
+        240
       ],
       "id": "wf2-switch-action",
       "name": "Switch: Phân Loại Gói Chăm Sóc"
@@ -165,8 +165,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1600,
-        320
+        1100,
+        480
       ],
       "id": "wf2-gsheet-log",
       "name": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên"
@@ -183,8 +183,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1840,
-        320
+        1340,
+        480
       ],
       "id": "wf2-sync-db",
       "name": "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc",
@@ -199,8 +199,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2080,
-        320
+        1600,
+        480
       ],
       "id": "wf2-respond",
       "name": "Phản Hồi Hoàn Tất Can Thiệp (200 OK)"
@@ -244,6 +244,11 @@
       "main": [
         [
           {
+            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Switch: Phân Loại Gói Chăm Sóc",
             "type": "main",
             "index": 0
@@ -270,39 +275,6 @@
         [
           {
             "node": "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe": {
-      "main": [
-        [
-          {
-            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe": {
-      "main": [
-        [
-          {
-            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải": {
-      "main": [
-        [
-          {
-            "node": "Sheets: Ghi Nhật Ký Chăm Sóc Nhân Viên",
             "type": "main",
             "index": 0
           }
