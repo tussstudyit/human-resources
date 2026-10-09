@@ -9,6 +9,9 @@ import {
   LayoutDashboard,
   Building2,
   ChevronRight,
+  Compass,
+  TrendingUp,
+  Heart,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -19,10 +22,31 @@ export default function Sidebar() {
   const agents = [
     {
       name: 'AI Recruitment Agent',
-      desc: 'CV parse, AI score, Meet schedule',
+      desc: 'CV parse, AI score, Phỏng vấn',
       icon: Briefcase,
       href: '/recruitment',
       badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Onboarding Agent',
+      desc: 'Checklist nhận việc & cấp tài khoản',
+      icon: Compass,
+      href: '/onboarding',
+      badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Performance Agent',
+      desc: 'Theo dõi KPI & đánh giá 360°',
+      icon: TrendingUp,
+      href: '/performance',
+      badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Employee Engagement',
+      desc: 'Khảo sát eNPS & Wellbeing (n8n)',
+      icon: Heart,
+      href: '#',
+      badge: 'LIVE N8N',
     },
   ];
 
