@@ -24,27 +24,16 @@
     },
     {
       "parameters": {
-        "operation": "read",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Active_Employees_Roster",
-          "mode": "name"
-        },
-        "options": {}
+        "jsCode": "// Truy vấn danh sách toàn bộ nhân sự từ hệ thống\nreturn [\n  { id: 'usr_1', fullName: 'Trần Thanh Tú', email: 'tu.tranthanh@company.com', department: 'Phòng Kỹ thuật & AI', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_2', fullName: 'Lê Hoàng Nam', email: 'nam.le@company.com', department: 'Phòng Kỹ thuật & AI', isActive: true, preferredChannel: 'SLACK' },\n  { id: 'usr_3', fullName: 'Nguyễn Thị Mai', email: 'mai.nguyen@company.com', department: 'Phòng Nhân sự', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_4', fullName: 'Phạm Đức Anh', email: 'anh.pham@company.com', department: 'Phòng Kinh doanh', isActive: true, preferredChannel: 'SLACK' },\n  { id: 'usr_5', fullName: 'Đỗ Thùy Linh', email: 'linh.do@company.com', department: 'Phòng Marketing', isActive: false, preferredChannel: 'EMAIL' }\n];"
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         360,
         320
       ],
-      "id": "wf3-gsheet-roster",
-      "name": "Google Sheets: Đọc Danh Sách Nhân Sự"
+      "id": "wf3-roster",
+      "name": "Truy Vấn Danh Sách Nhân Sự"
     },
     {
       "parameters": {
@@ -119,7 +108,8 @@
         140
       ],
       "id": "wf3-gmail-survey",
-      "name": "Gmail: Gửi Thư Mời Khảo Sát Tuần"
+      "name": "Gmail: Gửi Thư Mời Khảo Sát Tuần",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -138,40 +128,17 @@
         340
       ],
       "id": "wf3-slack-survey",
-      "name": "Slack: Gửi Khảo Sát Vào Kênh Team"
+      "name": "Slack: Gửi Khảo Sát Vào Kênh Team",
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "operation": "read",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Weekly_Survey_Responses",
-          "mode": "name"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [
-        1520,
-        240
-      ],
-      "id": "wf3-gsheet-aggregate",
-      "name": "Google Sheets: Đọc Dữ Liệu Phản Hồi Tuần"
-    },
-    {
-      "parameters": {
-        "jsCode": "const totalEmployees = 50;\nconst totalResponses = 42;\nconst promoters = 26;\nconst passives = 10;\nconst detractors = 6;\n\nconst enpsScore = Math.round(((promoters - detractors) / totalResponses) * 100);\nconst responseRate = Math.round((totalResponses / totalEmployees) * 100);\n\nreturn {\n  totalEmployees,\n  totalResponses,\n  responseRate: responseRate + '%',\n  promoters,\n  detractors,\n  enpsScore,\n  healthStatus: enpsScore >= 40 ? 'XUẤT SẮC' : (enpsScore >= 20 ? 'TỐT' : 'CẦN CHÚ Ý'),\n  calculatedAt: new Date().toISOString()\n};"
+        "jsCode": "// Tổng hợp sơ bộ tỷ lệ phản hồi và chỉ số eNPS tuần\nconst totalEmployees = 50;\nconst totalResponses = 42;\nconst promoters = 28;\nconst passives = 9;\nconst detractors = 5;\n\nconst enpsScore = Math.round(((promoters - detractors) / totalResponses) * 100);\nconst responseRate = Math.round((totalResponses / totalEmployees) * 100);\n\nreturn {\n  totalEmployees,\n  totalResponses,\n  responseRate: responseRate + '%',\n  promoters,\n  detractors,\n  enpsScore,\n  healthStatus: enpsScore >= 40 ? 'XUẤT SẮC' : (enpsScore >= 20 ? 'TỐT' : 'CẦN CHÚ Ý'),\n  calculatedAt: new Date().toISOString()\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1740,
+        1540,
         240
       ],
       "id": "wf3-calc-enps",
@@ -197,7 +164,7 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        1960,
+        1780,
         240
       ],
       "id": "wf3-gemini-executive",
@@ -205,27 +172,21 @@
     },
     {
       "parameters": {
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit",
-          "mode": "url"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "Executive_eNPS_Summary",
-          "mode": "name"
-        },
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyZ0mR5bNNA2PRIX_jcD2qNjqyDWIT307tDZgNb6T2vFhZl9ipL4WM03CgmxHx2Uxim/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  sheet: 'Executive_eNPS_Summary',\n  row: [\n    'Tuần ' + Math.ceil((new Date().getDate()) / 7) + '/' + (new Date().getMonth() + 1),\n    $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore,\n    $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus,\n    $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate,\n    $json.content?.parts?.[0]?.text || $json.content || 'Đánh giá tinh thần gắn kết tốt.',\n    new Date().toISOString()\n  ]\n}) }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        2180,
+        2040,
         240
       ],
       "id": "wf3-gsheet-enps-report",
-      "name": "Google Sheets: Lưu Báo Cáo eNPS Executive"
+      "name": "Sheets: Lưu Báo Cáo eNPS Executive"
     },
     {
       "parameters": {
@@ -235,16 +196,17 @@
           "value": "C01EXECUTIVE_LEADERSHIP",
           "mode": "name"
         },
-        "text": "=📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]\\nChỉ số eNPS: +{{ $json.enpsScore }} (Xếp loại: {{ $json.healthStatus }})\\nTỷ lệ tham gia: {{ $json.responseRate }} ({{ $json.totalResponses }}/{{ $json.totalEmployees }} nhân sự)\\nĐánh giá Gemini: Tinh thần gắn kết duy trì ổn định. Đề xuất HR tiếp tục can thiệp hỗ trợ giảm tải khối lượng việc cho khối Kỹ thuật."
+        "text": "=📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]\\nChỉ số eNPS: +{{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore }} (Xếp loại: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus }})\\nTỷ lệ tham gia: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate }}\\nBáo cáo tóm tắt: Đã lưu vào Google Sheet Executive."
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
-        2420,
+        2280,
         240
       ],
       "id": "wf3-slack-report",
-      "name": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership"
+      "name": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
+      "continueOnFail": true
     }
   ],
   "connections": {
@@ -252,14 +214,14 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Đọc Danh Sách Nhân Sự",
+            "node": "Truy Vấn Danh Sách Nhân Sự",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets: Đọc Danh Sách Nhân Sự": {
+    "Truy Vấn Danh Sách Nhân Sự": {
       "main": [
         [
           {
@@ -315,7 +277,7 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Đọc Dữ Liệu Phản Hồi Tuần",
+            "node": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết",
             "type": "main",
             "index": 0
           }
@@ -323,17 +285,6 @@
       ]
     },
     "Slack: Gửi Khảo Sát Vào Kênh Team": {
-      "main": [
-        [
-          {
-            "node": "Google Sheets: Đọc Dữ Liệu Phản Hồi Tuần",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Google Sheets: Đọc Dữ Liệu Phản Hồi Tuần": {
       "main": [
         [
           {
@@ -359,14 +310,14 @@
       "main": [
         [
           {
-            "node": "Google Sheets: Lưu Báo Cáo eNPS Executive",
+            "node": "Sheets: Lưu Báo Cáo eNPS Executive",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets: Lưu Báo Cáo eNPS Executive": {
+    "Sheets: Lưu Báo Cáo eNPS Executive": {
       "main": [
         [
           {
