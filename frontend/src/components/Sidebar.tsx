@@ -6,14 +6,9 @@ import { usePathname } from 'next/navigation';
 import {
   Users,
   Briefcase,
-  Compass,
-  LineChart,
-  GraduationCap,
-  HeartHandshake,
   LayoutDashboard,
   Building2,
-  Settings,
-  Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -24,138 +19,167 @@ export default function Sidebar() {
   const agents = [
     {
       name: 'AI Recruitment Agent',
-      desc: 'Job posting, CV analysis, interview scheduling',
+      desc: 'CV parse, AI score, Meet schedule',
       icon: Briefcase,
-      color: 'text-amber-500',
-      bgColor: 'bg-amber-50',
-    },
-    {
-      name: 'AI Onboarding Agent',
-      desc: 'New-hire checklists, tool access, training',
-      icon: Compass,
-      color: 'text-cyan-500',
-      bgColor: 'bg-cyan-50',
-    },
-    {
-      name: 'AI Performance Tracking',
-      desc: 'Feedback collection, KPI dashboards',
-      icon: LineChart,
-      color: 'text-emerald-500',
-      bgColor: 'bg-emerald-50',
-    },
-    {
-      name: 'AI Training & Skills Agent',
-      desc: 'Certification reminders, ROI analysis',
-      icon: GraduationCap,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      name: 'AI Employee Engagement',
-      desc: 'Surveys, wellbeing actions, engagement',
-      icon: HeartHandshake,
-      color: 'text-rose-500',
-      bgColor: 'bg-rose-50',
+      href: '/recruitment',
+      badge: 'ACTIVE',
     },
   ];
 
   return (
-    <aside className="w-72 bg-slate-900 text-slate-300 flex flex-col shrink-0 h-screen sticky top-0 border-r border-slate-800 select-none">
+    <aside className="w-68 bg-white text-[#171717] flex flex-col shrink-0 h-screen sticky top-0 border-r border-[#ebebeb] select-none font-sans">
       {/* Brand Header */}
-      <div className="h-16 px-6 flex items-center border-b border-slate-800 gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
-          <Sparkles className="h-5 w-5" />
-        </div>
-        <div>
-          <span className="font-bold text-white text-base tracking-tight">HR Platform</span>
-          <span className="block text-[11px] text-slate-400 font-medium">Multi-Agent System</span>
-        </div>
+      <div className="h-14 px-5 flex items-center border-b border-[#ebebeb] justify-between">
+        <Link href="/dashboard" className="flex items-center space-x-2.5 group">
+          {/* Iconic Minimalist Vercel Triangle mark */}
+          <div className="h-7 w-7 rounded-[6px] bg-[#171717] flex items-center justify-center text-white shadow-[0px_1px_2px_rgba(0,0,0,0.1)] group-hover:bg-[#333333] transition-colors">
+            <svg
+              className="w-3.5 h-3.5 fill-current"
+              viewBox="0 0 75 65"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M37.5 0L75 65H0z" />
+            </svg>
+          </div>
+          <div>
+            <span className="font-semibold text-sm text-[#171717] tracking-tight block leading-tight">
+              HR Platform
+            </span>
+            <span className="font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider block">
+              Multi-Agent ATS
+            </span>
+          </div>
+        </Link>
       </div>
 
       {/* Navigation List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 space-y-6">
+        {/* Overview section */}
         <div>
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
-            Tổng quan
+          <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider px-2.5 mb-1.5">
+            // Overview
           </div>
           <Link
             href="/dashboard"
-            className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition ${
+            className={`flex items-center space-x-2.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium transition-colors focus-ring cursor-pointer ${
               pathname === '/dashboard'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                : 'hover:bg-slate-800/80 text-slate-300 hover:text-white'
+                ? 'bg-[#f2f2f2] text-[#171717] font-semibold'
+                : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
             }`}
           >
-            <LayoutDashboard className="h-4 w-4" />
+            <LayoutDashboard className="h-4 w-4 shrink-0 text-[#8f8f8f]" aria-hidden="true" />
             <span>Bảng điều khiển</span>
           </Link>
         </div>
 
-        {/* 5 AI AGENTS LIST */}
+        {/* AI AGENT LIST */}
         <div>
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 flex items-center justify-between">
-            <span>5 AI Agents</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+          <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider px-2.5 mb-1.5 flex items-center justify-between">
+            <span>// AI Agent</span>
+            <span className="flex items-center gap-1 text-[9px] text-emerald-600 font-mono">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              ONLINE
+            </span>
           </div>
-          <div className="space-y-1">
+
+          <div className="space-y-0.5">
             {agents.map((agent) => {
               const Icon = agent.icon;
+              const isActive = pathname === agent.href;
+
+              const content = (
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center space-x-2.5 min-w-0">
+                    <Icon
+                      className={`h-4 w-4 shrink-0 ${
+                        isActive ? 'text-[#171717]' : 'text-[#8f8f8f]'
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0">
+                      <div
+                        className={`text-xs truncate ${
+                          isActive
+                            ? 'font-semibold text-[#171717]'
+                            : 'font-medium text-[#4d4d4d] group-hover:text-[#171717]'
+                        }`}
+                      >
+                        {agent.name}
+                      </div>
+                      <p className="text-[10px] text-[#8f8f8f] truncate leading-tight">
+                        {agent.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+
+              if (agent.href) {
+                return (
+                  <Link
+                    key={agent.name}
+                    href={agent.href}
+                    className={`block px-2.5 py-2 rounded-[6px] transition-colors cursor-pointer group focus-ring ${
+                      isActive
+                        ? 'bg-[#f2f2f2] text-[#171717] border border-[#ebebeb]'
+                        : 'hover:bg-[#fafafa] text-[#4d4d4d] hover:text-[#171717]'
+                    }`}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
               return (
                 <div
                   key={agent.name}
-                  className="p-2.5 rounded-xl hover:bg-slate-800/80 transition cursor-pointer group"
+                  className="px-2.5 py-2 rounded-[6px] text-[#8f8f8f] opacity-75 hover:opacity-100 transition-opacity cursor-default group"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${agent.bgColor} ${agent.color}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-bold text-slate-200 group-hover:text-white truncate">
-                        {agent.name}
-                      </div>
-                      <p className="text-[11px] text-slate-400 truncate mt-0.5">{agent.desc}</p>
-                    </div>
-                  </div>
+                  {content}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Management */}
+        {/* Administration Section */}
         <div>
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
-            Quản trị nhân sự
+          <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider px-2.5 mb-1.5">
+            // Management
           </div>
-          <div className="space-y-1">
-            <a
-              href="#employees"
-              className="flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800/80 hover:text-white transition"
+          <div className="space-y-0.5">
+            <Link
+              href="/dashboard#employees"
+              className="flex items-center space-x-2.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa] transition-colors focus-ring cursor-pointer"
             >
-              <Users className="h-4 w-4 text-indigo-400" />
+              <Users className="h-4 w-4 text-[#8f8f8f]" aria-hidden="true" />
               <span>Danh sách nhân sự</span>
-            </a>
-            <a
-              href="#departments"
-              className="flex items-center space-x-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800/80 hover:text-white transition"
+            </Link>
+            <Link
+              href="/dashboard#departments"
+              className="flex items-center space-x-2.5 px-2.5 py-1.5 rounded-[6px] text-xs font-medium text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa] transition-colors focus-ring cursor-pointer"
             >
-              <Building2 className="h-4 w-4 text-indigo-400" />
+              <Building2 className="h-4 w-4 text-[#8f8f8f]" aria-hidden="true" />
               <span>Cơ cấu phòng ban</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* User Footer */}
       {user && (
-        <div className="p-4 border-t border-slate-800 bg-slate-950/50">
-          <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs uppercase">
+        <div className="p-3 border-t border-[#ebebeb] bg-[#fafafa]">
+          <div className="flex items-center space-x-2.5">
+            <div className="h-7 w-7 rounded-[6px] bg-[#171717] text-white flex items-center justify-center font-mono font-medium text-xs uppercase shadow-[0px_1px_1px_rgba(0,0,0,0.04)]">
               {user.fullName ? user.fullName[0] : 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-white truncate">{user.fullName}</p>
-              <p className="text-[11px] text-slate-400 truncate">{user.role}</p>
+              <p className="text-xs font-semibold text-[#171717] truncate leading-tight">
+                {user.fullName}
+              </p>
+              <p className="font-mono text-[10px] text-[#8f8f8f] truncate">
+                {user.role} • {user.email}
+              </p>
             </div>
           </div>
         </div>

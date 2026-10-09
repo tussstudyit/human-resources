@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import axios from 'axios';
 import { api } from '@/lib/api';
 
 export type Role = 'HR' | 'EMPLOYEE' | 'MANAGER';
@@ -24,6 +25,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (data: {
@@ -42,7 +44,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
+  isInitialized: false,
   error: null,
 
   clearError: () => set({ error: null }),
@@ -51,16 +54,24 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (typeof window === 'undefined') return;
     const token = localStorage.getItem('token');
     if (!token) {
-      set({ isLoading: false, isAuthenticated: false, user: null, token: null });
+      set({
+        isLoading: false,
+        isInitialized: true,
+        isAuthenticated: false,
+        user: null,
+        token: null,
+      });
       return;
     }
 
     try {
+      set({ isLoading: true });
       const res = await api.get('/auth/me');
       set({
         user: res.data,
         token,
         isAuthenticated: true,
+        isInitialized: true,
         isLoading: false,
         error: null,
       });
@@ -70,6 +81,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         token: null,
         isAuthenticated: false,
+        isInitialized: true,
         isLoading: false,
       });
     }
@@ -85,11 +97,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         user,
         token: accessToken,
         isAuthenticated: true,
+        isInitialized: true,
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Đăng nhập không thành công';
+    } catch (err: unknown) {
+      let message = 'Đăng nhập không thành công';
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.message || err.message || message;
+      }
       set({
         isLoading: false,
         error: Array.isArray(message) ? message.join(', ') : message,
@@ -108,11 +124,15 @@ export const useAuthStore = create<AuthState>((set) => ({
         user,
         token: accessToken,
         isAuthenticated: true,
+        isInitialized: true,
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Đăng ký không thành công';
+    } catch (err: unknown) {
+      let message = 'Đăng ký không thành công';
+      if (axios.isAxiosError(err)) {
+        message = err.response?.data?.message || err.message || message;
+      }
       set({
         isLoading: false,
         error: Array.isArray(message) ? message.join(', ') : message,
@@ -129,6 +149,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       user: null,
       token: null,
       isAuthenticated: false,
+      isInitialized: true,
       error: null,
     });
   },

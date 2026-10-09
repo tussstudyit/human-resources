@@ -1,22 +1,114 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Primitive Tokens */
+  --color-brand: #0369A1;
+  --color-brand-hover: #0284C7;
+  --color-brand-active: #075985;
+  --color-surface: #FFFFFF;
+  --color-bg-base: #F8FAFC;
+  --color-border-base: #E2E8F0;
+  
+  /* Semantic Tokens */
+  --color-primary: #0369A1;
+  --color-primary-hover: #0284C7;
+  --color-secondary: #0EA5E9;
+  --color-accent: #16A34A;
+  --color-accent-hover: #15803D;
+  --color-warning: #D97706;
+  --color-destructive: #DC2626;
+  --color-muted: #F1F5F9;
+  --color-muted-foreground: #64748B;
+  
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  /* Three-Layer Token Architecture (MASTER.md) */
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --surface: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --border: #E2E8F0;
+  --border-hairline: #EBEBEB;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  
+  --primary: #0369A1;
+  --primary-foreground: #FFFFFF;
+  --accent: #16A34A;
+  --accent-foreground: #FFFFFF;
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --ring: #0369A1;
+  
+  /* Spacing Scale (Density 8/10 - Dense Dashboard) */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Đảm bảo toàn bộ input, textarea, select luôn có màu chữ rõ nét */
+/* Accessible inputs across light & dark high-contrast modes */
 input, select, textarea {
-  color: #0f172a !important;
+  color: #0F172A !important;
 }
 
 input::placeholder, textarea::placeholder {
-  color: #94a3b8 !important;
+  color: #64748B !important;
+}
+
+/* Resilient typography helpers (ui-ux-pro-max guidelines) */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* Accessible focus ring token */
+.focus-ring {
+  outline: none;
+  transition: box-shadow 150ms ease-out;
+}
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #0369A1;
+}
+
+/* Micro-interaction hover lift */
+.hover-lift {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+}
+
+/* Tôn trọng người dùng bật prefers-reduced-motion (WCAG 2.2 AA) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
