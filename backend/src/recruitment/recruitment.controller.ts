@@ -40,9 +40,15 @@ export class RecruitmentController {
     return this.recruitmentService.getPublicJobs();
   }
 
-  // 2. HR ONLY: Admin get jobs (filter by status OPEN | CLOSED)
+  // 1.1 PUBLIC / AUTH: Get recruitment stats for dashboard
+  @Get('stats')
+  async getStats() {
+    return this.recruitmentService.getStats();
+  }
+
+  // 2. ADMIN/HR: Admin get jobs (filter by status OPEN | CLOSED)
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.HR)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
   @Get('admin/jobs')
   async getAdminJobs(@Query('status') status?: JobStatus) {
     return this.recruitmentService.getAdminJobs(status);
@@ -54,44 +60,66 @@ export class RecruitmentController {
     return this.recruitmentService.getPublicJobById(id);
   }
 
-  // 4. HR ONLY: Create a new job post
+  // 4. ADMIN/HR: Create a new job post
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.HR)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
   @Post('jobs')
   async createJob(@Body() dto: CreateJobDto) {
     return this.recruitmentService.createJob(dto);
   }
 
-  // 5. HR ONLY: Update job post
+  // 5. ADMIN/HR: Update job post
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.HR)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
   @Patch('jobs/:id')
   async updateJob(@Param('id') id: string, @Body() dto: UpdateJobDto) {
     return this.recruitmentService.updateJob(id, dto);
   }
 
-  // 6. HR ONLY: Delete job post & associated CV files
+  // 6. ADMIN/HR: Delete job post & associated CV files
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.HR)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
   @Delete('jobs/:id')
   async deleteJob(@Param('id') id: string) {
     return this.recruitmentService.deleteJob(id);
   }
 
-  // 7. HR ONLY: Get candidates for a job post sorted by matchScore
+  // 7. ADMIN/HR: Get candidates for a job post sorted by matchScore
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.HR)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
   @Get('jobs/:id/candidates')
   async getJobCandidates(@Param('id') id: string) {
     return this.recruitmentService.getJobCandidates(id);
   }
 
-  // 8. HR ONLY: Re-evaluate candidate
+  // 8. ADMIN/HR: Re-evaluate candidate
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.HR)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
   @Post('candidates/:id/re-evaluate')
   async reEvaluate(@Param('id') id: string) {
     return this.recruitmentService.reEvaluateCandidate(id);
+  }
+
+  // 8.1 ADMIN/HR: Schedule candidate interview & create Google Meet
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
+  @Post('candidates/:id/schedule-interview')
+  async scheduleInterview(
+    @Param('id') id: string,
+    @Body('interviewType') interviewType?: string,
+  ) {
+    return this.recruitmentService.scheduleInterview(id, interviewType);
+  }
+
+  // 8.2 ADMIN/HR: Archive candidate into talent pool
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR, Role.MANAGER, Role.EMPLOYEE)
+  @Post('candidates/:id/talent-pool')
+  async archiveTalentPool(
+    @Param('id') id: string,
+    @Body('scenario') scenario?: string,
+  ) {
+    return this.recruitmentService.archiveTalentPool(id, scenario);
   }
 
   // 9. PUBLIC: Apply for job with CV upload (memoryStorage, magic bytes check, rate-limited)
