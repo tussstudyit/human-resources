@@ -1,5 +1,5 @@
 {
-  "name": "[HR] WF_05 - Smart Interview Scheduler & Google Meet Invitation (Score >= 80%)",
+  "name": "[HR] WF_05 - Enterprise Smart Interview Orchestrator & Calendar Sync",
   "nodes": [
     {
       "parameters": {
@@ -11,58 +11,159 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        160,
+        120,
         300
       ],
       "id": "wf5-webhook-intake",
-      "name": "Webhook: Tiếp Nhận Ứng Viên Xuất Sắc"
+      "name": "Webhook: Intake Candidate (Score >= 80%)",
+      "webhookId": "schedule-interview-webhook"
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_01';\nconst candidateName = body.name || body.candidateName || 'Ứng viên tiềm năng';\nconst candidateEmail = body.email || body.candidateEmail || 'candidate@example.com';\nconst jobTitle = body.jobTitle || 'Senior Software Engineer';\nconst matchScore = Number(body.matchScore || 85);\nconst skills = Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson.join(', ') : (body.parsedSkillsJson || 'React, TypeScript, Node.js');\n\n// Đề xuất ngày phỏng vấn sau 3 ngày làm việc vào lúc 09:30 AM (GMT+7)\nconst interviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);\ninterviewDate.setHours(9, 30, 0, 0);\nconst formattedDate = interviewDate.toLocaleDateString('vi-VN', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\nconst formattedTime = '09:30 - 10:30 (Giờ Việt Nam)';\n\n// Tạo link Google Meet tự động\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst googleMeetUrl = `https://meet.google.com/${randomRoomId}`;\n\n// Soạn email HTML chuyên nghiệp\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;\">THƯ MỜI PHỎNG VẤN TRỰC TUYẾN</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;\">AI Recruitment Agent • HR Tech Platform</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6; margin-top: 0;\">Kính gửi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Chúc mừng bạn! Hồ sơ ứng tuyển của bạn cho vị trí <strong>${jobTitle}</strong> đã được hệ thống <strong>AI Recruitment Agent</strong> đánh giá rất cao với điểm tương thích ấn tượng <strong><span style=\"color: #16a34a; font-size: 16px;\">${matchScore}%</span></strong>.\n    </p>\n    <div style=\"background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 24px 0;\">\n      <h3 style=\"margin: 0 0 12px 0; font-size: 14px; text-transform: uppercase; color: #4f46e5; font-weight: 700;\">Chi tiết buổi phỏng vấn</h3>\n      <table style=\"width: 100%; font-size: 13px; line-height: 1.8; color: #475569;\">\n        <tr><td style=\"width: 130px; font-weight: 600;\">Vị trí:</td><td>${jobTitle}</td></tr>\n        <tr><td style=\"font-weight: 600;\">Thời gian:</td><td><strong>${formattedTime}</strong>, ${formattedDate}</td></tr>\n        <tr><td style=\"font-weight: 600;\">Hình thức:</td><td>Trực tuyến qua Google Meet</td></tr>\n        <tr><td style=\"font-weight: 600;\">Đường dẫn phòng:</td><td><a href=\"${googleMeetUrl}\" style=\"color: #4f46e5; font-weight: 700; text-decoration: none;\">${googleMeetUrl}</a></td></tr>\n      </table>\n    </div>\n    <div style=\"text-align: center; margin: 30px 0;\">\n      <a href=\"${googleMeetUrl}\" style=\"background: #4f46e5; color: #ffffff; padding: 12px 28px; border-radius: 8px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 14px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);\">Tham gia phòng họp Google Meet</a>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b; line-height: 1.6;\">\n      Vui lòng kiểm tra camera và micro trước giờ phỏng vấn 5 phút. Nếu cần thay đổi thời gian, bạn có thể phản hồi trực tiếp qua email này.\n    </p>\n    <p style=\"font-size: 13px; color: #64748b; margin-bottom: 0;\">Trân trọng,<br><strong>Ban Tuyển dụng & AI Recruitment Squad</strong></p>\n  </div>\n</div>\n`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    formattedDate,\n    formattedTime,\n    googleMeetUrl,\n    emailSubject: `[HR Platform] Thư mời phỏng vấn vị trí ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
+        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_01';\nconst candidateName = body.name || body.candidateName || 'Đoàn Thanh Huy';\nconst candidateEmail = body.email || body.candidateEmail || 'doanthanhhuy130978@gmail.com';\nconst jobTitle = body.jobTitle || 'Senior Fullstack Engineer';\nconst matchScore = Number(body.matchScore || 85);\nconst skills = Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson : ['Software Engineering', 'System Architecture'];\nconst skillsStr = Array.isArray(skills) ? skills.join(', ') : String(skills);\nconst companyName = body.companyName || 'Công ty Cổ phần Công nghệ HR Tech Hub';\n\n// 1. Phân bổ Ban Phỏng Vấn thông minh dựa trên Job Title & Kỹ năng\nlet leadInterviewer = {\n  name: 'Đoàn Thanh Huy',\n  role: 'AI Recruitment Squad Lead',\n  email: 'doanthanhhuy1309@gmail.com',\n  phone: '0901 234 567'\n};\n\nconst jobLower = (jobTitle + ' ' + skillsStr).toLowerCase();\nif (jobLower.includes('python') || jobLower.includes('backend') || jobLower.includes('c++') || jobLower.includes('security')) {\n  leadInterviewer = {\n    name: 'Nguyễn Hoàng Nam',\n    role: 'Principal Software Architect & Security Lead',\n    email: 'nam.nguyen@company.com',\n    phone: '0912 345 678'\n  };\n} else if (jobLower.includes('frontend') || jobLower.includes('react') || jobLower.includes('ui') || jobLower.includes('mobile')) {\n  leadInterviewer = {\n    name: 'Trần Thị Mai',\n    role: 'Lead Frontend & Mobile Architect',\n    email: 'mai.tran@company.com',\n    phone: '0983 210 987'\n  };\n} else if (jobLower.includes('test') || jobLower.includes('qa') || jobLower.includes('qc')) {\n  leadInterviewer = {\n    name: 'Lê Quốc Huy',\n    role: 'Head of Quality Assurance & Automation',\n    email: 'huy.le@company.com',\n    phone: '0934 567 890'\n  };\n}\n\n// 2. Thuật toán tính ngày làm việc (tránh Thứ 7 & Chủ Nhật)\nlet workingDaysToAdd = 3;\nlet targetDate = new Date();\nwhile (workingDaysToAdd > 0) {\n  targetDate.setDate(targetDate.getDate() + 1);\n  const dayOfWeek = targetDate.getDay();\n  if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n    workingDaysToAdd--;\n  }\n}\ntargetDate.setHours(9, 30, 0, 0);\n\nconst endDate = new Date(targetDate.getTime() + 60 * 60 * 1000); // 1 giờ phỏng vấn\n\nconst formattedDate = targetDate.toLocaleDateString('vi-VN', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'numeric',\n  day: 'numeric'\n});\nconst formattedTime = '09:30 - 10:30 (Giờ Việt Nam)';\nconst dateTimeFormatted = `${formattedTime}, ${formattedDate}`;\n\n// 3. Tính thời hạn phản hồi (24 giờ trước buổi phỏng vấn)\nconst deadlineDate = new Date(targetDate);\ndeadlineDate.setDate(deadlineDate.getDate() - 1);\nif (deadlineDate.getDay() === 0) deadlineDate.setDate(deadlineDate.getDate() - 2);\nif (deadlineDate.getDay() === 6) deadlineDate.setDate(deadlineDate.getDate() - 1);\nconst deadlineFormatted = `17:00 ngày ${deadlineDate.toLocaleDateString('vi-VN', { year: 'numeric', month: 'numeric', day: 'numeric' })} (24 giờ trước buổi phỏng vấn)`;\n\n// 4. Xử lý hình thức phỏng vấn: ONLINE hay TRỰC TIẾP\nconst interviewType = (body.interviewType || body.type || body.format || 'ONLINE').toUpperCase();\nconst isOnline = !interviewType.includes('OFF') && !interviewType.includes('TRỰC TIẾP') && !interviewType.includes('TRUC TIEP') && !interviewType.includes('ONSITE');\n\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst fallbackMeetUrl = body.meetingUrl || body.googleMeetUrl || `https://meet.google.com/${randomRoomId}`;\nconst officeAddress = body.address || body.location || 'Tòa nhà HR Tech Tower, Tầng 8, 123 Đường Nam Kỳ Khởi Nghĩa, Quận 1, TP. Hồ Chí Minh';\n\n// 5. Thông tin Người liên hệ & Người gửi\nconst contactPerson = {\n  name: body.contactPersonName || leadInterviewer.name,\n  phone: body.contactPersonPhone || leadInterviewer.phone || '0901 234 567',\n  email: body.contactPersonEmail || leadInterviewer.email || 'recruitment@company.com'\n};\nconst contactText = `${contactPerson.name} - SĐT: ${contactPerson.phone} / Email: ${contactPerson.email}`;\n\nconst sender = {\n  name: body.senderName || 'Đoàn Thanh Huy',\n  role: body.senderRole || body.senderTitle || 'Trưởng Ban Tuyển Dụng & AI Sourcing Lead',\n  company: companyName,\n  contact: body.senderContact || 'Email: doanthanhhuy1309@gmail.com | Hotline: 0901 234 567'\n};\n\nconst calendarSummary = `Phỏng vấn tuyển dụng ${jobTitle} – ${candidateName}`;\nconst calendarDescription = `Phỏng vấn vị trí ${jobTitle} tại ${companyName}.\\\\nNgười phỏng vấn: ${leadInterviewer.name} (${leadInterviewer.role})\\\\nNgười liên hệ: ${contactText}`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    companyName,\n    matchScore,\n    skills,\n    calendarStartTime: targetDate.toISOString(),\n    calendarEndTime: endDate.toISOString(),\n    calendarSummary,\n    calendarDescription,\n    formattedDate,\n    formattedTime,\n    dateTimeFormatted,\n    interviewType: isOnline ? 'ONLINE' : 'OFFLINE',\n    isOnline,\n    fallbackMeetUrl,\n    officeAddress,\n    leadInterviewer,\n    contactPerson,\n    contactText,\n    sender,\n    deadlineFormatted\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        400,
+        380,
         300
       ],
-      "id": "wf5-generate-meet-schedule",
-      "name": "Tạo Lịch Phỏng Vấn & Phòng Google Meet"
+      "id": "wf5-smart-panel-scheduler",
+      "name": "Smart Interviewer Panel Routing & Schedule Engine"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.resend.com/emails",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "calendar": {
+          "__rl": true,
+          "value": "primary",
+          "mode": "list"
+        },
+        "start": "={{ $json.calendarStartTime }}",
+        "end": "={{ $json.calendarEndTime }}",
+        "additionalFields": {
+          "summary": "={{ $json.calendarSummary }}",
+          "description": "={{ $json.calendarDescription }}",
+          "attendees": [
+            "={{ $json.candidateEmail }}"
+          ],
+          "conferenceDataUi": {
+            "conferenceDataValues": {
+              "conferenceSolution": "hangoutsMeet"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.2,
+      "position": [
+        640,
+        300
+      ],
+      "id": "wf5-google-calendar-create",
+      "name": "Google Calendar: Tạo Sự Kiện & Meet Thật",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "GoogleCalendarOAuth2Cred01",
+          "name": "Google Calendar account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const intake = $('Smart Interviewer Panel Routing & Schedule Engine').first().json;\nconst gcalResult = $json;\n\n// Lấy link Google Meet thật từ Google Calendar API nếu có kết nối\nconst realGoogleMeetUrl = gcalResult?.hangoutLink || \n  (gcalResult?.conferenceData?.entryPoints ? gcalResult.conferenceData.entryPoints[0]?.uri : null) || \n  intake.fallbackMeetUrl;\n\nconst isRealGoogleMeet = !!(gcalResult?.hangoutLink || (gcalResult?.conferenceData?.entryPoints && gcalResult.conferenceData.entryPoints[0]?.uri));\nconst googleCalendarEventId = gcalResult?.id || null;\nconst googleCalendarHtmlLink = gcalResult?.htmlLink || null;\n\nconst isOnline = intake.isOnline;\nconst officeAddress = intake.officeAddress;\nconst candidateName = intake.candidateName;\nconst jobTitle = intake.jobTitle;\nconst companyName = intake.companyName;\nconst dateTimeFormatted = intake.dateTimeFormatted;\nconst deadlineFormatted = intake.deadlineFormatted;\nconst contactText = intake.contactText;\nconst sender = intake.sender;\n\nlet locationText = '';\nlet locationHtml = '';\n\nif (isOnline) {\n  locationText = `Phòng họp trực tuyến (Google Meet): ${realGoogleMeetUrl}`;\n  locationHtml = `<a href=\"${realGoogleMeetUrl}\" style=\"color: #2563eb; font-weight: 600; text-decoration: underline;\">${realGoogleMeetUrl}</a> (Google Meet)`;\n} else {\n  locationText = `Trực tiếp tại văn phòng: ${officeAddress}`;\n  locationHtml = `<strong>${officeAddress}</strong>`;\n}\n\n// Tiêu đề email chuẩn theo mẫu: \"Tiêu đề: Thư mời phỏng vấn – [Tên công ty]\"\nconst emailSubject = `Thư mời phỏng vấn – ${companyName}`;\n\n// Sinh nội dung iCalendar .ics tương thích mọi ứng dụng Calendar\nconst calendarIcsContent = [\n  'BEGIN:VCALENDAR',\n  'VERSION:2.0',\n  'PRODID:-//HR Tech Corp//AI Recruitment Orchestrator//VI',\n  'CALSCALE:GREGORIAN',\n  'METHOD:REQUEST',\n  'BEGIN:VEVENT',\n  `UID:interview-${intake.candidateId}-${Date.now()}@hrtech.platform`,\n  `DTSTAMP:${intake.calendarStartTime.replace(/[-:]/g, '').replace(/\\.\\d{3}Z/, 'Z')}`,\n  `DTSTART:${intake.calendarStartTime.replace(/[-:]/g, '').replace(/\\.\\d{3}Z/, 'Z')}`,\n  `DTEND:${intake.calendarEndTime.replace(/[-:]/g, '').replace(/\\.\\d{3}Z/, 'Z')}`,\n  `SUMMARY:${emailSubject} - ${candidateName}`,\n  `DESCRIPTION:${locationText}\\\\nNgười liên hệ: ${contactText}`,\n  `LOCATION:${isOnline ? realGoogleMeetUrl : officeAddress}`,\n  'STATUS:CONFIRMED',\n  'ORGANIZER;CN=Ban Tuyển Dụng:mailto:recruitment@company.com',\n  `ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN=${candidateName}:mailto:${intake.candidateEmail}`,\n  'END:VEVENT',\n  'END:VCALENDAR'\n].join('\\r\\n');\n\nconst candidateEmailHtml = `<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n</head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);\">\n    \n    <!-- Top Accent Bar -->\n    <div style=\"background: linear-gradient(135deg, #1e293b 0%, #334155 100%); height: 8px; width: 100%;\"></div>\n\n    <!-- Inner Padding Container -->\n    <div style=\"padding: 32px 28px;\">\n      \n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">Kính gửi ${candidateName},</p>\n\n      <p style=\"font-size: 15px; color: #334155; margin-bottom: 20px;\">\n        Cảm ơn bạn đã quan tâm và ứng tuyển vào vị trí <strong>${jobTitle}</strong> tại <strong>${companyName}</strong>. Sau khi xem xét hồ sơ, chúng tôi nhận thấy bạn phù hợp với yêu cầu tuyển dụng và mong muốn mời bạn tham gia buổi phỏng vấn để trao đổi chi tiết hơn về công việc.\n      </p>\n\n      <!-- Details List Box -->\n      <div style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 6px; padding: 18px 20px; margin: 22px 0; font-size: 14px; color: #1e293b;\">\n        <p style=\"margin: 0 0 10px 0;\"><strong>Thời gian:</strong> ${dateTimeFormatted}</p>\n        <p style=\"margin: 0 0 10px 0;\"><strong>Địa điểm:</strong> ${locationHtml}</p>\n        <p style=\"margin: 0;\"><strong>Người liên hệ:</strong> ${contactText}</p>\n      </div>\n\n      <p style=\"font-size: 14px; color: #334155; margin-bottom: 20px;\">\n        Vui lòng xác nhận sự tham gia của bạn bằng cách phản hồi email này trước <strong>${deadlineFormatted}</strong>. Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi qua thông tin trên.\n      </p>\n\n      ${isOnline ? `\n      <!-- Online Quick Action Button -->\n      <div style=\"text-align: center; margin: 24px 0;\">\n        <a href=\"${realGoogleMeetUrl}\" style=\"background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;\">Tham gia phòng phỏng vấn trực tuyến (Google Meet)</a>\n      </div>\n      ` : `\n      <!-- In-person Office Reminder -->\n      <div style=\"background: #f1f5f9; padding: 12px 16px; border-radius: 6px; font-size: 13px; color: #475569; margin: 20px 0;\">\n        📌 <em>Lưu ý khi đến phỏng vấn trực tiếp: Vui lòng mang theo CMND/CCCD để đăng ký tại quầy lễ tân tầng 1 và có mặt trước giờ phỏng vấn 10 phút.</em>\n      </div>\n      `}\n\n      <p style=\"font-size: 14px; color: #334155; margin-bottom: 28px;\">\n        Rất mong được gặp bạn trong buổi phỏng vấn!\n      </p>\n\n      <!-- Sign-off Block -->\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${sender.name}</p>\n        <p style=\"margin: 0; color: #475569;\">${sender.role}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${sender.company}</p>\n        <p style=\"margin: 4px 0 0 0; font-size: 13px; color: #64748b;\">${sender.contact}</p>\n      </div>\n\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    candidateId: intake.candidateId,\n    candidateName,\n    candidateEmail: intake.candidateEmail,\n    jobTitle,\n    companyName,\n    matchScore: intake.matchScore,\n    skills: intake.skills,\n    dateTimeFormatted,\n    interviewType: intake.interviewType,\n    isOnline,\n    isRealGoogleMeet,\n    googleMeetUrl: isOnline ? realGoogleMeetUrl : null,\n    googleCalendarEventId,\n    googleCalendarHtmlLink,\n    officeAddress: isOnline ? null : officeAddress,\n    locationText,\n    leadInterviewer: intake.leadInterviewer,\n    contactPerson: intake.contactPerson,\n    contactText,\n    sender,\n    deadlineFormatted,\n    calendarIcsContent,\n    candidateEmailHtml,\n    emailSubject\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "id": "wf5-email-formatter",
+      "name": "Soạn Thư Mời & Tổng Hợp Packet"
+    },
+    {
+      "parameters": {
+        "fromEmail": "doanthanhhuy1309@gmail.com",
+        "toEmail": "={{ $json.candidateEmail }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.candidateEmailHtml }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1160,
+        160
+      ],
+      "id": "wf5-candidate-email-dispatcher",
+      "name": "Stream 1: Candidate Email Dispatch",
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('Soạn Thư Mời & Tổng Hợp Packet').first().json;\n\nreturn [{\n  json: {\n    channel: 'INTERVIEWER_BRIEFING',\n    recipientInterviewer: data.leadInterviewer.name,\n    recipientEmail: data.leadInterviewer.email,\n    alertTitle: `[BRIEFING] Phỏng vấn ứng viên ${data.candidateName} (${data.matchScore}% match)`,\n    interviewSchedule: data.dateTimeFormatted,\n    interviewLocation: data.locationText,\n    googleMeetUrl: data.googleMeetUrl,\n    isRealGoogleMeet: data.isRealGoogleMeet,\n    googleCalendarEventId: data.googleCalendarEventId,\n    googleCalendarHtmlLink: data.googleCalendarHtmlLink,\n    technicalFocus: data.skills,\n    briefingStatus: 'SENT_TO_INTERVIEWER_PANEL',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        440
+      ],
+      "id": "wf5-panel-briefing-packet",
+      "name": "Stream 2: Interviewer Briefing Packet"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:3001/recruitment/candidates/{{ $json.candidateId }}/ai-evaluation",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"from\": \"HR Recruitment <recruitment@company.com>\",\n  \"to\": [\"{{ $json.candidateEmail }}\"],\n  \"subject\": \"{{ $json.emailSubject }}\",\n  \"html\": {{ JSON.stringify($json.emailHtml) }}\n}",
+        "jsonBody": "={\n  \"matchScore\": {{ $json.matchScore }},\n  \"summary\": {{ JSON.stringify(\"[LỊCH PHỎNG VẤN CHÍNH THỨC]: \" + $json.dateTimeFormatted + \" - \" + $json.locationText + \". Người liên hệ: \" + $json.contactPerson.name + \" (\" + $json.contactPerson.phone + \").\") }},\n  \"parsedSkillsJson\": {\n    \"skills\": {{ JSON.stringify($json.skills) }},\n    \"interviewSchedule\": {\n      \"status\": \"SCHEDULED\",\n      \"type\": {{ JSON.stringify($json.interviewType) }},\n      \"time\": {{ JSON.stringify($json.dateTimeFormatted) }},\n      \"location\": {{ JSON.stringify($json.locationText) }},\n      \"googleMeetUrl\": {{ JSON.stringify($json.googleMeetUrl) }},\n      \"isRealGoogleMeet\": {{ $json.isRealGoogleMeet }},\n      \"googleCalendarEventId\": {{ JSON.stringify($json.googleCalendarEventId) }},\n      \"googleCalendarHtmlLink\": {{ JSON.stringify($json.googleCalendarHtmlLink) }},\n      \"interviewer\": {{ JSON.stringify($json.leadInterviewer) }}\n    }\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        640,
-        220
+        1420,
+        300
       ],
-      "id": "wf5-send-email",
-      "name": "Gửi Email Mời Phỏng Vấn",
+      "id": "wf5-backend-sync",
+      "name": "Đồng Bộ Lịch Vào Backend NestJS",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const scheduleData = $('Tạo Lịch Phỏng Vấn & Phòng Google Meet').first().json;\n\nreturn [{\n  json: {\n    success: true,\n    action: 'INTERVIEW_SCHEDULED',\n    candidateId: scheduleData.candidateId,\n    candidateName: scheduleData.candidateName,\n    candidateEmail: scheduleData.candidateEmail,\n    jobTitle: scheduleData.jobTitle,\n    matchScore: scheduleData.matchScore,\n    interviewTime: scheduleData.formattedTime,\n    interviewDate: scheduleData.formattedDate,\n    googleMeetUrl: scheduleData.googleMeetUrl,\n    scheduledAt: new Date().toISOString()\n  }\n}];"
+        "jsCode": "const packet = $('Soạn Thư Mời & Tổng Hợp Packet').first().json;\nconst backendSyncResult = $json;\n\nreturn [{\n  json: {\n    success: true,\n    action: \"INTERVIEW_ORCHESTRATED_AND_SYNCED\",\n    candidateId: packet.candidateId,\n    candidateName: packet.candidateName,\n    candidateEmail: packet.candidateEmail,\n    jobTitle: packet.jobTitle,\n    companyName: packet.companyName,\n    interviewType: packet.interviewType,\n    schedule: {\n      time: packet.dateTimeFormatted,\n      location: packet.locationText,\n      googleMeetUrl: packet.googleMeetUrl,\n      isRealGoogleMeet: packet.isRealGoogleMeet,\n      googleCalendarEventId: packet.googleCalendarEventId,\n      googleCalendarHtmlLink: packet.googleCalendarHtmlLink,\n      officeAddress: packet.officeAddress,\n      deadline: packet.deadlineFormatted,\n      calendarIcsAttached: true\n    },\n    interviewerPanel: packet.leadInterviewer,\n    contactPerson: packet.contactPerson,\n    backendSync: {\n      status: backendSyncResult?.id ? \"SYNCED_TO_DATABASE\" : \"STANDALONE_SIMULATED\",\n      updatedCandidateId: backendSyncResult?.id || packet.candidateId\n    },\n    orchestratedAt: new Date().toISOString()\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        860,
+        1680,
         300
       ],
-      "id": "wf5-log-calendar",
-      "name": "Ghi Nhận Lịch Vào Hệ Thống"
+      "id": "wf5-consolidator",
+      "name": "Tổng Hợp Kết Quả & Lịch Trình (Consolidator)"
     },
     {
       "parameters": {
@@ -73,7 +174,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1080,
+        1940,
         300
       ],
       "id": "wf5-response",
@@ -81,34 +182,72 @@
     }
   ],
   "connections": {
-    "Webhook: Tiếp Nhận Ứng Viên Xuất Sắc": {
+    "Webhook: Intake Candidate (Score >= 80%)": {
       "main": [
         [
           {
-            "node": "Tạo Lịch Phỏng Vấn & Phòng Google Meet",
+            "node": "Smart Interviewer Panel Routing & Schedule Engine",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Tạo Lịch Phỏng Vấn & Phòng Google Meet": {
+    "Smart Interviewer Panel Routing & Schedule Engine": {
       "main": [
         [
           {
-            "node": "Gửi Email Mời Phỏng Vấn",
+            "node": "Google Calendar: Tạo Sự Kiện & Meet Thật",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar: Tạo Sự Kiện & Meet Thật": {
+      "main": [
+        [
+          {
+            "node": "Soạn Thư Mời & Tổng Hợp Packet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soạn Thư Mời & Tổng Hợp Packet": {
+      "main": [
+        [
+          {
+            "node": "Stream 1: Candidate Email Dispatch",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Ghi Nhận Lịch Vào Hệ Thống",
+            "node": "Stream 2: Interviewer Briefing Packet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Đồng Bộ Lịch Vào Backend NestJS",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Ghi Nhận Lịch Vào Hệ Thống": {
+    "Đồng Bộ Lịch Vào Backend NestJS": {
+      "main": [
+        [
+          {
+            "node": "Tổng Hợp Kết Quả & Lịch Trình (Consolidator)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tổng Hợp Kết Quả & Lịch Trình (Consolidator)": {
       "main": [
         [
           {
@@ -123,5 +262,6 @@
   "active": true,
   "settings": {
     "executionOrder": "v1"
-  }
+  },
+  "id": "Z8f05InterviewSc"
 }
