@@ -128,10 +128,10 @@ export default function JobCard({ job, onApply }: JobCardProps) {
           ref={applyButtonRef}
           type="button"
           onClick={handleApplyClick}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#ACE77E] hover:bg-[#92D861] active:bg-[#78C64C] text-[#0F172A] text-xs sm:text-sm font-bold rounded-[12px] shadow-xs hover:shadow-sm transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:ring-offset-2 shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#171717] hover:bg-[#333333] active:bg-black text-white text-xs sm:text-sm font-semibold rounded-[8px] shadow-xs hover:shadow-sm transition-all duration-150 ease-out focus-ring hover-lift shrink-0 cursor-pointer"
         >
           <span>Ứng tuyển ngay</span>
-          <ArrowRight className="h-3.5 w-3.5 text-[#0F172A]" />
+          <ArrowRight className="h-3.5 w-3.5 text-white" aria-hidden="true" />
         </button>
       </div>
     </div>

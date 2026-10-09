@@ -147,28 +147,28 @@ export default function CvDropzone({
           onDrop={handleDrop}
           className={`relative border-2 border-dashed rounded-[12px] p-6 text-center cursor-pointer transition-all duration-200 ease-out outline-none ${
             disabled
-              ? 'border-[#E2E8F0] bg-slate-50 cursor-not-allowed opacity-60'
+              ? 'border-[#ebebeb] bg-slate-50 cursor-not-allowed opacity-60'
               : isDragging
-              ? 'border-[#78C64C] bg-[#ACE77E]/10'
+              ? 'border-[#0070f3] bg-[#0070f3]/5'
               : error
               ? 'border-rose-300 bg-rose-50/40 hover:bg-rose-50/60'
-              : 'border-[#E2E8F0] bg-[#F8FAFC] hover:bg-white hover:border-[#92D861] focus:ring-2 focus:ring-[#ACE77E] focus:ring-offset-2'
+              : 'border-[#ebebeb] bg-[#fafafa] hover:bg-white hover:border-[#0070f3]/50 focus-ring'
           }`}
         >
           <div className="flex flex-col items-center justify-center space-y-2">
             <div
-              className={`p-3 rounded-[12px] ${
+              className={`p-3 rounded-[10px] ${
                 isDragging
-                  ? 'bg-[#ACE77E] text-[#0F172A]'
+                  ? 'bg-[#0070f3] text-white'
                   : 'bg-slate-100 text-[#475569]'
               } transition-colors duration-150`}
             >
-              <UploadCloud className="h-6 w-6" />
+              <UploadCloud className="h-6 w-6" aria-hidden="true" />
             </div>
 
             <div className="space-y-0.5">
-              <p className="text-sm font-bold text-[#0F172A]">
-                <span className="text-[#0F172A] underline underline-offset-2 hover:text-slate-700">
+              <p className="text-sm font-semibold text-[#171717]">
+                <span className="text-[#0070f3] underline underline-offset-2 hover:text-[#0051b3]">
                   Nhấn để chọn tệp
                 </span>{' '}
                 hoặc kéo thả vào đây
@@ -181,31 +181,44 @@ export default function CvDropzone({
         </div>
       ) : (
         /* Khi đã chọn file */
-        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[12px] transition-all">
-          <div className="flex items-center space-x-3 min-w-0 pr-2">
-            <div className="h-10 w-10 rounded-[10px] bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
-              <FileText className="h-5 w-5" />
+        <div className="p-3.5 sm:p-4 bg-white border border-[#ebebeb] rounded-[12px] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] space-y-2 transition-all">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 min-w-0 pr-2">
+              <div className="h-10 w-10 rounded-[8px] bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-200">
+                <FileText className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-[#171717] truncate" title={file.name}>
+                  {file.name}
+                </p>
+                <p className="text-[11px] text-[#64748B] mt-0.5 font-mono">
+                  {formatFileSize(file.size)} • PDF Document
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-[#0F172A] truncate" title={file.name}>
-                {file.name}
-              </p>
-              <p className="text-[11px] text-[#64748B] mt-0.5 font-medium">
-                {formatFileSize(file.size)} • PDF Document
-              </p>
-            </div>
+
+            <button
+              type="button"
+              onClick={handleRemove}
+              disabled={disabled}
+              className="p-2 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-[6px] transition duration-150 shrink-0 cursor-pointer focus-ring"
+              title="Xóa tệp và chọn lại"
+              aria-label="Xóa tệp và chọn lại"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={handleRemove}
-            disabled={disabled}
-            className="p-2 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-[10px] transition duration-150 shrink-0"
-            title="Xóa tệp và chọn lại"
-            aria-label="Xóa tệp và chọn lại"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {/* Upload Progress Complete Bar */}
+          <div className="pt-1">
+            <div className="flex items-center justify-between text-[10px] font-mono text-[#8f8f8f] mb-1">
+              <span className="text-emerald-700 font-medium">● ĐÃ NẠP TỆP VÀO BỘ NHỚ SẴN SÀNG</span>
+              <span>100%</span>
+            </div>
+            <div className="w-full bg-[#f2f2f2] h-1.5 rounded-full overflow-hidden">
+              <div className="bg-emerald-600 h-full rounded-full w-full transition-all duration-300"></div>
+            </div>
+          </div>
         </div>
       )}
 

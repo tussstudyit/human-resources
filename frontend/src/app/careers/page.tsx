@@ -4,9 +4,9 @@ import CareersClient from '@/components/recruitment/CareersClient';
 import { JobPost } from '@/types/recruitment';
 
 export const metadata: Metadata = {
-  title: 'Cơ hội nghề nghiệp & Tuyển dụng AI | HR Platform',
+  title: 'Cơ hội nghề nghiệp & Việc làm | HR Platform',
   description:
-    'Khám phá các vị trí tuyển dụng công nghệ hấp dẫn tại HR Platform. Nộp hồ sơ nhanh chóng và nhận phân tích tự động từ AI Recruitment Agent.',
+    'Khám phá các vị trí tuyển dụng hấp dẫn tại HR Platform. Nộp hồ sơ nhanh chóng và kết nối trực tiếp với đội ngũ tuyển dụng.',
 };
 
 // Giữ force-dynamic để Next.js SSR tại thời điểm request, bỏ qua fetch cache,

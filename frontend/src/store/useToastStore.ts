@@ -4,11 +4,16 @@ import { ToastItem, ToastType } from '@/types/recruitment';
 interface ToastState {
   toasts: ToastItem[];
   showToast: (toast: { type: ToastType; title: string; message?: string; duration?: number }) => void;
+  addToast: (toast: { type: ToastType; title: string; message?: string; duration?: number }) => void;
   removeToast: (id: string) => void;
 }
 
-export const useToastStore = create<ToastState>((set) => ({
+export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
+
+  addToast: (toast) => {
+    get().showToast(toast);
+  },
 
   showToast: ({ type, title, message, duration = 4000 }) => {
     const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

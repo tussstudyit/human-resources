@@ -17,51 +17,54 @@ export default function Navbar() {
   const getRoleBadge = (role?: string) => {
     switch (role) {
       case 'HR':
-        return 'bg-purple-100 text-purple-700 border-purple-200';
+        return 'bg-[#f2f2f2] text-[#171717] border-[#ebebeb]';
       case 'MANAGER':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-[#d3e5ff] text-[#0761d1] border-[#0070f3]/20';
       default:
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        return 'bg-[#f2f2f2] text-[#4d4d4d] border-[#ebebeb]';
     }
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+    <header className="h-14 bg-white border-b border-[#ebebeb] px-6 flex items-center justify-between sticky top-0 z-30 font-sans">
       <div className="flex items-center space-x-3">
-        <h1 className="text-base font-bold text-slate-900">
-          Hệ thống Quản lý Nhân sự & AI Agents
+        <h1 className="text-xs font-semibold text-[#171717] tracking-tight uppercase font-mono">
+          HR Management Console
         </h1>
+        <span className="text-[#8f8f8f] font-mono text-xs">/</span>
+        <span className="text-xs text-[#8f8f8f] font-mono">
+          Enterprise Cloud
+        </span>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3">
         {user && (
-          <div className="flex items-center space-x-3 bg-slate-50 py-1.5 px-3.5 rounded-full border border-slate-200">
-            <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+          <div className="flex items-center space-x-2.5 py-1 px-3 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
+            <div className="h-6 w-6 rounded-[4px] bg-[#171717] text-white flex items-center justify-center font-bold text-[10px] uppercase">
               {user.fullName ? user.fullName[0] : 'U'}
             </div>
-            <div className="text-left">
-              <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <span>{user.fullName}</span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${getRoleBadge(
-                    user.role,
-                  )}`}
-                >
-                  {user.role}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium">
-                {user.department?.name || user.email}
-              </p>
+            <div className="text-left flex items-center space-x-2">
+              <span className="text-xs font-semibold text-[#171717]">
+                {user.fullName}
+              </span>
+              <span
+                className={`font-mono text-[10px] font-medium px-1.5 py-0.2 rounded-[4px] border ${getRoleBadge(
+                  user.role
+                )}`}
+              >
+                {user.role}
+              </span>
             </div>
           </div>
         )}
 
         <button
           onClick={handleLogout}
-          className="flex items-center space-x-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3.5 py-2 rounded-xl font-bold transition"
+          className="flex items-center space-x-1.5 text-xs text-[#4d4d4d] hover:text-[#ee0000] bg-white hover:bg-[#fafafa] border border-[#ebebeb] px-2.5 py-1.5 rounded-[6px] font-medium transition-colors shadow-[0px_1px_1px_rgba(0,0,0,0.04)] cursor-pointer focus-ring"
+          title="Đăng xuất"
+          aria-label="Đăng xuất khỏi tài khoản"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
           <span>Đăng xuất</span>
         </button>
       </div>

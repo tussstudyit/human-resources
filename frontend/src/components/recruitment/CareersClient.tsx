@@ -170,9 +170,11 @@ export default function CareersClient({
         {/* 2. Hero Section: Light Mode, White Space, H1: "Gia nhập đội ngũ của chúng tôi" */}
         <section className="bg-white border-b border-[#E2E8F0] pt-12 pb-14 sm:pt-16 sm:pb-16 px-4 sm:px-8">
           <div className="max-w-[1184px] mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[12px] bg-slate-100 border border-[#E2E8F0] text-[#475569] text-xs font-semibold">
-              <span className="h-2 w-2 rounded-full bg-[#78C64C]"></span>
-              <span>Tuyển dụng nhân sự công nghệ</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#ebebeb] shadow-[0px_1px_2px_rgba(0,0,0,0.04)] text-xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+              <span className="font-semibold text-[#171717]">Cổng thông tin việc làm</span>
+              <span className="text-[#8f8f8f]">•</span>
+              <span className="text-[#4d4d4d]">Khám phá các vị trí tuyển dụng mới nhất</span>
             </div>
 
             <h1 className="text-[36px] sm:text-[48px] md:text-[60px] md:leading-[1.12] font-black tracking-tight text-[#0F172A] max-w-4xl mx-auto">
@@ -180,7 +182,7 @@ export default function CareersClient({
             </h1>
 
             <p className="text-sm sm:text-base text-[#475569] max-w-2xl mx-auto leading-relaxed font-normal">
-              Khám phá các cơ hội nghề nghiệp công nghệ hấp dẫn và cùng chúng tôi kiến tạo những sản phẩm giá trị.
+              Khám phá các cơ hội nghề nghiệp hấp dẫn và cùng chúng tôi kiến tạo những giá trị mới.
             </p>
 
             {/* 3. Search: "Tìm theo vị trí hoặc kỹ năng" */}
@@ -225,10 +227,10 @@ export default function CareersClient({
                     key={dept}
                     type="button"
                     onClick={() => setSelectedDept(dept)}
-                    className={`px-3.5 py-2 rounded-[12px] text-xs font-semibold transition-colors duration-150 shrink-0 border ${
+                    className={`px-3.5 py-1.5 rounded-[8px] text-xs font-medium transition-colors duration-150 shrink-0 border cursor-pointer focus-ring ${
                       isSelected
-                        ? 'bg-[#ACE77E] border-[#ACE77E] text-[#0F172A] shadow-xs'
-                        : 'bg-white border-[#E2E8F0] text-[#475569] hover:bg-slate-100 hover:text-[#0F172A]'
+                        ? 'bg-[#171717] border-[#171717] text-white shadow-xs font-semibold'
+                        : 'bg-white border-[#ebebeb] text-[#4d4d4d] hover:bg-slate-50 hover:text-[#171717]'
                     }`}
                   >
                     {dept} ({count})
@@ -241,7 +243,7 @@ export default function CareersClient({
               type="button"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#64748B] hover:text-[#0F172A] px-3 py-2 rounded-[12px] bg-white border border-[#E2E8F0] hover:bg-slate-100 transition disabled:opacity-50 ml-auto shrink-0 shadow-xs"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#4d4d4d] hover:text-[#171717] px-3 py-1.5 rounded-[8px] bg-white border border-[#ebebeb] hover:bg-[#fafafa] transition disabled:opacity-50 ml-auto shrink-0 shadow-xs cursor-pointer focus-ring"
               title="Làm mới danh sách"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -267,7 +269,7 @@ export default function CareersClient({
                 <button
                   type="button"
                   onClick={handleRefresh}
-                  className="px-5 py-2.5 bg-[#ACE77E] hover:bg-[#92D861] active:bg-[#78C64C] text-[#0F172A] text-xs font-bold rounded-[12px] shadow-xs transition duration-150"
+                  className="px-4 py-2 bg-[#171717] hover:bg-[#333333] active:bg-black text-white text-xs font-semibold rounded-[8px] shadow-xs transition duration-150 cursor-pointer focus-ring"
                 >
                   Thử lại
                 </button>

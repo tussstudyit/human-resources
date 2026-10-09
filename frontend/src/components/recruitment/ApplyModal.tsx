@@ -170,7 +170,7 @@ export default function ApplyModal({
         showToast({
           type: 'success',
           title: 'Nộp hồ sơ thành công!',
-          message: 'AI Recruitment Agent đang phân tích CV của bạn.',
+          message: 'Bộ phận tuyển dụng sẽ sớm liên hệ với bạn.',
         });
       }, 800);
       return;
@@ -218,7 +218,7 @@ export default function ApplyModal({
       showToast({
         type: 'success',
         title: 'Nộp hồ sơ thành công!',
-        message: 'AI Agent đang phân tích CV của bạn.',
+        message: 'Bộ phận tuyển dụng sẽ xem xét hồ sơ của bạn sớm nhất.',
       });
     } catch (err: unknown) {
       const apiErr = err as ApplyApiError;
@@ -289,7 +289,7 @@ export default function ApplyModal({
                 Ứng tuyển thành công!
               </h3>
               <p className="text-sm font-semibold text-[#475569]">
-                AI Agent đang phân tích CV
+                Hồ sơ của bạn đã được tiếp nhận
               </p>
               <p className="text-xs text-[#64748B] max-w-sm mx-auto leading-relaxed pt-1">
                 Hồ sơ của bạn cho vị trí <span className="font-semibold text-[#0F172A]">{job.title}</span> đã được lưu trữ thành công.
@@ -320,7 +320,7 @@ export default function ApplyModal({
                 <span>{job.title}</span>
               </h3>
               <p className="text-xs text-[#64748B] mt-1">
-                Vui lòng điền thông tin và tải lên CV dạng PDF để hệ thống AI đánh giá.
+                Vui lòng điền thông tin và tải lên CV dạng PDF (tối đa 5MB).
               </p>
             </div>
 
@@ -412,14 +412,14 @@ export default function ApplyModal({
                   Số điện thoại <span className="text-[#64748B] font-normal">(Tùy chọn)</span>
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" />
+                  <Phone className="absolute left-3.5 top-3 h-4 w-4 text-[#64748B]" aria-hidden="true" />
                   <input
                     type="tel"
                     disabled={isSubmitting}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="0912 345 678"
-                    className="w-full pl-10 pr-4 py-2.5 bg-white text-[#0F172A] placeholder:text-[#64748B] border border-[#E2E8F0] rounded-[12px] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:border-[#78C64C] shadow-xs transition duration-150 disabled:bg-slate-50 disabled:cursor-not-allowed"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white text-[#0F172A] placeholder:text-[#64748B] border border-[#E2E8F0] rounded-[8px] text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] shadow-xs transition duration-150 disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -443,16 +443,16 @@ export default function ApplyModal({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 px-5 bg-[#ACE77E] hover:bg-[#92D861] active:bg-[#78C64C] text-[#0F172A] rounded-[12px] text-xs sm:text-sm font-bold shadow-xs hover:shadow-sm flex items-center justify-center space-x-2 transition-colors duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-[#ACE77E] focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3 px-5 bg-[#171717] hover:bg-[#333333] active:bg-black text-white rounded-[8px] text-xs sm:text-sm font-semibold shadow-xs hover:shadow-sm flex items-center justify-center space-x-2 transition-all duration-150 ease-out focus-ring hover-lift cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin text-[#0F172A]" />
-                      <span>Đang nộp hồ sơ & gửi AI xử lý...</span>
+                      <Loader2 className="h-4 w-4 animate-spin text-white" aria-hidden="true" />
+                      <span>Đang gửi hồ sơ ứng tuyển...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 text-[#0F172A]" />
+                      <Send className="h-4 w-4 text-white" aria-hidden="true" />
                       <span>Nộp hồ sơ ứng tuyển</span>
                     </>
                   )}
