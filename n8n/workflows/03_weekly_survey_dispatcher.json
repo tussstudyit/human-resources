@@ -7,8 +7,7 @@
           "interval": [
             {
               "field": "weeks",
-              "triggerAtHour": 9,
-              "triggerAtMinute": 0
+              "triggerAtHour": 9
             }
           ]
         }
@@ -16,7 +15,7 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        140,
+        144,
         320
       ],
       "id": "wf3-cron-trigger",
@@ -29,7 +28,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        360,
+        368,
         320
       ],
       "id": "wf3-roster",
@@ -49,7 +48,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        580,
+        592,
         320
       ],
       "id": "wf3-if-active",
@@ -62,8 +61,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        800,
-        240
+        848,
+        256
       ],
       "id": "wf3-generate-tokens",
       "name": "Tạo Magic Link & Token Khảo Sát Tuần"
@@ -75,8 +74,7 @@
         "rules": {
           "rules": [
             {
-              "value2": "EMAIL",
-              "output": 0
+              "value2": "EMAIL"
             },
             {
               "value2": "SLACK",
@@ -89,7 +87,7 @@
       "typeVersion": 1,
       "position": [
         1040,
-        140
+        144
       ],
       "id": "wf3-switch-channel",
       "name": "Switch: Kênh Gửi Khảo Sát (Email vs Slack)"
@@ -105,10 +103,11 @@
       "typeVersion": 2.1,
       "position": [
         1280,
-        80
+        -32
       ],
       "id": "wf3-gmail-survey",
       "name": "Gmail: Gửi Thư Mời Khảo Sát Tuần",
+      "webhookId": "f4e0b797-b182-4e82-b5d0-0056b462bb8a",
       "continueOnFail": true
     },
     {
@@ -119,16 +118,18 @@
           "value": "C06PULSE_SURVEYS",
           "mode": "name"
         },
-        "text": "=👋 Chào {{ $json.fullName }}, hãy dành 1 phút tham gia Khảo sát Gắn kết tuần này nhé: {{ $json.magicLink }}"
+        "text": "=👋 Chào {{ $json.fullName }}, hãy dành 1 phút tham gia Khảo sát Gắn kết tuần này nhé: {{ $json.magicLink }}",
+        "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
         1280,
-        200
+        160
       ],
       "id": "wf3-slack-survey",
       "name": "Slack: Gửi Khảo Sát Vào Kênh Team",
+      "webhookId": "6eab630b-7a4d-4ae1-a060-9e2805954d59",
       "continueOnFail": true
     },
     {
@@ -139,36 +140,42 @@
       "typeVersion": 2,
       "position": [
         1040,
-        360
+        368
       ],
       "id": "wf3-calc-enps",
       "name": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết"
     },
     {
       "parameters": {
-        "resource": "text",
-        "operation": "message",
-        "modelSearch": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
           "mode": "list",
-          "value": "models/gemini-1.5-flash"
+          "cachedResultName": "models/gemini-flash-lite-latest"
         },
         "messages": {
           "values": [
             {
-              "content": "=\"Bạn là Giám đốc Phân tích Dữ liệu Nhân sự AI (AI Chief People Officer).\nDữ liệu tuần: eNPS: +\" + $json.enpsScore + \", Tỷ lệ tham gia: \" + $json.responseRate + \" (\" + $json.totalResponses + \"/\" + $json.totalEmployees + \" nhân sự), Xếp loại: \" + $json.healthStatus + \".\nHãy đưa ra 3 kết luận chiến lược súc tích cho Ban Điều Hành (Tình hình gắn kết, Khối phòng ban cần quan tâm, và Kế hoạch can thiệp 7 ngày tới).\"",
-              "role": "user"
+              "content": "=\"Bạn là Giám đốc Phân tích Dữ liệu Nhân sự AI (AI Chief People Officer).\nDữ liệu tuần: eNPS: +\" + $json.enpsScore + \", Tỷ lệ tham gia: \" + $json.responseRate + \" (\" + $json.totalResponses + \"/\" + $json.totalEmployees + \" nhân sự), Xếp loại: \" + $json.healthStatus + \".\nHãy đưa ra 3 kết luận chiến lược súc tích cho Ban Điều Hành (Tình hình gắn kết, Khối phòng ban cần quan tâm, và Kế hoạch can thiệp 7 ngày tới).\""
             }
           ]
-        }
+        },
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        1280,
-        360
+        1264,
+        368
       ],
       "id": "wf3-gemini-executive",
-      "name": "Google Gemini: Phân Tích Xu Hướng & Báo Cáo Lãnh Đạo"
+      "name": "Google Gemini: Phân Tích Xu Hướng & Báo Cáo Lãnh Đạo",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TTSJd7ZLHn9lkF9B",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     },
     {
       "parameters": {
@@ -182,8 +189,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1540,
-        360
+        1552,
+        368
       ],
       "id": "wf3-gsheet-enps-report",
       "name": "Sheets: Lưu Báo Cáo eNPS Executive"
@@ -196,16 +203,18 @@
           "value": "C01EXECUTIVE_LEADERSHIP",
           "mode": "name"
         },
-        "text": "=📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]\\nChỉ số eNPS: +{{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore }} (Xếp loại: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus }})\\nTỷ lệ tham gia: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate }}\\nBáo cáo tóm tắt: Đã lưu vào Google Sheet Executive."
+        "text": "=📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]\\nChỉ số eNPS: +{{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore }} (Xếp loại: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus }})\\nTỷ lệ tham gia: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate }}\\nBáo cáo tóm tắt: Đã lưu vào Google Sheet Executive.",
+        "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
-        1780,
-        360
+        1792,
+        368
       ],
       "id": "wf3-slack-report",
       "name": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
+      "webhookId": "ee1e8e1d-acdf-4663-ba0f-ce68ed979e84",
       "continueOnFail": true
     }
   ],
@@ -311,5 +320,10 @@
         ]
       ]
     }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   }
 }

@@ -11,11 +11,12 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        140,
+        144,
         320
       ],
       "id": "wf2-webhook-wellbeing",
-      "name": "Webhook: Kích Hoạt Can Thiệp Wellbeing"
+      "name": "Webhook: Kích Hoạt Can Thiệp Wellbeing",
+      "webhookId": "fabeac29-fd7a-43cd-879c-889ef511525e"
     },
     {
       "parameters": {
@@ -24,7 +25,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        360,
+        368,
         320
       ],
       "id": "wf2-profile",
@@ -32,29 +33,35 @@
     },
     {
       "parameters": {
-        "resource": "text",
-        "operation": "message",
-        "modelSearch": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
           "mode": "list",
-          "value": "models/gemini-1.5-flash"
+          "cachedResultName": "models/gemini-flash-lite-latest"
         },
         "messages": {
           "values": [
             {
-              "content": "=\"Bạn là Chuyên gia Phúc lợi & Sức khỏe Tinh thần Nhân sự AI (AI Wellbeing Strategist).\nNhiệm vụ: Căn cứ vào tình trạng của nhân viên: \" + $json.employeeName + \" (Phòng: \" + $json.department + \"), Điểm cảm xúc: \" + ($json.sentimentScore || -0.65) + \".\n\nHãy chọn 1 trong 3 hành động can thiệp tối ưu:\n1. COFFEE_VOUCHER: Tặng voucher cafe & nghỉ ngơi giải lao (cho stress nhẹ đến vừa).\n2. COUNSELING_CHAT: Buổi trò chuyện 1-on-1 kín đáo với HR Lead (cho kiệt sức nặng).\n3. WORKLOAD_RELIEF: Đề xuất quản lý giảm 20% deadline và gửi bộ cẩm nang Mindfulness.\n\nTrả về định dạng JSON thuần không markdown:\n{\\\"actionType\\\": \\\"COFFEE_VOUCHER\\\", \\\"packageTitle\\\": \\\"...\\\", \\\"reason\\\": \\\"...\\\"}\"",
-              "role": "user"
+              "content": "=\"Bạn là Chuyên gia Phúc lợi & Sức khỏe Tinh thần Nhân sự AI (AI Wellbeing Strategist).\nNhiệm vụ: Căn cứ vào tình trạng của nhân viên: \" + $json.employeeName + \" (Phòng: \" + $json.department + \"), Điểm cảm xúc: \" + ($json.sentimentScore || -0.65) + \".\n\nHãy chọn 1 trong 3 hành động can thiệp tối ưu:\n1. COFFEE_VOUCHER: Tặng voucher cafe & nghỉ ngơi giải lao (cho stress nhẹ đến vừa).\n2. COUNSELING_CHAT: Buổi trò chuyện 1-on-1 kín đáo với HR Lead (cho kiệt sức nặng).\n3. WORKLOAD_RELIEF: Đề xuất quản lý giảm 20% deadline và gửi bộ cẩm nang Mindfulness.\n\nTrả về định dạng JSON thuần không markdown:\n{\\\"actionType\\\": \\\"COFFEE_VOUCHER\\\", \\\"packageTitle\\\": \\\"...\\\", \\\"reason\\\": \\\"...\\\"}\""
             }
           ]
-        }
+        },
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        600,
+        608,
         320
       ],
       "id": "wf2-gemini-advisor",
-      "name": "Google Gemini: Đề Xuất Phác Thảo Chăm Sóc Đời Sống"
+      "name": "Google Gemini: Đề Xuất Phác Thảo Chăm Sóc Đời Sống",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TTSJd7ZLHn9lkF9B",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     },
     {
       "parameters": {
@@ -63,7 +70,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        840,
+        848,
         320
       ],
       "id": "wf2-enrich-plan",
@@ -76,8 +83,7 @@
         "rules": {
           "rules": [
             {
-              "value2": "COFFEE_VOUCHER",
-              "output": 0
+              "value2": "COFFEE_VOUCHER"
             },
             {
               "value2": "COUNSELING_CHAT",
@@ -93,7 +99,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        1100,
+        1104,
         240
       ],
       "id": "wf2-switch-action",
@@ -109,11 +115,12 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        1340,
-        160
+        1328,
+        -32
       ],
       "id": "wf2-gmail-voucher",
       "name": "Gmail: Gửi E-Voucher Nghỉ Dưỡng / Cafe",
+      "webhookId": "bb9e54ce-525e-4525-8a9f-ecc8d63c5def",
       "continueOnFail": true
     },
     {
@@ -124,16 +131,18 @@
           "value": "C06HR_COUNSELING",
           "mode": "name"
         },
-        "text": "=🌿 [YÊU CẦU 1-ON-1 TÂM LÝ] Gemini Agent đã lên lịch mời trò chuyện kín đáo cùng nhân sự {{ $json.employeeName }} ({{ $json.employeeEmail }}) nhằm lắng nghe và giải tỏa căng thẳng công việc."
+        "text": "=🌿 [YÊU CẦU 1-ON-1 TÂM LÝ] Gemini Agent đã lên lịch mời trò chuyện kín đáo cùng nhân sự {{ $json.employeeName }} ({{ $json.employeeEmail }}) nhằm lắng nghe và giải tỏa căng thẳng công việc.",
+        "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
-        1340,
-        320
+        1328,
+        176
       ],
       "id": "wf2-slack-counseling",
       "name": "Slack: Điều Phối Buổi 1-on-1 Lắng Nghe",
+      "webhookId": "ac23a9aa-82a5-4c07-8b2e-a3fa381be422",
       "continueOnFail": true
     },
     {
@@ -146,11 +155,12 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        1340,
-        480
+        1328,
+        384
       ],
       "id": "wf2-gmail-wellness",
       "name": "Gmail: Gửi Cẩm Nang Mindfulness & Đề Xuất Giảm Tải",
+      "webhookId": "96105ea8-0d19-4342-b3d6-4878f11912a0",
       "continueOnFail": true
     },
     {
@@ -165,7 +175,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1100,
+        1104,
         480
       ],
       "id": "wf2-gsheet-log",
@@ -183,8 +193,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1340,
-        480
+        1328,
+        608
       ],
       "id": "wf2-sync-db",
       "name": "PostgreSQL: Đồng Bộ Trạng Thái Chăm Sóc",
@@ -200,7 +210,7 @@
       "typeVersion": 1.1,
       "position": [
         1600,
-        480
+        384
       ],
       "id": "wf2-respond",
       "name": "Phản Hồi Hoàn Tất Can Thiệp (200 OK)"
@@ -303,5 +313,10 @@
         ]
       ]
     }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   }
 }

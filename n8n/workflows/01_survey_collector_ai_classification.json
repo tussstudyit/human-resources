@@ -11,11 +11,12 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        140,
+        144,
         320
       ],
       "id": "wf1-webhook",
-      "name": "Webhook: Tiếp Nhận Bài Khảo Sát"
+      "name": "Webhook: Tiếp Nhận Bài Khảo Sát",
+      "webhookId": "5542e17c-5a76-489d-b86f-1c6501e7bc3f"
     },
     {
       "parameters": {
@@ -24,7 +25,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        360,
+        368,
         320
       ],
       "id": "wf1-sanitize",
@@ -42,7 +43,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        580,
+        592,
         320
       ],
       "id": "wf1-gsheet-raw",
@@ -50,29 +51,35 @@
     },
     {
       "parameters": {
-        "resource": "text",
-        "operation": "message",
-        "modelSearch": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
           "mode": "list",
-          "value": "models/gemini-1.5-flash"
+          "cachedResultName": "models/gemini-flash-lite-latest"
         },
         "messages": {
           "values": [
             {
-              "content": "=\"Bạn là Chuyên gia Tâm lý & Nhân sự AI (AI Employee Engagement & Wellbeing Analyst).\nNhiệm vụ: Phân tích phản hồi khảo sát của nhân viên sau:\n- Nhân viên: \" + $json.employeeName + \" (Phòng: \" + $json.department + \")\n- Điểm đánh giá: \" + $json.rating + \"/10\n- Ý kiến phản hồi: \\\"\" + $json.textAnswer + \"\\\"\n\nHãy phân loại vào 1 trong 5 danh mục:\n1. WORKLOAD_STRESS (Áp lực công việc & Kiệt sức OT)\n2. COMPENSATION_BENEFITS (Lương thưởng & Chế độ đãi ngộ)\n3. MANAGEMENT_LEADERSHIP (Phong cách quản lý & Quan hệ cấp trên)\n4. CULTURE_ENVIRONMENT (Văn hóa công ty & Đồng nghiệp)\n5. CAREER_GROWTH (Cơ hội học tập & Thăng tiến)\n\nĐánh giá:\n- sentimentScore (từ -1.0 đến +1.0)\n- burnoutRisk (LOW, MEDIUM, HIGH, CRITICAL)\n- riskLevel (THẤP, VỪA, CAO, NGUY CẤP)\n- actionRecommendation (Đề xuất can thiệp cho HR)\n\nTrả về định dạng JSON thuần không markdown:\n{\\\"category\\\": \\\"WORKLOAD_STRESS\\\", \\\"sentimentScore\\\": -0.65, \\\"burnoutRisk\\\": \\\"HIGH\\\", \\\"riskLevel\\\": \\\"CAO\\\", \\\"actionRecommendation\\\": \\\"...\\\"}\"",
-              "role": "user"
+              "content": "=\"Bạn là Chuyên gia Tâm lý & Nhân sự AI (AI Employee Engagement & Wellbeing Analyst).\nNhiệm vụ: Phân tích phản hồi khảo sát của nhân viên sau:\n- Nhân viên: \" + $json.employeeName + \" (Phòng: \" + $json.department + \")\n- Điểm đánh giá: \" + $json.rating + \"/10\n- Ý kiến phản hồi: \\\"\" + $json.textAnswer + \"\\\"\n\nHãy phân loại vào 1 trong 5 danh mục:\n1. WORKLOAD_STRESS (Áp lực công việc & Kiệt sức OT)\n2. COMPENSATION_BENEFITS (Lương thưởng & Chế độ đãi ngộ)\n3. MANAGEMENT_LEADERSHIP (Phong cách quản lý & Quan hệ cấp trên)\n4. CULTURE_ENVIRONMENT (Văn hóa công ty & Đồng nghiệp)\n5. CAREER_GROWTH (Cơ hội học tập & Thăng tiến)\n\nĐánh giá:\n- sentimentScore (từ -1.0 đến +1.0)\n- burnoutRisk (LOW, MEDIUM, HIGH, CRITICAL)\n- riskLevel (THẤP, VỪA, CAO, NGUY CẤP)\n- actionRecommendation (Đề xuất can thiệp cho HR)\n\nTrả về định dạng JSON thuần không markdown:\n{\\\"category\\\": \\\"WORKLOAD_STRESS\\\", \\\"sentimentScore\\\": -0.65, \\\"burnoutRisk\\\": \\\"HIGH\\\", \\\"riskLevel\\\": \\\"CAO\\\", \\\"actionRecommendation\\\": \\\"...\\\"}\""
             }
           ]
-        }
+        },
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        820,
+        832,
         320
       ],
       "id": "wf1-gemini-classify",
-      "name": "Google Gemini: Phân Loại Chủ Đề & Đánh Giá Cảm Xúc"
+      "name": "Google Gemini: Phân Loại Chủ Đề & Đánh Giá Cảm Xúc",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TTSJd7ZLHn9lkF9B",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     },
     {
       "parameters": {
@@ -81,7 +88,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1060,
+        1072,
         320
       ],
       "id": "wf1-parse-ai",
@@ -99,7 +106,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1300,
+        1312,
         320
       ],
       "id": "wf1-gsheet-analytics",
@@ -117,7 +124,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1540,
+        1552,
         320
       ],
       "id": "wf1-sync-backend",
@@ -152,16 +159,19 @@
           "value": "C06HR_WELLBEING_ALERTS",
           "mode": "name"
         },
-        "text": "=🚨 [CẢNH BÁO KIỆT SỨC - GEMINI AI AGENT]\\nNhân viên: {{ $json.employeeName }} (Phòng: {{ $json.department }})\\nChủ đề: {{ $json.aiAnalysis.category }}\\nMức độ rủi ro: {{ $json.aiAnalysis.riskLevel }} (Điểm: {{ $json.aiAnalysis.sentimentScore }})\\nNội dung: \\\"{{ $json.textAnswer }}\\\"\\nKhuyến nghị Gemini: {{ $json.aiAnalysis.actionRecommendation }}"
+        "text": "=🚨 [CẢNH BÁO KIỆT SỨC - GEMINI AI AGENT]\\nNhân viên: {{ $json.employeeName }} (Phòng: {{ $json.department }})\\nChủ đề: {{ $json.aiAnalysis.category }}\\nMức độ rủi ro: {{ $json.aiAnalysis.riskLevel }} (Điểm: {{ $json.aiAnalysis.sentimentScore }})\\nNội dung: \\\"{{ $json.textAnswer }}\\\"\\nKhuyến nghị Gemini: {{ $json.aiAnalysis.actionRecommendation }}",
+        "otherOptions": {}
       },
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.2,
       "position": [
-        2020,
-        200
+        2032,
+        208
       ],
       "id": "wf1-slack-alert",
       "name": "Slack: Cảnh Báo Khẩn Tới HR Lead",
+      "webhookId": "f5884f0f-309b-4f10-9b17-4c75e3a6e215",
+      "disabled": true,
       "continueOnFail": true
     },
     {
@@ -174,11 +184,13 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        2260,
-        200
+        2272,
+        208
       ],
       "id": "wf1-gmail-support",
       "name": "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1",
+      "webhookId": "7f198f8a-5ea7-4962-808e-aacba277ca2d",
+      "disabled": true,
       "continueOnFail": true
     },
     {
@@ -188,8 +200,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2020,
-        440
+        2032,
+        448
       ],
       "id": "wf1-log-positive",
       "name": "Ghi Nhận Mức Độ Gắn Kết Tốt"
@@ -203,7 +215,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        2500,
+        2512,
         320
       ],
       "id": "wf1-respond",
@@ -339,5 +351,10 @@
         ]
       ]
     }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
   }
 }
