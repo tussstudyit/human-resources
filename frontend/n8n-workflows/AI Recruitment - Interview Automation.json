@@ -1,0 +1,72 @@
+{
+  "name": "AI Recruitment - Interview Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "interview-schedule",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ac1e6ed2-840a-41a0-9053-d3cea19738e8",
+      "name": "Webhook",
+      "webhookId": "ba01be4a-a972-45e5-97ad-0b1a677eb9b0"
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.body.candidateEmail }}",
+        "subject": "=Thư mời phỏng vấn vị trí {{ $json.body.position }}",
+        "html": "=Xin chào {{ $json.body.candidateName }},\n\nBạn có lịch phỏng vấn vị trí {{ $json.body.position }}.\nThời gian: {{ $json.body.interviewTime }}\nLink meeting: {{ $json.body.meetingLink }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f011d231-e31d-4dee-8f9f-b98247c4642a",
+      "name": "Send an Email",
+      "webhookId": "608898f3-ea37-4d10-a387-c59264c333ac",
+      "credentials": {
+        "smtp": {
+          "id": "CkQNwI9UjsCUzHPR",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "69c29331-c83a-4775-b68c-663ca9517882",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8b4307105391188a5185b593287056c6bac6bca68fb4075694aab58c256f7d4a"
+  },
+  "nodeGroups": [],
+  "id": "1Mrco94cBEqatce1",
+  "tags": []
+}

@@ -1,0 +1,35 @@
+{
+  "name": "onboarding checklist",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "it-provisioning",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7d3a29a6-a555-482e-b376-c6afd66d4acf",
+      "name": "Webhook",
+      "webhookId": "6c1a165f-3549-4769-b907-61aeec94f736"
+    }
+  ],
+  "pinData": {},
+  "connections": {},
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "54ca150e-6261-4ff1-acbf-5bb617270df6",
+  "meta": {
+    "instanceId": "8b4307105391188a5185b593287056c6bac6bca68fb4075694aab58c256f7d4a"
+  },
+  "nodeGroups": [],
+  "id": "pLUFpOW35sikygGc",
+  "tags": []
+}
