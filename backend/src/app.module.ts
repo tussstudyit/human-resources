@@ -10,6 +10,7 @@ import { PerformanceModule } from './performance/performance.module.js';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { RecruitmentModule } from './recruitment/recruitment.module.js';
+import { TrainingModule } from './training/training.module.js';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RecruitmentModule } from './recruitment/recruitment.module.js';
     RecruitmentModule,
     OnboardingModule,
     PerformanceModule,
+    TrainingModule,
   ],
   controllers: [AppController],
   providers: [

@@ -12,6 +12,7 @@ import {
   Compass,
   TrendingUp,
   Heart,
+  GraduationCap,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -39,6 +40,13 @@ export default function Sidebar() {
       desc: 'Theo dõi KPI & đánh giá 360°',
       icon: TrendingUp,
       href: '/performance',
+      badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Training & Skills',
+      desc: 'Skill Gap Radar & Chứng chỉ',
+      icon: GraduationCap,
+      href: '/training',
       badge: 'ACTIVE',
     },
     {

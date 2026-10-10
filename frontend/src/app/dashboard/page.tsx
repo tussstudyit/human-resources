@@ -424,8 +424,9 @@ export default function DashboardPage() {
               </Link>
 
               {/* Agent 4: Training */}
-              <div
-                className="p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
+              <Link
+                href="/training"
+                className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
               >
                 <div className="flex items-center justify-between mb-2.5">
                   <div className="h-8 w-8 rounded-[6px] bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center">
@@ -435,18 +436,18 @@ export default function DashboardPage() {
                     Đào tạo
                   </span>
                 </div>
-                <h4 className="text-xs font-semibold text-[#171717] flex items-center justify-between">
+                <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors flex items-center justify-between">
                   AI Training & Skills Agent
-                  <span className="text-[9px] font-mono text-[#8f8f8f] bg-[#f2f2f2] px-1.5 py-0.5 rounded">SẮP RA MẮT</span>
+                  <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
                 </h4>
                 <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
-                  Nhắc hạn chứng chỉ, đề xuất lộ trình khóa học & phân tích ROI đào tạo.
+                  Đánh giá khoảng cách kỹ năng (Radar Chart), quản lý chứng chỉ & hạn cấp.
                 </p>
-                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-[#8f8f8f]">
+                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
                   <span>TRẠNG THÁI</span>
-                  <span>Kế hoạch Sprint tiếp theo</span>
+                  <span className="font-semibold">Hoạt động (Radar & Certs)</span>
                 </div>
-              </div>
+              </Link>
 
               {/* Agent 5: Employee Engagement (Nguyen's) */}
               <a

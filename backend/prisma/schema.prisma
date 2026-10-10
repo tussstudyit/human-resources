@@ -39,9 +39,10 @@ model User {
   kpiMetrics       KpiMetric[]
   feedbackGiven    Feedback[]       @relation("FeedbackGiven")
   feedbackReceived Feedback[]       @relation("FeedbackReceived")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  certifications   Certification[]
+  trainingROI      TrainingROI[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@map("users")
 }
@@ -72,7 +73,7 @@ model JobPost {
 }
 
 model Candidate {
-  id               String    @id @default(uuid())
+  id               String   @id @default(uuid())
   name             String
   email            String
   phone            String?
@@ -80,12 +81,12 @@ model Candidate {
   parsedSkillsJson Json?
   matchScore       Float?
   experienceYears  Int?
-  summary          String?   @db.Text
-  aiStatus         AiStatus  @default(PENDING)
+  summary          String?  @db.Text
+  aiStatus         AiStatus @default(PENDING)
   jobId            String
-  job              JobPost   @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  job              JobPost  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@unique([email, jobId])
   @@index([jobId])
@@ -139,4 +140,41 @@ model Feedback {
   updatedAt DateTime @updatedAt
 
   @@map("feedbacks")
+}
+
+model Certification {
+  id             String    @id @default(uuid())
+  name           String
+  issuer         String?
+  issueDate      DateTime
+  expirationDate DateTime?
+  credentialId   String?
+  userId         String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expirationDate])
+  @@map("certifications")
+}
+
+model TrainingROI {
+  id           String    @id @default(uuid())
+  trainingName String
+  description  String?   @db.Text
+  cost         Float
+  benefit      Float
+  trainingDate DateTime?
+  userId       String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("training_roi")
 }
