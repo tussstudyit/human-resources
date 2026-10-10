@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -92,6 +94,11 @@ export default function OnboardingPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* Nút Quay lại Dashboard */}
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 font-medium">
+        <ArrowLeft className="w-4 h-4" /> Quay lại Dashboard
+      </Link>
+
       <div className="border-b pb-4">
         <h1 className="text-2xl font-bold text-gray-800">📋 Onboarding Checklist</h1>
         <p className="text-gray-600">Danh sách công việc cần hoàn thành cho nhân viên mới</p>
