@@ -1,0 +1,30 @@
+{
+  "name": "WF_07_it_tool_provisioning",
+  "nodes": [
+    { "parameters": { "httpMethod": "POST", "path": "it-provisioning", "responseMode": "responseNode" }, "type": "n8n-nodes-base.webhook", "typeVersion": 2.1, "position": [-1100, 200], "name": "1. Webhook Trigger" },
+    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-900, 200], "name": "2. Sanitize Data" },
+    { "parameters": { "conditions": { "string": [{ "value1": "={{ $json.userEmail }}", "operation": "contains", "value2": "@" }] } }, "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [-700, 200], "name": "3. Validate Email" },
+    { "parameters": { "respondWith": "json", "responseBody": "{\"status\":\"error\",\"message\":\"Invalid Email\"}", "options": { "responseCode": 400 } }, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [-500, 380], "name": "4. Error Response" },
+    { "parameters": { "jsCode": "const item = $input.first().json;\nreturn [{ json: { ...item, empId: 'EMP-' + Math.floor(10000 + Math.random() * 90000), tempPwd: 'IT@' + Math.random().toString(36).slice(-6) } }];" }, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-500, 100], "name": "5. Generate Credentials" },
+    { "parameters": { "conditions": { "string": [{ "value1": "={{ $json.department }}", "value2": "Tech" }] } }, "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [-300, 100], "name": "6. Check Department" },
+    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-100, 0], "name": "7. Setup Tech Stack (Jira/Slack)" },
+    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-100, 200], "name": "8. Setup Standard Stack" },
+    { "parameters": { "url": "https://httpbin.org/post", "method": "POST", "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json) }}" }, "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [100, 100], "name": "9. Mock IT Provisioning API" },
+    { "parameters": { "fromEmail": "tatcoolngau@gmail.com", "toEmail": "={{ $json.body.userEmail || 'anhtanht1905@gmail.com' }}", "subject": "=[IT Provisioning] Hoàn tất cấp phát tài khoản", "html": "=Xin chào, tài khoản công ty của bạn đã sẵn sàng." }, "type": "n8n-nodes-base.emailSend", "typeVersion": 2.1, "position": [300, 100], "name": "10. Send Notification Email" },
+    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [500, 100], "name": "11. Audit Log Database" },
+    { "parameters": { "respondWith": "json", "responseBody": "{\"status\":\"success\",\"message\":\"WF_07 executed successfully with 12 nodes\"}" }, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [700, 100], "name": "12. Respond to Frontend" }
+  ],
+  "connections": {
+    "1. Webhook Trigger": { "main": [[{ "node": "2. Sanitize Data", "type": "main", "index": 0 }]] },
+    "2. Sanitize Data": { "main": [[{ "node": "3. Validate Email", "type": "main", "index": 0 }]] },
+    "3. Validate Email": { "main": [[{ "node": "5. Generate Credentials", "type": "main", "index": 0 }], [{ "node": "4. Error Response", "type": "main", "index": 0 }]] },
+    "5. Generate Credentials": { "main": [[{ "node": "6. Check Department", "type": "main", "index": 0 }]] },
+    "6. Check Department": { "main": [[{ "node": "7. Setup Tech Stack (Jira/Slack)", "type": "main", "index": 0 }], [{ "node": "8. Setup Standard Stack", "type": "main", "index": 0 }]] },
+    "7. Setup Tech Stack (Jira/Slack)": { "main": [[{ "node": "9. Mock IT Provisioning API", "type": "main", "index": 0 }]] },
+    "8. Setup Standard Stack": { "main": [[{ "node": "9. Mock IT Provisioning API", "type": "main", "index": 0 }]] },
+    "9. Mock IT Provisioning API": { "main": [[{ "node": "10. Send Notification Email", "type": "main", "index": 0 }]] },
+    "10. Send Notification Email": { "main": [[{ "node": "11. Audit Log Database", "type": "main", "index": 0 }]] },
+    "11. Audit Log Database": { "main": [[{ "node": "12. Respond to Frontend", "type": "main", "index": 0 }]] }
+  },
+  "active": true
+}

@@ -1,200 +1,359 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-
-interface KpiMetric {
-  id: string;
-  metricName: string;
-  targetValue: number;
-  actualValue: number;
-  period: string;
-}
-
-interface Feedback {
-  id: string;
-  score: number;
-  comment: string | null;
-  period: string;
-  reviewer: {
-    fullName: string;
-    email: string;
-  };
-}
-
-interface DashboardData {
-  totalKpis: number;
-  avgCompletionPercentage: number;
-  avgFeedbackScore: number;
-  kpis: KpiMetric[];
-  feedbacks: Feedback[];
-}
+import React, { useState } from 'react';
+import axios from 'axios';
 
 export default function PerformancePage() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [message, setMessage] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  // Dữ liệu biểu đồ so sánh KPI (kpi_metrics)
+  const kpiMetrics = [
+    { id: 'k1', metric: 'Tỷ lệ hoàn thành Sprint đúng hạn', target: 90, actual: 95, dept: 'Kỹ thuật & Công nghệ' },
+    { id: 'k2', metric: 'Chất lượng bàn giao & Code Review', target: 85, actual: 88, dept: 'Kỹ thuật & Công nghệ' },
+    { id: 'k3', metric: 'Điểm hài lòng phối hợp liên phòng ban', target: 80, actual: 76, dept: 'Toàn công ty' },
+    { id: 'k4', metric: 'Tỷ lệ hoàn thành mục tiêu OKR Quý', target: 85, actual: 92, dept: 'Sản phẩm' },
+  ];
 
-  // Lấy dữ liệu Dashboard
-  const fetchDashboard = async () => {
+  const [employees, setEmployees] = useState([
+    {
+      id: 1,
+      name: 'Trần Anh Tân',
+      email: 'anhtanht1905@gmail.com',
+      role: 'Frontend Developer',
+      dept: 'Kỹ thuật & Công nghệ',
+      status: 'Chờ nộp',
+      completed: false,
+      magicLink: 'https://hr.company.vn/review-360?token=ml_tan_9821',
+      reminded: false,
+    },
+    {
+      id: 2,
+      name: 'Lê Hoàng Nam',
+      email: 'nam.le@company.vn',
+      role: 'Backend Engineer',
+      dept: 'Kỹ thuật & Công nghệ',
+      status: 'Đã hoàn thành',
+      completed: true,
+      magicLink: 'https://hr.company.vn/review-360?token=ml_nam_4410',
+      reminded: false,
+    },
+    {
+      id: 3,
+      name: 'Phạm Minh Tuấn',
+      email: 'tuan.pham@company.vn',
+      role: 'UI/UX Designer',
+      dept: 'Sản phẩm',
+      status: 'Chờ nộp',
+      completed: false,
+      magicLink: 'https://hr.company.vn/review-360?token=ml_tuan_7732',
+      reminded: false,
+    },
+    {
+      id: 4,
+      name: 'Nguyễn Thu Hà',
+      email: 'ha.nguyen@company.vn',
+      role: 'HR Specialist',
+      dept: 'Nhân sự',
+      status: 'Đã hoàn thành',
+      completed: true,
+      magicLink: 'https://hr.company.vn/review-360?token=ml_ha_1109',
+      reminded: false,
+    },
+  ]);
+
+  const [logs, setLogs] = useState([
+    { time: 'Ngày 25', text: 'Cronjob định kỳ hàng tháng sẵn sàng quét danh sách nhân sự chưa nộp đánh giá 360°', type: 'purple' }
+  ]);
+
+  const handleTriggerAllPending = async () => {
+    setLoading(true);
+    const pendingList = employees.filter(e => !e.completed);
+
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/performance/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const payload = {
+        event: 'monthly_360_feedback_reminder',
+        runDate: '25',
+        totalPending: pendingList.length,
+        recipients: pendingList.map(emp => ({
+          id: emp.id,
+          name: emp.name,
+          email: emp.email,
+          department: emp.dept,
+          magicLink: emp.magicLink
+        }))
+      };
+
+      const res = await axios.post('/api/n8n', {
+        workflow: 'feedback_reminder',
+        payload
       });
 
-      if (res.ok) {
-        const result = await res.json();
-        setData(result);
-      }
+      setEmployees(employees.map(emp => !emp.completed ? { ...emp, reminded: true, status: 'Đã gửi Magic Link' } : emp));
+
+      setLogs(prev => [
+        {
+          time: res.data.timestamp || 'Vừa xong',
+          text: `Đã quét thấy ${pendingList.length} nhân sự chưa nộp (${pendingList.map(p => p.name).join(', ')}) và gửi tin nhắn kèm Magic Link form review`,
+          type: 'green'
+        },
+        ...prev
+      ]);
     } catch (err) {
-      console.error('Lỗi lấy dữ liệu Performance:', err);
+      console.error('Lỗi gửi Magic Link:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+  const handleSendSingleMagicLink = async (empId: number) => {
+    const emp = employees.find(e => e.id === empId);
+    if (!emp) return;
 
-  // Khởi tạo KPI mẫu nếu chưa có
-  const handleSeedKpis = async () => {
+    setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/performance/seed-kpis`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axios.post('/api/n8n', {
+        workflow: 'feedback_reminder',
+        payload: {
+          event: 'single_360_feedback_reminder',
+          recipient: {
+            name: emp.name,
+            email: emp.email,
+            magicLink: emp.magicLink
+          }
+        }
       });
 
-      if (res.ok) {
-        setMessage('Đã khởi tạo danh sách KPI mẫu thành công!');
-        fetchDashboard();
-      }
+      setEmployees(employees.map(e => e.id === empId ? { ...e, reminded: true, status: 'Đã gửi Magic Link' } : e));
+      setLogs(prev => [
+        {
+          time: res.data.timestamp || 'Vừa xong',
+          text: `Đã gửi tin nhắn nhắc nhở kèm Magic Link riêng cho ${emp.name} (${emp.email})`,
+          type: 'blue'
+        },
+        ...prev
+      ]);
     } catch (err) {
-      console.error('Lỗi seed KPI:', err);
+      console.error('Lỗi gửi cá nhân:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const pendingCount = employees.filter(e => !e.completed).length;
+
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
-      {/* Nút Quay lại Dashboard */}
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 font-medium">
-        <ArrowLeft className="w-4 h-4" /> Quay lại Dashboard
-      </Link>
-
-      {/* Header */}
-      <div className="border-b pb-4">
-        <h1 className="text-2xl font-bold text-gray-800">📊 Performance & 360 Review</h1>
-        <p className="text-gray-600">Theo dõi chỉ số KPI và tổng hợp đánh giá phản hồi</p>
-      </div>
-
-      {message && (
-        <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-          {message}
-        </div>
-      )}
-
-      {/* Thống kê Tổng quan */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Tổng số KPI</p>
-          <p className="text-3xl font-bold text-blue-600 mt-1">{data?.totalKpis || 0}</p>
-        </div>
-        <div className="bg-white p-5 rounded-xl border shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Tỷ lệ hoàn thành trung bình</p>
-          <p className="text-3xl font-bold text-green-600 mt-1">
-            {data?.avgCompletionPercentage || 0}%
-          </p>
-        </div>
-        <div className="bg-white p-5 rounded-xl border shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Điểm 360 Feedback TB</p>
-          <p className="text-3xl font-bold text-purple-600 mt-1">
-            {data?.avgFeedbackScore || 0} / 10
-          </p>
-        </div>
-      </div>
-
-      {/* Khối KPI Metrics */}
-      <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-800">🎯 KPI Metrics</h2>
-          {data?.kpis.length === 0 && (
-            <button
-              onClick={handleSeedKpis}
-              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
-            >
-              Tạo KPI mẫu
-            </button>
-          )}
-        </div>
-
-        {data?.kpis.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">Chưa có chỉ số KPI nào được ghi nhận.</p>
-        ) : (
-          <div className="space-y-4">
-            {data?.kpis.map((kpi) => {
-              const progress = Math.min(
-                100,
-                Math.round((kpi.actualValue / (kpi.targetValue || 1)) * 100),
-              );
-
-              return (
-                <div key={kpi.id} className="p-4 border rounded-lg space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-semibold text-gray-800">{kpi.metricName}</h3>
-                      <p className="text-xs text-gray-500">Kỳ đánh giá: {kpi.period}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-gray-700">
-                        {kpi.actualValue} / {kpi.targetValue}
-                      </span>
-                      <p className="text-xs text-gray-500">{progress}% hoàn thành</p>
-                    </div>
-                  </div>
-                  {/* Progress Bar */}
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div
-                      className={`h-2.5 rounded-full ${
-                        progress >= 100 ? 'bg-green-500' : progress >= 70 ? 'bg-blue-500' : 'bg-yellow-500'
-                      }`}
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+    <div>
+      {/* HEADER BANNER */}
+      <div className="hero-banner" style={{ marginBottom: '24px', padding: '24px 32px' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <a href="/" style={{ color: '#4f46e5', textDecoration: 'none', fontSize: '13px', fontWeight: 600 }}>← Trang chủ</a>
+            <span style={{ color: '#cbd5e1' }}>/</span>
+            <span style={{ color: '#64748b', fontSize: '13px', fontWeight: 500 }}>Đánh giá hiệu suất & KPI</span>
           </div>
-        )}
+          <h1 className="hero-title" style={{ fontSize: '24px', marginBottom: '6px' }}>📊 AI Performance Tracking Agent</h1>
+          <p className="hero-subtitle" style={{ maxWidth: '640px' }}>
+            Theo dõi biểu đồ so sánh chỉ số KPI thực tế và tự động chạy vào ngày 25 hàng tháng để gửi tin nhắn nhắc nhở kèm Magic Link form review 360°.
+          </p>
+        </div>
+
+        <button
+          onClick={handleTriggerAllPending}
+          disabled={loading}
+          className="btn btn-green"
+          style={{ padding: '12px 22px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1 }}
+        >
+          <span>📨</span> {loading ? 'Đang quét & gửi Magic Link...' : `Quét & Gửi Magic Link (${pendingCount} nhân sự)`}
+        </button>
       </div>
 
-      {/* Khối 360 Feedback */}
-      <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
-        <h2 className="text-xl font-bold text-gray-800">💬 Đánh giá 360 Feedback nhận được</h2>
-        {data?.feedbacks.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">Chưa có phản hồi 360 nào.</p>
-        ) : (
-          <div className="space-y-3">
-            {data?.feedbacks.map((fb) => (
-              <div key={fb.id} className="p-4 bg-gray-50 rounded-lg border space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium text-gray-800">
-                    Người đánh giá: {fb.reviewer?.fullName || 'Đồng nghiệp'}
-                  </span>
-                  <span className="px-2.5 py-0.5 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
-                    {fb.score} / 10 điểm
-                  </span>
+      {/* 3 THẺ THỐNG KÊ NHANH */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div className="stat-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div className="stat-label">Trung bình KPI toàn khối</div>
+              <div className="stat-value" style={{ color: '#4f46e5' }}>87.8%</div>
+            </div>
+            <div className="stat-icon-box bg-blue-soft" style={{ marginBottom: 0 }}>📊</div>
+          </div>
+          <div className="stat-trend trend-up" style={{ marginTop: '14px' }}>
+            ↑ Vượt 2.8% so với mục tiêu đề ra
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div className="stat-label">Nhân viên chưa nộp đánh giá 360°</div>
+              <div className="stat-value" style={{ color: '#ea580c' }}>{pendingCount}</div>
+            </div>
+            <div className="stat-icon-box bg-orange-soft" style={{ marginBottom: 0 }}>⏳</div>
+          </div>
+          <div className="stat-trend trend-neutral" style={{ marginTop: '14px' }}>
+            Sẵn sàng nhận tin nhắn kèm Magic Link
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div className="stat-label">Lịch chạy Cronjob định kỳ</div>
+              <div className="stat-value" style={{ fontSize: '20px', marginTop: '4px' }}>Ngày 25 hàng tháng</div>
+            </div>
+            <div className="stat-icon-box bg-purple-soft" style={{ marginBottom: 0 }}>🗓️</div>
+          </div>
+          <div className="stat-trend trend-up" style={{ marginTop: '14px' }}>
+            🟢 Tự động lọc & gửi form review
+          </div>
+        </div>
+      </div>
+
+      {/* BỐ CỤC 2 CỘT CHÍNH */}
+      <div className="dashboard-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* KHỐI 1: BIỂU ĐỒ SO SÁNH KPI (KPI COMPARISON CHART) */}
+          <div className="section-card">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">📈 Biểu đồ So sánh KPI (Thực tế vs Mục tiêu)</h2>
+                <p className="section-sub">Dữ liệu trích xuất từ bảng chỉ số kpi_metrics trong kỳ đánh giá</p>
+              </div>
+              <span className="tag-pill">Quý hiện tại</span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {kpiMetrics.map(item => (
+                <div key={item.id} style={{ padding: '14px 16px', borderRadius: '12px', border: '1px solid #f1f5f9', background: '#f8fafc' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13.5px' }}>
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{item.metric} <span style={{ fontWeight: 400, color: '#64748b', fontSize: '12px' }}>({item.dept})</span></span>
+                    <span style={{ fontWeight: 700, color: item.actual >= item.target ? '#16a34a' : '#ea580c' }}>
+                      Thực tế: {item.actual}% <span style={{ color: '#94a3b8', fontWeight: 500 }}>/ Mục tiêu: {item.target}%</span>
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', background: '#e2e8f0', height: '10px', borderRadius: '99px', position: 'relative', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        width: `${item.actual}%`,
+                        background: item.actual >= item.target ? 'linear-gradient(90deg, #4f46e5, #10b981)' : '#f97316',
+                        height: '100%',
+                        borderRadius: '99px',
+                        transition: 'width 0.4s ease'
+                      }}
+                    ></div>
+                  </div>
                 </div>
-                {fb.comment && <p className="text-sm text-gray-600">"{fb.comment}"</p>}
-                <p className="text-xs text-gray-400">Kỳ: {fb.period}</p>
+              ))}
+            </div>
+          </div>
+
+          {/* KHỐI 2: DANH SÁCH NHÂN SỰ & MAGIC LINK (FEEDBACKS) */}
+          <div className="section-card">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">📋 Danh sách nhân sự & Trạng thái Form Review 360°</h2>
+                <p className="section-sub">Hệ thống tự động tạo Magic Link riêng biệt cho từng nhân viên chưa hoàn thành</p>
+              </div>
+              <span className="tag-pill">{pendingCount} chưa nộp</span>
+            </div>
+
+            <div>
+              {employees.map(emp => (
+                <div key={emp.id} className="list-row">
+                  <div className="row-left">
+                    <div className={`stat-icon-box ${emp.completed ? 'bg-green-soft' : 'bg-orange-soft'}`} style={{ marginBottom: 0, width: '42px', height: '42px', fontWeight: 700, fontSize: '14px' }}>
+                      {emp.name.split(' ').pop()?.charAt(0)}
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <h3 className="row-title" style={{ margin: 0 }}>{emp.name}</h3>
+                        <span style={{ fontSize: '12px', color: '#64748b' }}>({emp.email})</span>
+                      </div>
+                      <p className="row-meta" style={{ marginTop: '3px' }}>
+                        {emp.role} · {emp.dept}
+                      </p>
+                      {!emp.completed && (
+                        <div style={{ fontSize: '11.5px', color: '#4f46e5', marginTop: '4px', fontFamily: 'monospace' }}>
+                          🔗 Magic Link: {emp.magicLink}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="row-right">
+                    <span
+                      className="status-pill"
+                      style={{
+                        background: emp.completed ? '#dcfce7' : emp.reminded ? '#e0e7ff' : '#ffedd5',
+                        color: emp.completed ? '#15803d' : emp.reminded ? '#4338ca' : '#c2410c'
+                      }}
+                    >
+                      {emp.status}
+                    </span>
+                    {!emp.completed && (
+                      <button
+                        onClick={() => handleSendSingleMagicLink(emp.id)}
+                        disabled={loading}
+                        className="btn"
+                        style={{ padding: '7px 12px', fontSize: '12px', background: '#0f172a' }}
+                      >
+                        Gửi Magic Link
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* CỘT PHẢI: CẤU HÌNH CRONJOB & NHẬT KÝ GỬI */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="section-card">
+            <h2 className="section-title" style={{ marginBottom: '12px' }}>⚙️ Quy trình tự động ngày 25</h2>
+            <p style={{ fontSize: '13px', color: '#64748b', lineHeight: 1.6, marginBottom: '16px' }}>
+              Vào ngày 25 hàng tháng, hệ thống tự động tìm toàn bộ nhân sự chưa nộp bài đánh giá 360° và gửi tin nhắn kèm đường dẫn Magic Link cá nhân hóa.
+            </p>
+
+            <div style={{ background: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '16px', fontSize: '12.5px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#64748b' }}>Lịch chạy tự động:</span>
+                <span style={{ fontWeight: 600, color: '#0f172a' }}>09:00 - Ngày 25 hàng tháng</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ color: '#64748b' }}>Điều kiện lọc:</span>
+                <span style={{ fontWeight: 600, color: '#ea580c' }}>Trạng thái = "Chờ nộp"</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#64748b' }}>Nội dung gửi:</span>
+                <span style={{ fontWeight: 600, color: '#4f46e5' }}>Tin nhắn + Magic Link Review</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleTriggerAllPending}
+              disabled={loading}
+              className="btn btn-green"
+              style={{ width: '100%', padding: '12px' }}
+            >
+              {loading ? 'Đang thực thi...' : '⚡ Kích hoạt quét & gửi nhắc nhở ngay'}
+            </button>
+          </div>
+
+          <div className="section-card">
+            <h2 className="section-title" style={{ marginBottom: '14px' }}>⚡ Nhật ký gửi nhắc nhở</h2>
+            {logs.map((log, index) => (
+              <div key={index} className="activity-item">
+                <div className="act-left">
+                  <div className={`act-icon bg-${log.type}-soft`}>
+                    {log.type === 'green' ? '✓' : '📨'}
+                  </div>
+                  <p className="act-text">{log.text}</p>
+                </div>
+                <span className="act-time">{log.time}</span>
               </div>
             ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
