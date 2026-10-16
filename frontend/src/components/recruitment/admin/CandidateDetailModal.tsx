@@ -248,14 +248,14 @@ export default function CandidateDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-sans">
       <div className="bg-white border border-[#ebebeb] rounded-[12px] w-full max-w-7xl h-[92vh] flex flex-col shadow-[0px_4px_16px_rgba(0,0,0,0.08),0px_16px_32px_-4px_rgba(0,0,0,0.12)] overflow-hidden">
         {/* Modal Top Bar */}
-        <div className="px-6 py-3.5 border-b border-[#ebebeb] flex items-center justify-between bg-white">
+        <div className="px-6 py-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
           <div className="flex items-center space-x-3.5">
-            <div className="h-8 w-8 rounded-[6px] bg-[#171717] text-white flex items-center justify-center font-bold text-xs uppercase shadow-[0px_1px_1px_rgba(0,0,0,0.04)]">
+            <div className="h-9 w-9 rounded-lg bg-linear-to-br from-red-600 to-rose-700 text-white flex items-center justify-center font-bold text-sm uppercase shadow-xs">
               {candidate.name[0] || 'C'}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-semibold text-[#171717] tracking-tight">
+                <h2 className="text-sm font-bold text-slate-900 tracking-tight">
                   {candidate.name}
                 </h2>
                 {isPending ? (
@@ -264,7 +264,7 @@ export default function CandidateDetailModal({
                   </span>
                 ) : (
                   <span
-                    className={`font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] border ${getScoreBadge(
+                    className={`font-mono text-[10px] font-semibold px-2 py-0.5 rounded-[4px] border ${getScoreBadge(
                       score
                     )}`}
                   >
@@ -272,16 +272,16 @@ export default function CandidateDetailModal({
                   </span>
                 )}
               </div>
-              <div className="flex items-center space-x-3 font-mono text-[11px] text-[#8f8f8f] mt-0.5">
+              <div className="flex items-center space-x-3 font-mono text-[11px] text-slate-500 mt-0.5">
                 <span className="flex items-center">
-                  <Mail className="w-3 h-3 mr-1 text-[#a1a1a1]" aria-hidden="true" /> {candidate.email}
+                  <Mail className="w-3 h-3 mr-1 text-slate-400" aria-hidden="true" /> {candidate.email}
                 </span>
                 {candidate.phone && (
                   <span>• {candidate.phone}</span>
                 )}
                 {candidate.experienceYears !== null &&
                   candidate.experienceYears !== undefined && (
-                    <span className="text-[#171717] font-medium">
+                    <span className="text-slate-900 font-semibold">
                       • {candidate.experienceYears}Y EXP
                     </span>
                   )}
@@ -289,22 +289,22 @@ export default function CandidateDetailModal({
             </div>
           </div>
 
-          {/* Action buttons - 6px Vercel Controls */}
+          {/* Action buttons */}
           <div className="flex items-center space-x-2">
             <button
               onClick={handleScheduleMeet}
               disabled={schedulingMeet || isPending}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-[6px] bg-[#0070f3] hover:bg-[#0060df] text-white text-xs font-medium transition-colors disabled:opacity-50 shadow-[0px_1px_1px_rgba(0,0,0,0.04)] cursor-pointer focus-ring"
-              title="Kích hoạt n8n WF_05: Xếp lịch Google Meet và gửi thư mời"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
+              title="Kích hoạt n8n WF_05: Xếp lịch Google Meet và gửi thư mời cho ứng viên"
             >
               <Video className={`w-3.5 h-3.5 ${schedulingMeet ? 'animate-spin' : ''}`} aria-hidden="true" />
-              <span>{schedulingMeet ? 'Đang tạo...' : 'Lên lịch Meet'}</span>
+              <span>{schedulingMeet ? 'Đang tạo Meet...' : 'Lên lịch Meet'}</span>
             </button>
 
             <button
               onClick={handleArchivePool}
               disabled={archivingPool || isPending}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-[6px] bg-white hover:bg-[#fafafa] text-[#171717] border border-[#ebebeb] text-xs font-medium transition-colors disabled:opacity-50 shadow-[0px_1px_1px_rgba(0,0,0,0.04)] cursor-pointer focus-ring"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Kích hoạt n8n WF_06: Lưu kho nhân tài và gửi email phản hồi"
             >
               <Archive className={`w-3.5 h-3.5 ${archivingPool ? 'animate-spin' : ''}`} aria-hidden="true" />
@@ -314,7 +314,7 @@ export default function CandidateDetailModal({
             <button
               onClick={handleReEvaluate}
               disabled={reEvaluating || isPending}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-[6px] bg-white hover:bg-[#fafafa] text-[#171717] border border-[#ebebeb] text-xs font-medium transition-colors disabled:opacity-50 shadow-[0px_1px_1px_rgba(0,0,0,0.04)] cursor-pointer focus-ring"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Gửi lại CV cho Gemini AI phân tích (n8n WF_04)"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${reEvaluating || isPending ? 'animate-spin' : ''}`} aria-hidden="true" />

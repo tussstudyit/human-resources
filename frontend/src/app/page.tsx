@@ -1,30 +1,24 @@
-'use client';
+import { Metadata } from 'next';
+import { getJobs } from '@/lib/api/recruitment';
+import { UpCareerPortalClient } from '@/components/topdev/TopDevPortalClient';
+import { JobPost } from '@/types/recruitment';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+export const metadata: Metadata = {
+  title: 'UpCareer - Việc Làm IT Hàng Đầu Việt Nam | HR Tech Platform',
+  description:
+    'Nền tảng việc làm IT hàng đầu Việt Nam. Khám phá hàng ngàn việc làm lập trình viên chất lượng cao, tính lương Gross - Net, tải báo cáo thị trường IT.',
+};
 
-export default function RootPage() {
-  const router = useRouter();
-  const { initAuth } = useAuthStore();
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    initAuth().then(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        router.replace('/dashboard');
-      } else {
-        router.replace('/login');
-      }
-    });
-  }, [initAuth, router]);
+export default async function HomePage() {
+  let initialJobs: JobPost[] = [];
 
-  return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white text-xs">
-      <div className="flex items-center space-x-2">
-        <div className="h-4 w-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <span>Đang khởi động HR Platform...</span>
-      </div>
-    </div>
-  );
+  try {
+    initialJobs = await getJobs();
+  } catch (err) {
+    console.error('Lỗi SSR khi tải danh sách việc làm:', err);
+  }
+
+  return <UpCareerPortalClient initialRealJobs={initialJobs} />;
 }

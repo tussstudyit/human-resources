@@ -48,6 +48,13 @@ export class RecruitmentController {
     return this.recruitmentService.getAdminJobs(status);
   }
 
+  // 2.5 AUTHENTICATED: Get recruitment & pipeline statistics
+  @UseGuards(JwtAuthGuard)
+  @Get('stats')
+  async getStats() {
+    return this.recruitmentService.getRecruitmentStats();
+  }
+
   // 3. PUBLIC: Get single OPEN job by ID
   @Get('jobs/:id')
   async getJobById(@Param('id') id: string) {
@@ -92,6 +99,28 @@ export class RecruitmentController {
   @Post('candidates/:id/re-evaluate')
   async reEvaluate(@Param('id') id: string) {
     return this.recruitmentService.reEvaluateCandidate(id);
+  }
+
+  // 8.1 HR ONLY: Schedule interview (triggers n8n WF_05)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR)
+  @Post('candidates/:id/schedule-interview')
+  async scheduleInterview(
+    @Param('id') id: string,
+    @Body('interviewType') interviewType?: string,
+  ) {
+    return this.recruitmentService.scheduleCandidateInterview(id, interviewType);
+  }
+
+  // 8.2 HR ONLY: Archive to Talent Pool & send rejection notice (triggers n8n WF_06)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR)
+  @Post('candidates/:id/talent-pool')
+  async archiveTalentPool(
+    @Param('id') id: string,
+    @Body('scenario') scenario?: string,
+  ) {
+    return this.recruitmentService.archiveCandidateTalentPool(id, scenario);
   }
 
   // 9. PUBLIC: Apply for job with CV upload (memoryStorage, magic bytes check, rate-limited)
