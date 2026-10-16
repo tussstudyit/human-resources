@@ -1,0 +1,178 @@
+{
+  "name": "WF_10_cert_expiration_alert",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 * * *"
+            }
+          ]
+        }
+      },
+      "id": "daily-at-00:00",
+      "name": "Daily at 00:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT c.id, c.name, c.user_id, c.expiry_date, u.email, u.name AS employee_name FROM certifications c LEFT JOIN users u ON u.id = c.user_id WHERE c.expiry_date >= CURRENT_DATE AND c.expiry_date < CURRENT_DATE + INTERVAL '31 days' ORDER BY c.expiry_date ASC;",
+        "options": {}
+      },
+      "id": "get-expiring-certificates",
+      "name": "Get expiring certificates",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(({json: row}) => { const expiry = new Date(row.expiry_date); const daysLeft = Math.ceil((expiry - new Date()) / 86400000); return {json:{...row,days_left:daysLeft,alert_message:`Certificate \"${row.name}\" for ${row.employee_name || row.user_id || 'an employee'} expires in ${daysLeft} day(s) on ${row.expiry_date}.`}}; });"
+      },
+      "id": "prepare-alert-rows",
+      "name": "Prepare alert rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-rows",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-expiring-certificates",
+      "name": "Has expiring certificates?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.HR_ALERT_FROM || 'configure-sender@example.com' }}",
+        "toEmail": "={{ $env.HR_ALERT_TO || 'configure-hr@example.com' }}",
+        "subject": "=Certificate expiring soon: {{$json.name}}",
+        "emailFormat": "text",
+        "text": "={{$json.alert_message}}",
+        "options": {}
+      },
+      "id": "send-alert-to-hr-(configure)",
+      "name": "Send alert to HR (configure)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        220
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "no-certificates-to-alert",
+      "name": "No certificates to alert",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Daily at 00:00": {
+      "main": [
+        [
+          {
+            "node": "Get expiring certificates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get expiring certificates": {
+      "main": [
+        [
+          {
+            "node": "Prepare alert rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare alert rows": {
+      "main": [
+        [
+          {
+            "node": "Has expiring certificates?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has expiring certificates?": {
+      "main": [
+        [
+          {
+            "node": "Send alert to HR (configure)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No certificates to alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "training-cert-expiration-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

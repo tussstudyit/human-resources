@@ -1,0 +1,99 @@
+{
+  "name": "WF_11_skill_gap_course_recommender",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-(test)",
+      "name": "Manual trigger (test)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Adapt table/column names to your Prisma schema before activating.\nSELECT u.id AS user_id, u.name AS employee_name, s.skill_name, s.current_level, s.required_level FROM users u JOIN employee_skills s ON s.user_id = u.id WHERE COALESCE(s.current_level, 0) < COALESCE(s.required_level, 0) ORDER BY u.id, s.skill_name;",
+        "options": {}
+      },
+      "id": "get-employee-skill-gaps",
+      "name": "Get employee skill gaps",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const catalog=[{keywords:['python','data','ai','machine learning'],course:'Python & AI fundamentals',providers:['Coursera','Udemy'],url:'https://www.coursera.org/'},{keywords:['cloud','docker','devops','kubernetes'],course:'Docker and DevOps fundamentals',providers:['Coursera','Udemy'],url:'https://www.udemy.com/'},{keywords:['communication','leadership','teamwork'],course:'Communication and leadership',providers:['Coursera','Udemy'],url:'https://www.coursera.org/'},{keywords:['sql','database','postgres'],course:'SQL and database management',providers:['Coursera','Udemy'],url:'https://www.udemy.com/'}]; return $input.all().map(({json:r})=>{const skill=String(r.skill_name||'').toLowerCase();const match=catalog.find(c=>c.keywords.some(k=>skill.includes(k)));return {json:{...r,skill_gap:Math.max(0,Number(r.required_level||0)-Number(r.current_level||0)),recommended_course:match?.course||`Learning path: ${r.skill_name}`,providers:match?.providers||['Coursera','Udemy'],course_url:match?.url||'https://www.coursera.org/'}};});"
+      },
+      "id": "build-course-recommendations",
+      "name": "Build course recommendations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "output-recommendations",
+      "name": "Output recommendations",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Manual trigger (test)": {
+      "main": [
+        [
+          {
+            "node": "Get employee skill gaps",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get employee skill gaps": {
+      "main": [
+        [
+          {
+            "node": "Build course recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build course recommendations": {
+      "main": [
+        [
+          {
+            "node": "Output recommendations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "training-skill-gap-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
