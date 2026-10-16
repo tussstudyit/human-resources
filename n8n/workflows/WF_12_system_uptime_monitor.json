@@ -1,0 +1,245 @@
+{
+  "name": "WF_12_system_uptime_monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "every-15-minutes",
+      "name": "Every 15 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MONITOR_WEB_URL || 'http://localhost:3000' }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "check-web",
+      "name": "Check Web",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MONITOR_API_URL || 'http://localhost:3001' }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "check-api",
+      "name": "Check API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.MONITOR_DB_HEALTH_URL || 'http://localhost:3001/health/db' }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "check-database-health-endpoint",
+      "name": "Check database health endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const checks=[{service:'Web',item:$('Check Web').first()},{service:'API',item:$('Check API').first()},{service:'Database health endpoint',item:$('Check database health endpoint').first()}]; return checks.map(({service,item})=>{const status=item?.json?.statusCode??item?.json?.status??'unknown';const ok=typeof status==='number'?status>=200&&status<400:String(status).toLowerCase()==='ok';return {json:{service,status,ok,checked_at:new Date().toISOString(),message:ok?`${service} is responding (${status}).`:`${service} health check failed; status=${status}.`}};});"
+      },
+      "id": "combine-check-results",
+      "name": "Combine check results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-failure",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "failure",
+      "name": "Failure?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        920,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ALERT_WEBHOOK_URL || 'https://example.com/replace-with-webhook' }}",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { text: $json.message + ' Checked at ' + $json.checked_at } }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "send-alert-to-chat-(configure)",
+      "name": "Send alert to chat (configure)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        220
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "healthy-service",
+      "name": "Healthy service",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Every 15 minutes": {
+      "main": [
+        [
+          {
+            "node": "Check Web",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check database health endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Web": {
+      "main": [
+        [
+          {
+            "node": "Combine check results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check API": {
+      "main": [
+        [
+          {
+            "node": "Combine check results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check database health endpoint": {
+      "main": [
+        [
+          {
+            "node": "Combine check results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine check results": {
+      "main": [
+        [
+          {
+            "node": "Failure?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failure?": {
+      "main": [
+        [
+          {
+            "node": "Send alert to chat (configure)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Healthy service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "training-uptime-monitor-v1",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
