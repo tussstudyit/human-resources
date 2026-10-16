@@ -1,7 +1,19 @@
+'use client';
 
-"use client";
-
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  ArrowLeft,
+  GraduationCap,
+  BookOpen,
+  Award,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  Mail,
+  User,
+  Calendar,
+} from 'lucide-react';
 
 type Skill = {
   name: string;
@@ -18,35 +30,35 @@ type Certification = {
 };
 
 const initialSkills: Skill[] = [
-  { name: "Technical", current: 65, target: 85 },
-  { name: "Communication", current: 70, target: 80 },
-  { name: "Leadership", current: 45, target: 75 },
-  { name: "Problem Solving", current: 60, target: 85 },
-  { name: "Teamwork", current: 80, target: 85 },
-  { name: "Adaptability", current: 55, target: 80 },
+  { name: 'Technical', current: 65, target: 85 },
+  { name: 'Communication', current: 70, target: 80 },
+  { name: 'Leadership', current: 45, target: 75 },
+  { name: 'Problem Solving', current: 60, target: 85 },
+  { name: 'Teamwork', current: 80, target: 85 },
+  { name: 'Adaptability', current: 55, target: 80 },
 ];
 
 const initialCertifications: Certification[] = [
   {
     id: 1,
-    name: "AWS Cloud Practitioner",
-    issuer: "Amazon Web Services",
-    issueDate: "2025-03-10",
-    expirationDate: "2028-03-10",
+    name: 'AWS Cloud Practitioner',
+    issuer: 'Amazon Web Services',
+    issueDate: '2025-03-10',
+    expirationDate: '2028-03-10',
   },
   {
     id: 2,
-    name: "Professional Scrum Master I",
-    issuer: "Scrum.org",
-    issueDate: "2025-07-15",
-    expirationDate: "",
+    name: 'Professional Scrum Master I',
+    issuer: 'Scrum.org',
+    issueDate: '2025-07-15',
+    expirationDate: '',
   },
   {
     id: 3,
-    name: "Google Data Analytics",
-    issuer: "Google",
-    issueDate: "2024-11-20",
-    expirationDate: "2026-11-20",
+    name: 'Google Data Analytics',
+    issuer: 'Google',
+    issueDate: '2024-11-20',
+    expirationDate: '2026-11-20',
   },
 ];
 
@@ -57,13 +69,11 @@ function RadarChart({ skills }: { skills: Skill[] }) {
   const points = (values: number[]) =>
     values
       .map((value, index) => {
-        const angle =
-          -Math.PI / 2 + (2 * Math.PI * index) / values.length;
+        const angle = -Math.PI / 2 + (2 * Math.PI * index) / values.length;
         const r = (value / 100) * radius;
-
         return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
       })
-      .join(" ");
+      .join(' ');
 
   const grid = [20, 40, 60, 80, 100];
 
@@ -86,24 +96,15 @@ function RadarChart({ skills }: { skills: Skill[] }) {
       ))}
 
       {skills.map((skill, index) => {
-        const angle =
-          -Math.PI / 2 + (2 * Math.PI * index) / skills.length;
-
+        const angle = -Math.PI / 2 + (2 * Math.PI * index) / skills.length;
         const x = center + radius * Math.cos(angle);
         const y = center + radius * Math.sin(angle);
-
         const labelX = center + (radius + 28) * Math.cos(angle);
         const labelY = center + (radius + 28) * Math.sin(angle);
 
         return (
           <g key={skill.name}>
-            <line
-              x1={center}
-              y1={center}
-              x2={x}
-              y2={y}
-              stroke="#d1d5db"
-            />
+            <line x1={center} y1={center} x2={x} y2={y} stroke="#d1d5db" />
             <text
               x={labelX}
               y={labelY}
@@ -138,14 +139,13 @@ function RadarChart({ skills }: { skills: Skill[] }) {
 }
 
 function formatDate(date: string) {
-  if (!date) return "Không hết hạn";
-
-  return new Date(`${date}T00:00:00`).toLocaleDateString("vi-VN");
+  if (!date) return 'Không hết hạn';
+  return new Date(`${date}T00:00:00`).toLocaleDateString('vi-VN');
 }
 
 function getStatus(expirationDate: string) {
   if (!expirationDate) {
-    return { label: "Không hết hạn", className: "bg-blue-100 text-blue-800" };
+    return { label: 'Không hết hạn', className: 'bg-blue-100 text-blue-800' };
   }
 
   const today = new Date();
@@ -157,29 +157,40 @@ function getStatus(expirationDate: string) {
   );
 
   if (daysLeft < 0) {
-    return { label: "Đã hết hạn", className: "bg-red-100 text-red-800" };
+    return { label: 'Đã hết hạn', className: 'bg-red-100 text-red-800' };
   }
 
   if (daysLeft <= 90) {
     return {
-      label: "Sắp hết hạn",
-      className: "bg-amber-100 text-amber-800",
+      label: 'Sắp hết hạn',
+      className: 'bg-amber-100 text-amber-800',
     };
   }
 
-  return { label: "Còn hiệu lực", className: "bg-green-100 text-green-800" };
+  return { label: 'Còn hiệu lực', className: 'bg-green-100 text-green-800' };
 }
 
 export default function TrainingPage() {
   const [skills, setSkills] = useState(initialSkills);
   const [certifications, setCertifications] = useState(initialCertifications);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  const [name, setName] = useState("");
-  const [issuer, setIssuer] = useState("");
-  const [issueDate, setIssueDate] = useState("");
-  const [expirationDate, setExpirationDate] = useState("");
+  const [name, setName] = useState('');
+  const [issuer, setIssuer] = useState('');
+  const [issueDate, setIssueDate] = useState('');
+  const [expirationDate, setExpirationDate] = useState('');
+
+  // Tan's training reminder workflow state
+  const [reminderData, setReminderData] = useState({
+    employeeName: 'Trần Anh Tân',
+    employeeEmail: 'anhtanht1905@gmail.com',
+    courseName: 'AWS Solutions Architect & Next.js Microservices',
+    dueDate: '30/10/2026',
+    progress: 85,
+  });
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const filteredCertifications = useMemo(
     () =>
@@ -192,7 +203,6 @@ export default function TrainingPage() {
   );
 
   const totalSkills = skills.length;
-
   const averageGap =
     skills.reduce(
       (sum, skill) => sum + Math.max(skill.target - skill.current, 0),
@@ -201,14 +211,13 @@ export default function TrainingPage() {
 
   function addCertification(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     if (!name.trim() || !issuer.trim() || !issueDate) {
-      alert("Vui lòng nhập tên chứng chỉ, đơn vị cấp và ngày cấp.");
+      alert('Vui lòng nhập tên chứng chỉ, đơn vị cấp và ngày cấp.');
       return;
     }
 
     if (expirationDate && expirationDate < issueDate) {
-      alert("Ngày hết hạn không được trước ngày cấp.");
+      alert('Ngày hết hạn không được trước ngày cấp.');
       return;
     }
 
@@ -223,16 +232,15 @@ export default function TrainingPage() {
       },
     ]);
 
-    setName("");
-    setIssuer("");
-    setIssueDate("");
-    setExpirationDate("");
+    setName('');
+    setIssuer('');
+    setIssueDate('');
+    setExpirationDate('');
     setShowForm(false);
   }
 
   function deleteCertification(id: number) {
-    if (!window.confirm("Bạn có chắc muốn xóa chứng chỉ này?")) return;
-
+    if (!window.confirm('Bạn có chắc muốn xóa chứng chỉ này?')) return;
     setCertifications((previous) =>
       previous.filter((cert) => cert.id !== id)
     );
@@ -240,7 +248,7 @@ export default function TrainingPage() {
 
   function updateSkill(
     index: number,
-    field: "current" | "target",
+    field: 'current' | 'target',
     value: number
   ) {
     setSkills((previous) =>
@@ -250,55 +258,141 @@ export default function TrainingPage() {
     );
   }
 
+  const handleTriggerTrainingWorkflow = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus(null);
+
+    const payload = {
+      ...reminderData,
+      employeeEmail: reminderData.employeeEmail.trim().replace(/^=/, ''),
+      employeeName: reminderData.employeeName.trim(),
+    };
+
+    try {
+      const res = await fetch('http://localhost:5678/webhook/training-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setStatus({
+          type: 'success',
+          message: 'Đã gửi thông báo nhắc nhở đào tạo & chứng chỉ thành công!',
+        });
+      } else {
+        const testRes = await fetch('http://localhost:5678/webhook-test/training-reminder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (testRes.ok) {
+          setStatus({
+            type: 'success',
+            message: 'Đã gửi thông báo nhắc nhở đào tạo thành công!',
+          });
+        } else {
+          throw new Error('Không thể kết nối hệ thống');
+        }
+      }
+    } catch {
+      setStatus({
+        type: 'error',
+        message: 'Lỗi kết nối hệ thống tự động hóa. Vui lòng thử lại sau.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 p-4 text-slate-900 sm:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-blue-600 font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" /> Quay lại Dashboard
+        </Link>
+
+        {/* Header */}
         <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600">
-              Human Resources
-            </p>
-            <h1 className="mt-2 text-3xl font-bold">Training & Certifications</h1>
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                <GraduationCap className="w-6 h-6" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-600 font-mono">
+                  AGENT 4 · SKILLS & TRAINING
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-bold">Training & Certifications</h1>
+              </div>
+            </div>
             <p className="mt-2 text-sm text-slate-500">
-              Theo dõi kỹ năng nhân viên và quản lý chứng chỉ.
+              Đánh giá khoảng cách kỹ năng (Skill Gap), quản lý chứng chỉ & gửi nhắc nhở đào tạo qua n8n.
             </p>
           </div>
 
           <button
             onClick={() => setShowForm(!showForm)}
-            className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+            className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 transition"
           >
             + Thêm chứng chỉ
           </button>
         </header>
 
+        {/* AI Recommendations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex gap-3 items-center">
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg">
+              <BookOpen className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 text-sm">Gợi ý khóa học: Next.js & n8n Microservices</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Đề xuất bởi AI Agent dựa trên hồ sơ kỹ năng của bạn (Tiến độ: 85%).</p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm flex gap-3 items-center">
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg">
+              <Award className="w-5 h-5 flex-shrink-0" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 text-sm">Chứng chỉ AWS Solutions Architect</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Trạng thái: Đã cập nhật & đồng bộ với cơ sở dữ liệu nhân sự.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Summary Cards */}
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Tổng kỹ năng</p>
+            <p className="text-sm text-slate-500">Tổng kỹ năng đánh giá</p>
             <p className="mt-2 text-3xl font-bold">{totalSkills}</p>
           </div>
 
           <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Khoảng trống kỹ năng trung bình</p>
+            <p className="text-sm text-slate-500">Khoảng trống kỹ năng TB (Skill Gap)</p>
             <p className="mt-2 text-3xl font-bold text-amber-600">
               {averageGap.toFixed(1)}%
             </p>
           </div>
 
           <div className="rounded-xl border bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Tổng chứng chỉ</p>
+            <p className="text-sm text-slate-500">Tổng chứng chỉ theo dõi</p>
             <p className="mt-2 text-3xl font-bold">{certifications.length}</p>
           </div>
         </section>
 
+        {/* Add Certification Modal/Form */}
         {showForm && (
           <section className="rounded-xl border bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-xl font-bold">Thêm chứng chỉ mới</h2>
 
-            <form
-              onSubmit={addCertification}
-              className="grid gap-4 sm:grid-cols-2"
-            >
+            <form onSubmit={addCertification} className="grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-medium">
                 Tên chứng chỉ *
                 <input
@@ -346,14 +440,14 @@ export default function TrainingPage() {
               <div className="flex gap-3 sm:col-span-2">
                 <button
                   type="submit"
-                  className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+                  className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 transition"
                 >
                   Lưu chứng chỉ
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="rounded-lg border px-5 py-3 font-semibold hover:bg-slate-100"
+                  className="rounded-lg border px-5 py-3 font-semibold hover:bg-slate-100 transition"
                 >
                   Hủy
                 </button>
@@ -362,12 +456,14 @@ export default function TrainingPage() {
           </section>
         )}
 
+        {/* Skill Gap Radar Chart & Certifications Table */}
         <section className="grid gap-6 lg:grid-cols-2">
+          {/* Radar Chart */}
           <div className="rounded-xl border bg-white p-5 shadow-sm">
             <div className="mb-3">
               <h2 className="text-xl font-bold">Skill Gap Radar Chart</h2>
               <p className="mt-1 text-sm text-slate-500">
-                So sánh mức kỹ năng hiện tại với mục tiêu.
+                So sánh mức kỹ năng hiện tại với mục tiêu mong đợi.
               </p>
             </div>
 
@@ -385,7 +481,7 @@ export default function TrainingPage() {
             <RadarChart skills={skills} />
 
             <div className="mt-4 space-y-4 border-t pt-4">
-              <h3 className="font-semibold">Điều chỉnh điểm kỹ năng</h3>
+              <h3 className="font-semibold text-sm">Điều chỉnh điểm kỹ năng</h3>
 
               {skills.map((skill, index) => (
                 <div key={skill.name} className="grid gap-2 sm:grid-cols-3">
@@ -399,7 +495,7 @@ export default function TrainingPage() {
                       max="100"
                       value={skill.current}
                       onChange={(event) =>
-                        updateSkill(index, "current", Number(event.target.value))
+                        updateSkill(index, 'current', Number(event.target.value))
                       }
                       className="mt-1 block w-full"
                     />
@@ -413,7 +509,7 @@ export default function TrainingPage() {
                       max="100"
                       value={skill.target}
                       onChange={(event) =>
-                        updateSkill(index, "target", Number(event.target.value))
+                        updateSkill(index, 'target', Number(event.target.value))
                       }
                       className="mt-1 block w-full"
                     />
@@ -423,11 +519,12 @@ export default function TrainingPage() {
             </div>
           </div>
 
+          {/* Certifications Table */}
           <div className="rounded-xl border bg-white p-5 shadow-sm">
             <div className="mb-4">
-              <h2 className="text-xl font-bold">Certifications</h2>
+              <h2 className="text-xl font-bold">Chứng chỉ & Hiệu lực</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Danh sách chứng chỉ và thời hạn hiệu lực.
+                Danh sách chứng chỉ chuyên môn và thời hạn hết hạn.
               </p>
             </div>
 
@@ -435,11 +532,11 @@ export default function TrainingPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Tìm tên chứng chỉ hoặc đơn vị cấp..."
-              className="mb-4 w-full rounded-lg border p-3"
+              className="mb-4 w-full rounded-lg border p-3 text-sm"
             />
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[620px] text-left text-sm">
+              <table className="w-full min-w-[500px] text-left text-sm">
                 <thead className="bg-slate-100 text-slate-600">
                   <tr>
                     <th className="p-3">Chứng chỉ</th>
@@ -452,33 +549,27 @@ export default function TrainingPage() {
 
                 <tbody>
                   {filteredCertifications.map((cert) => {
-                    const status = getStatus(cert.expirationDate);
+                    const certStatus = getStatus(cert.expirationDate);
 
                     return (
-                      <tr key={cert.id} className="border-b last:border-0">
+                      <tr key={cert.id} className="border-b last:border-0 hover:bg-slate-50/50">
                         <td className="p-3">
                           <p className="font-semibold">{cert.name}</p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {cert.issuer}
-                          </p>
+                          <p className="mt-0.5 text-xs text-slate-500">{cert.issuer}</p>
                         </td>
-                        <td className="p-3 whitespace-nowrap">
-                          {formatDate(cert.issueDate)}
-                        </td>
-                        <td className="p-3 whitespace-nowrap">
-                          {formatDate(cert.expirationDate)}
-                        </td>
+                        <td className="p-3 whitespace-nowrap">{formatDate(cert.issueDate)}</td>
+                        <td className="p-3 whitespace-nowrap">{formatDate(cert.expirationDate)}</td>
                         <td className="p-3">
                           <span
-                            className={`inline-block whitespace-nowrap rounded-full px-2 py-1 text-xs font-semibold ${status.className}`}
+                            className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${certStatus.className}`}
                           >
-                            {status.label}
+                            {certStatus.label}
                           </span>
                         </td>
                         <td className="p-3">
                           <button
                             onClick={() => deleteCertification(cert.id)}
-                            className="font-semibold text-red-600 hover:text-red-800"
+                            className="font-medium text-red-600 hover:text-red-800 text-xs"
                           >
                             Xóa
                           </button>
@@ -489,11 +580,8 @@ export default function TrainingPage() {
 
                   {filteredCertifications.length === 0 && (
                     <tr>
-                      <td
-                        colSpan={5}
-                        className="p-6 text-center text-slate-500"
-                      >
-                        Không tìm thấy chứng chỉ.
+                      <td colSpan={5} className="p-6 text-center text-slate-500">
+                        Không tìm thấy chứng chỉ phù hợp.
                       </td>
                     </tr>
                   )}
@@ -503,9 +591,111 @@ export default function TrainingPage() {
           </div>
         </section>
 
-        <p className="text-center text-xs text-slate-500">
-          Training Management · Dữ liệu demo trên trình duyệt, chưa kết nối API.
-        </p>
+        {/* Tan's Training Reminder Webhook Form */}
+        <section className="rounded-xl border bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+              <Send className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Gửi Nhắc nhở Đào tạo & Chứng chỉ</h2>
+              <p className="text-xs text-slate-500">Tự động kích hoạt n8n workflow gửi email nhắc hạn hoàn thành khóa học.</p>
+            </div>
+          </div>
+
+          {status && (
+            <div
+              className={`p-4 rounded-xl mb-4 flex items-center gap-3 ${
+                status.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+              }`}
+            >
+              {status.type === 'success' ? (
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              ) : (
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              )}
+              <span className="text-sm font-medium">{status.message}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleTriggerTrainingWorkflow} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Tên nhân viên</label>
+                <div className="relative">
+                  <User className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    value={reminderData.employeeName}
+                    onChange={(e) => setReminderData({ ...reminderData, employeeName: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Email nhận thông báo</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    value={reminderData.employeeEmail}
+                    onChange={(e) => setReminderData({ ...reminderData, employeeEmail: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Khóa học / Chứng chỉ</label>
+                <div className="relative">
+                  <BookOpen className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    value={reminderData.courseName}
+                    onChange={(e) => setReminderData({ ...reminderData, courseName: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Hạn hoàn thành (Deadline)</label>
+                <div className="relative">
+                  <Calendar className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    value={reminderData.dueDate}
+                    onChange={(e) => setReminderData({ ...reminderData, dueDate: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? (
+                'Đang gửi...'
+              ) : (
+                <>
+                  <Send className="w-4 h-4" /> Gửi Nhắc Nhở Đào Tạo (n8n Webhook)
+                </>
+              )}
+            </button>
+          </form>
+        </section>
       </div>
     </main>
   );

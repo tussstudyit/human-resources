@@ -461,10 +461,8 @@ export default function DashboardPage() {
               </Link>
 
               {/* Agent 5: Employee Engagement (Nguyen's) */}
-              <a
-                href="https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit"
-                target="_blank"
-                rel="noreferrer"
+              <Link
+                href="/engagement"
                 className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
               >
                 <div className="flex items-center justify-between mb-2.5">
@@ -477,16 +475,16 @@ export default function DashboardPage() {
                 </div>
                 <h4 className="text-xs font-semibold text-[#171717] group-hover:text-rose-600 transition-colors flex items-center justify-between">
                   AI Employee Engagement
-                  <ExternalLink className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
                 </h4>
                 <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
                   Khảo sát định kỳ, phân tích cảm xúc Gemini 1.5, đề xuất Wellbeing & theo dõi eNPS.
                 </p>
                 <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
-                  <span>DỮ LIỆU REAL-TIME</span>
-                  <span className="font-semibold underline">Google Sheets Live ↗</span>
+                  <span>TRẠNG THÁI</span>
+                  <span className="font-semibold">Hoạt động (n8n & Sheets)</span>
                 </div>
-              </a>
+              </Link>
             </div>
           </div>
 

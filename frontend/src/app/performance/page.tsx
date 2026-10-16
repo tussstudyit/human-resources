@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 interface KpiMetric {
   id: string;
@@ -79,6 +81,11 @@ export default function PerformancePage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
+      {/* Nút Quay lại Dashboard */}
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 font-medium">
+        <ArrowLeft className="w-4 h-4" /> Quay lại Dashboard
+      </Link>
+
       {/* Header */}
       <div className="border-b pb-4">
         <h1 className="text-2xl font-bold text-gray-800">📊 Performance & 360 Review</h1>

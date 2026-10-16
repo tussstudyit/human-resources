@@ -42,7 +42,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: null,
+  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
   isAuthenticated: false,
   isLoading: false,
   isInitialized: false,
@@ -64,8 +64,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
+    set({ isLoading: true });
     try {
-      set({ isLoading: true });
       const res = await api.get('/auth/me');
       set({
         user: res.data,
@@ -75,15 +75,23 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
         error: null,
       });
-    } catch {
-      localStorage.removeItem('token');
-      set({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isInitialized: true,
-        isLoading: false,
-      });
+    } catch (err: any) {
+      // Chỉ xóa token nếu thực sự lỗi 401 (Token sai/hết hạn)
+      if (err?.response?.status === 401) {
+        localStorage.removeItem('token');
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isInitialized: true,
+          isLoading: false,
+        });
+      } else {
+        set({
+          isInitialized: true,
+          isLoading: false,
+        });
+      }
     }
   },
 
