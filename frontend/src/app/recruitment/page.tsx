@@ -3,8 +3,8 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
+import { Header } from '@/components/topdev/Header';
+import AgentNavBar from '@/components/AgentNavBar';
 import RecruitmentAdminClient from '@/components/recruitment/admin/RecruitmentAdminClient';
 import Link from 'next/link';
 import { Lock, ArrowRight } from 'lucide-react';
@@ -69,14 +69,12 @@ export default function RecruitmentAdminPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#fafafa] overflow-hidden font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <Navbar />
-        <main className="flex-1 flex flex-col min-w-0">
-          <RecruitmentAdminClient />
-        </main>
-      </div>
+    <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
+      <Header />
+      <AgentNavBar />
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <RecruitmentAdminClient />
+      </main>
     </div>
   );
 }

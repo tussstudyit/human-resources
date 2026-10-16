@@ -19,4 +19,15 @@ Object.defineProperty(window, 'matchMedia', {
 // 2. Mock window.scrollTo: JSDOM có sẵn hàm nhưng log cảnh báo "Not implemented"
 window.scrollTo = vi.fn();
 
-// 3. AbortSignal.timeout: Node 20 + JSDOM đã hỗ trợ native đầy đủ, không cần mock
+// 3. Mock next/navigation for App Router components
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+  redirect: vi.fn(),
+}));

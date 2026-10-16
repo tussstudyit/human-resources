@@ -3,8 +3,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import { Header } from '@/components/topdev/Header';
+import AgentNavBar from '@/components/AgentNavBar';
 import {
   ArrowLeft,
   GraduationCap,
@@ -326,12 +326,11 @@ export default function TrainingPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#fafafa] overflow-hidden font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <Navbar />
+    <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
+      <Header />
+      <AgentNavBar />
 
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
+      <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Hero Banner Header */}
           <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 md:p-8 text-white border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
             <div className="relative z-10 space-y-2">
@@ -787,6 +786,5 @@ export default function TrainingPage() {
         </section>
       </main>
     </div>
-  </div>
-);
+  );
 }

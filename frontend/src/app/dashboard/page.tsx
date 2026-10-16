@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
-import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
+import { Header } from '@/components/topdev/Header';
+import AgentNavBar from '@/components/AgentNavBar';
 import { api } from '@/lib/api';
 import {
   Users,
@@ -195,15 +195,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] flex font-sans">
-      {/* Sidebar Navigation */}
-      <Sidebar />
+    <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
+      <Header />
+      <AgentNavBar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <Navbar />
-
-        <main className="p-6 md:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
+      <main className="p-6 md:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
           {/* Welcome Banner - UpCareer Dark Slate with Agent live status & Portal shortcut */}
           <div className="relative overflow-hidden bg-[#0F172A] rounded-[16px] p-6 md:p-7 text-white border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
             <div className="absolute -top-16 -right-16 w-64 h-64 bg-red-600/15 rounded-full blur-2xl pointer-events-none" />
@@ -958,7 +954,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </main>
-      </div>
     </div>
   );
 }
