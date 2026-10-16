@@ -69,33 +69,33 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-4 font-sans relative selection:bg-[#171717] selection:text-white">
-      {/* Micro-dot grid background */}
+    <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
+      {/* Subtle tech background grid pattern & ambient glow from TopDev Hero */}
       <div
-        className="absolute inset-0 bg-[linear-gradient(to_right,#ebebeb_1px,transparent_1px),linear-gradient(to_bottom,#ebebeb_1px,transparent_1px)] bg-[size:32px_32px] opacity-40 pointer-events-none"
+        className="absolute inset-0 opacity-15 pointer-events-none"
+        style={{
+          backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
+          backgroundSize: '24px 24px',
+        }}
         aria-hidden="true"
       />
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-red-600/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-lg bg-white rounded-[16px] border border-[#ebebeb] shadow-[0px_4px_24px_rgba(0,0,0,0.04)] p-7 md:p-8 space-y-6">
+      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl border border-slate-200/90 shadow-2xl p-7 md:p-8 space-y-6">
         {/* Header */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="inline-flex items-center space-x-2.5 group">
-              <div className="h-8 w-8 rounded-[6px] bg-[#171717] flex items-center justify-center text-white shadow-[0px_1px_2px_rgba(0,0,0,0.1)] group-hover:bg-[#333333] transition-colors">
-                <svg
-                  className="w-4 h-4 fill-current"
-                  viewBox="0 0 75 65"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M37.5 0L75 65H0z" />
-                </svg>
+              <div className="w-9 h-9 rounded-lg bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-extrabold text-lg shadow-xs group-hover:scale-105 transition-transform">
+                <span className="font-mono tracking-tighter text-white">&lt;/&gt;</span>
               </div>
               <div>
-                <span className="font-semibold text-sm text-[#171717] tracking-tight block leading-tight">
-                  HR Platform
+                <span className="font-extrabold text-base text-slate-900 tracking-tight block leading-tight">
+                  <span className="text-red-600">TOP</span>DEV <span className="text-slate-700 font-semibold text-sm">HR Platform</span>
                 </span>
-                <span className="font-mono text-[9px] text-[#8f8f8f] uppercase tracking-wider block">
-                  Enterprise ATS
+                <span className="font-mono text-[9px] text-slate-400 uppercase tracking-wider block">
+                  Enterprise ATS & Recruitment
                 </span>
               </div>
             </Link>
@@ -107,14 +107,14 @@ export default function RegisterPage() {
           </div>
 
           <div className="pt-2">
-            <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider mb-1">
-              // NEW_USER_REGISTRATION
+            <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <span>// NEW_USER_REGISTRATION</span>
             </div>
-            <h1 className="text-xl font-semibold text-[#171717] tracking-tight">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
               Đăng ký tài khoản
             </h1>
-            <p className="text-xs text-[#8f8f8f] mt-1 leading-relaxed">
-              Tạo tài khoản để tham gia hệ thống Quản trị Nhân sự & Tuyển dụng.
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Tạo tài khoản quản trị để tham gia hệ sinh thái Tuyển dụng & Nhân sự UpCareer.
             </p>
           </div>
         </div>
@@ -246,7 +246,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 py-2.5 bg-[#171717] hover:bg-[#333333] text-white rounded-[8px] text-xs font-semibold shadow-[0px_1px_2px_rgba(0,0,0,0.06)] flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-ring"
+            className="w-full mt-2 py-3 bg-linear-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-lg text-xs font-semibold shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed focus-ring"
           >
             <span>{isSubmitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}</span>
             {isSubmitting ? (
@@ -257,9 +257,9 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="pt-4 border-t border-[#ebebeb] text-center text-xs text-[#8f8f8f]">
+        <div className="pt-4 border-t border-slate-200 text-center text-xs text-slate-500">
           Đã có tài khoản?{' '}
-          <Link href="/login" className="text-[#0070f3] font-semibold hover:underline cursor-pointer">
+          <Link href="/login" className="text-red-600 font-bold hover:underline cursor-pointer">
             Đăng nhập tại đây
           </Link>
         </div>

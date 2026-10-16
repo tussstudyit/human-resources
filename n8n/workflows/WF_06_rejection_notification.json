@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-10-09T14:23:10.000Z",
+  "createdAt": "2026-10-09T12:04:22.336Z",
+  "id": "Z8f06RejectNotif",
   "name": "[HR] WF_06 - Polite Rejection Notification & Talent Pool Retention (Score < 80%)",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -186,9 +192,41 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "id": "Z8f06RejectNotif"
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "85b9dab2-ff90-4ac6-a1ed-9e9fc25321c6",
+  "activeVersionId": "85b9dab2-ff90-4ac6-a1ed-9e9fc25321c6",
+  "versionCounter": 5,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-10-09T12:04:22.338Z",
+      "createdAt": "2026-10-09T12:04:22.338Z",
+      "role": "workflow:owner",
+      "workflowId": "Z8f06RejectNotif",
+      "projectId": "6fLB1uBc0gD1ogBQ",
+      "project": {
+        "updatedAt": "2026-09-30T14:32:33.272Z",
+        "createdAt": "2026-09-30T13:39:28.905Z",
+        "id": "6fLB1uBc0gD1ogBQ",
+        "name": "Đoàn Huy <doanthanhhuy1309@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "f74528cc-054d-4509-863b-f3ddb16b799d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }

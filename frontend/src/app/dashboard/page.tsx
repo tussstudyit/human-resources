@@ -131,7 +131,7 @@ export default function DashboardPage() {
       name: '1. Nộp hồ sơ',
       count: totalCandidates.toString(),
       rate: '100%',
-      color: 'bg-blue-600',
+      color: 'bg-red-600',
       desc: 'Tổng ứng viên nộp qua Careers & n8n',
     },
     {
@@ -199,37 +199,48 @@ export default function DashboardPage() {
         <Navbar />
 
         <main className="p-6 md:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
-          {/* Welcome Banner - Stark Vercel Ink style with Agent live status */}
-          <div className="bg-[#171717] rounded-[12px] p-6 text-white border border-[#171717] shadow-[0px_1px_2px_rgba(0,0,0,0.06)] flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-            <div className="space-y-1">
-              <div className="inline-flex items-center space-x-2 font-mono text-[10px] text-[#8f8f8f] uppercase tracking-wider">
-                <Sparkles className="h-3 w-3 text-[#0070f3]" aria-hidden="true" />
-                <span>// ENTERPRISE_CONSOLE_OVERVIEW</span>
+          {/* Welcome Banner - UpCareer Dark Slate with Agent live status & Portal shortcut */}
+          <div className="relative overflow-hidden bg-[#0F172A] rounded-[16px] p-6 md:p-7 text-white border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-red-600/15 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative z-10 space-y-1.5">
+              <div className="inline-flex items-center space-x-2 font-mono text-[10px] text-slate-400 uppercase tracking-wider">
+                <Sparkles className="h-3 w-3 text-red-500" aria-hidden="true" />
+                <span>// UPCAREER_CONSOLE_OVERVIEW</span>
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 font-mono">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
                   AI RECRUITMENT ONLINE (100%)
                 </span>
               </div>
-              <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-balance">
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
                 Xin chào, {user.fullName}!
               </h2>
-              <p className="text-[#a1a1a1] text-xs max-w-2xl leading-relaxed">
-                Hệ thống Quản lý Nhân sự Thông minh kết nối trực tiếp cơ sở dữ liệu và n8n Automation Engine để sàng lọc ứng viên, tạo lịch phỏng vấn và quản trị nhân tài.
+              <p className="text-slate-300 text-xs max-w-2xl leading-relaxed">
+                Hệ thống Quản lý Tuyển dụng & Nhân sự UpCareer kết nối trực tiếp cơ sở dữ liệu và n8n Automation Engine để sàng lọc ứng viên, tạo lịch phỏng vấn và quản trị nhân tài.
               </p>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="flex items-center gap-2.5 bg-white/5 px-3.5 py-2.5 rounded-[6px] border border-white/10 text-xs font-mono">
-                <Shield className="h-4 w-4 text-[#0070f3]" aria-hidden="true" />
+            <div className="relative z-10 flex items-center gap-3 shrink-0 flex-wrap">
+              <div className="flex items-center gap-2.5 bg-white/5 px-3.5 py-2 rounded-[8px] border border-white/10 text-xs font-mono">
+                <Shield className="h-4 w-4 text-red-500" aria-hidden="true" />
                 <div>
-                  <span className="text-[#8f8f8f] block text-[10px]">CURRENT_ROLE</span>
-                  <span className="font-semibold text-white uppercase">{user.role}</span>
+                  <span className="text-slate-400 block text-[9px]">CURRENT_ROLE</span>
+                  <span className="font-semibold text-white uppercase text-xs">{user.role}</span>
                 </div>
               </div>
 
               <Link
+                href="/"
+                target="_blank"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/15 text-white rounded-[8px] text-xs font-medium transition-colors border border-white/15 focus-ring cursor-pointer"
+                title="Mở cổng việc làm UpCareer"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-slate-300" aria-hidden="true" />
+                <span>Cổng UpCareer</span>
+              </Link>
+
+              <Link
                 href="/recruitment"
-                className="flex items-center gap-1.5 px-3.5 py-2.5 bg-[#0070f3] hover:bg-[#0060df] text-white rounded-[6px] text-xs font-medium transition-colors shadow-sm focus-ring cursor-pointer"
+                className="flex items-center gap-1.5 px-4 py-2 bg-linear-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white rounded-[8px] text-xs font-semibold transition-all shadow-md hover:shadow-lg focus-ring cursor-pointer"
               >
                 <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
                 <span>Mở ATS Tuyển dụng</span>
@@ -339,7 +350,7 @@ export default function DashboardPage() {
                 </span>
                 <Link
                   href="/recruitment"
-                  className="inline-flex items-center space-x-1 text-xs font-medium text-[#0070f3] hover:underline cursor-pointer"
+                  className="inline-flex items-center space-x-1 text-xs font-semibold text-red-600 hover:text-red-700 hover:underline cursor-pointer"
                 >
                   <span>Xem chi tiết ATS</span>
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -351,7 +362,7 @@ export default function DashboardPage() {
               {dynamicFunnelStages.map((stage, idx) => (
                 <div
                   key={stage.name}
-                  className="p-3 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] relative overflow-hidden group hover:border-[#0070f3]/40 transition-colors"
+                  className="p-3 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] relative overflow-hidden group hover:border-red-500/40 transition-colors"
                 >
                   <div className="flex items-center justify-between text-[11px] font-mono text-[#4d4d4d] mb-1">
                     <span className="font-semibold text-[#171717] truncate">{stage.name}</span>
@@ -392,20 +403,20 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            <div className="bg-white rounded-[12px] p-6 border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover:border-[#171717]/40 transition-all">
+            <div className="bg-white rounded-[12px] p-6 border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover:border-slate-300 transition-all">
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 pb-5 border-b border-[#ebebeb]">
                 <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-[10px] bg-[#171717] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="h-12 w-12 rounded-[10px] bg-linear-to-br from-red-600 to-rose-700 text-white flex items-center justify-center shrink-0 shadow-xs">
                     <Briefcase className="h-6 w-6 text-white" aria-hidden="true" />
                   </div>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href="/recruitment"
-                        className="text-base font-semibold text-[#171717] hover:text-[#0070f3] transition-colors inline-flex items-center gap-1.5 group"
+                        className="text-base font-semibold text-[#171717] hover:text-red-600 transition-colors inline-flex items-center gap-1.5 group"
                       >
                         <span>AI Recruitment Agent</span>
-                        <ArrowUpRight className="h-4 w-4 text-[#8f8f8f] group-hover:text-[#0070f3] group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
+                        <ArrowUpRight className="h-4 w-4 text-[#8f8f8f] group-hover:text-red-600 group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
                       </Link>
                       <span className="font-mono text-[10px] font-medium text-[#4d4d4d] bg-[#f2f2f2] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                         Cốt lõi
@@ -426,7 +437,7 @@ export default function DashboardPage() {
 
                 <Link
                   href="/recruitment"
-                  className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-[#171717] hover:bg-[#333333] text-white text-xs font-medium rounded-[6px] transition-colors shadow-sm focus-ring cursor-pointer group"
+                  className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-[6px] transition-colors shadow-xs focus-ring cursor-pointer group"
                 >
                   <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
                   <span>Mở ATS Tuyển dụng</span>
@@ -440,9 +451,9 @@ export default function DashboardPage() {
                   // QUY_TRINH_TU_DONG_HOA_N8N_DANG_CHAY (3 ACTIVE WORKFLOWS)
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-[#0070f3]/40 transition-colors">
+                  <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[11px] font-semibold text-[#0070f3]">WF_04</span>
+                      <span className="font-mono text-[11px] font-bold text-red-600">WF_04</span>
                       <span className="inline-flex items-center text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                         ONLINE
@@ -454,9 +465,9 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-[#0070f3]/40 transition-colors">
+                  <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[11px] font-semibold text-[#0070f3]">WF_05</span>
+                      <span className="font-mono text-[11px] font-bold text-red-600">WF_05</span>
                       <span className="inline-flex items-center text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                         ONLINE
@@ -468,9 +479,9 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-[#0070f3]/40 transition-colors">
+                  <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[11px] font-semibold text-[#0070f3]">WF_06</span>
+                      <span className="font-mono text-[11px] font-bold text-red-600">WF_06</span>
                       <span className="inline-flex items-center text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                         ONLINE
@@ -628,7 +639,7 @@ export default function DashboardPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Tìm nhân viên theo tên, email..."
-                    className="pl-8 pr-8 py-1.5 bg-white border border-[#ebebeb] rounded-[6px] text-xs text-[#171717] placeholder-[#8f8f8f] focus:outline-none focus:border-[#171717] w-64 md:w-72 transition-colors shadow-[0px_1px_1px_rgba(0,0,0,0.04)] focus-ring"
+                    className="pl-8 pr-8 py-1.5 bg-white border border-[#ebebeb] rounded-[6px] text-xs text-[#171717] placeholder-[#8f8f8f] focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 w-64 md:w-72 transition-colors shadow-[0px_1px_1px_rgba(0,0,0,0.04)] focus-ring"
                     aria-label="Tìm kiếm nhân viên"
                   />
                   {searchTerm && (
@@ -654,7 +665,7 @@ export default function DashboardPage() {
                     onClick={() => setSelectedDeptFilter('ALL')}
                     className={`px-2.5 py-1 rounded-[6px] text-xs font-mono transition-colors cursor-pointer ${
                       selectedDeptFilter === 'ALL'
-                        ? 'bg-[#171717] text-white'
+                        ? 'bg-[#171717] text-white font-medium'
                         : 'bg-[#fafafa] text-[#4d4d4d] border border-[#ebebeb] hover:bg-[#f2f2f2]'
                     }`}
                   >
@@ -669,7 +680,7 @@ export default function DashboardPage() {
                         onClick={() => setSelectedDeptFilter(isSelected ? 'ALL' : dept.id)}
                         className={`px-2.5 py-1 rounded-[6px] text-xs font-mono transition-colors cursor-pointer ${
                           isSelected
-                            ? 'bg-[#0070f3] text-white'
+                            ? 'bg-red-600 text-white font-medium shadow-xs'
                             : 'bg-[#fafafa] text-[#4d4d4d] border border-[#ebebeb] hover:bg-[#f2f2f2]'
                         }`}
                       >

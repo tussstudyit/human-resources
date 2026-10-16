@@ -159,13 +159,13 @@ export default function RecruitmentKanbanBoard({
                           onSelectCandidate(candidate);
                         }
                       }}
-                      className="group p-3 rounded-[8px] bg-white border border-[#ebebeb] hover:border-[#171717]/40 cursor-pointer transition-all shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover:shadow-[0px_2px_4px_rgba(0,0,0,0.06)] hover-lift focus-ring space-y-2"
+                      className="group p-3 rounded-[8px] bg-white border border-[#ebebeb] hover:border-red-400/60 cursor-pointer transition-all shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover:shadow-md hover-lift focus-ring space-y-2"
                       aria-label={`Xem chi tiết hồ sơ ${candidate.name}, điểm tương thích ${score}%`}
                     >
                       {/* Name & Score */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors truncate">
+                          <h4 className="text-xs font-semibold text-slate-900 group-hover:text-red-600 transition-colors truncate">
                             {candidate.name}
                           </h4>
                           <p className="text-[11px] font-mono text-[#8f8f8f] truncate flex items-center mt-0.5">
@@ -181,7 +181,7 @@ export default function RecruitmentKanbanBoard({
                           </span>
                         ) : candidate.aiStatus === 'DONE' ? (
                           <span
-                            className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-mono font-medium border shrink-0 ${getScoreBadge(
+                            className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-mono font-semibold border shrink-0 ${getScoreBadge(
                               score
                             )}`}
                           >
@@ -192,13 +192,13 @@ export default function RecruitmentKanbanBoard({
 
                       {/* Google Meet Info Badge */}
                       {interviewSchedule?.googleMeetUrl && (
-                        <div className="p-2 rounded-[6px] bg-[#d3e5ff]/40 border border-[#0070f3]/20 text-[11px] text-[#0761d1] space-y-0.5">
+                        <div className="p-2 rounded-[6px] bg-emerald-50/80 border border-emerald-200 text-[11px] text-emerald-900 space-y-0.5">
                           <div className="flex items-center space-x-1.5 font-medium">
-                            <Video className="w-3 h-3 text-[#0070f3] shrink-0" />
-                            <span className="truncate">Google Meet Phỏng Vấn</span>
+                            <Video className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span className="truncate font-semibold">Google Meet Phỏng Vấn</span>
                           </div>
                           {interviewSchedule.time && (
-                            <div className="text-[10px] font-mono text-[#0761d1]/80 truncate">
+                            <div className="text-[10px] font-mono text-emerald-700 truncate">
                               {interviewSchedule.time}
                             </div>
                           )}
@@ -207,9 +207,9 @@ export default function RecruitmentKanbanBoard({
 
                       {/* Talent Pool Tier Badge */}
                       {talentPool && (
-                        <div className="px-2 py-1 rounded-[6px] bg-[#f8f8f8] border border-[#ebebeb] text-[10px] font-mono text-[#4d4d4d] flex items-center justify-between">
-                          <span className="truncate">{talentPool.tier || 'POOL'}</span>
-                          <span className="text-[#8f8f8f]">Lưu trữ</span>
+                        <div className="px-2 py-1 rounded-[6px] bg-slate-50 border border-slate-200 text-[10px] font-mono text-slate-700 flex items-center justify-between">
+                          <span className="truncate font-medium">{talentPool.tier || 'POOL'}</span>
+                          <span className="text-slate-400">Lưu trữ</span>
                         </div>
                       )}
 
@@ -219,13 +219,13 @@ export default function RecruitmentKanbanBoard({
                           {skills.slice(0, 3).map((sk, idx) => (
                             <span
                               key={idx}
-                              className="px-1.5 py-0.5 rounded-[4px] bg-[#f2f2f2] border border-[#ebebeb] text-[10px] font-mono text-[#4d4d4d]"
+                              className="px-1.5 py-0.5 rounded-[4px] bg-slate-100 border border-slate-200 text-[10px] font-mono text-slate-700"
                             >
                               {sk}
                             </span>
                           ))}
                           {skills.length > 3 && (
-                            <span className="px-1 py-0.5 rounded-[4px] bg-white border border-[#ebebeb] text-[10px] font-mono text-[#8f8f8f]">
+                            <span className="px-1 py-0.5 rounded-[4px] bg-white border border-slate-200 text-[10px] font-mono text-slate-400">
                               +{skills.length - 3}
                             </span>
                           )}
@@ -233,14 +233,14 @@ export default function RecruitmentKanbanBoard({
                       )}
 
                       {/* Card Footer */}
-                      <div className="flex items-center justify-between pt-1 border-t border-[#ebebeb] text-[10px] text-[#8f8f8f] font-mono">
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-[10px] text-slate-400 font-mono">
                         <span>
                           {candidate.experienceYears !== null &&
                           candidate.experienceYears !== undefined
                             ? `${candidate.experienceYears}Y EXP`
                             : 'N/A EXP'}
                         </span>
-                        <span className="group-hover:text-[#171717] flex items-center transition-colors">
+                        <span className="group-hover:text-red-600 flex items-center transition-colors font-medium">
                           Chi tiết <ChevronRight className="w-3 h-3 ml-0.5" />
                         </span>
                       </div>

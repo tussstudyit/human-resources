@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-10-09T13:08:28.000Z",
+  "createdAt": "2026-09-30T14:47:45.726Z",
+  "id": "SPbqZlQMSoHpoqRx",
   "name": "HR Core Day 2 - AI Recruitment Multi-Branch Pipeline",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -375,7 +381,6 @@
       "name": "Update Backend (CV Lỗi)"
     }
   ],
-  "pinData": {},
   "connections": {
     "Webhook: Receive CV Application": {
       "main": [
@@ -542,16 +547,44 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
+  "staticData": null,
   "meta": {
     "instanceId": "d513a217739c970f06ba5b7905d56e04f8bf5bbc9d4fc9cc5d08fdd4d8b7ae7b"
   },
   "nodeGroups": [],
-  "id": "SPbqZlQMSoHpoqRx",
-  "tags": []
+  "pinData": {},
+  "versionId": "883578ec-0060-4d79-be10-f32692399e55",
+  "activeVersionId": "883578ec-0060-4d79-be10-f32692399e55",
+  "versionCounter": 21,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-09-30T14:47:45.730Z",
+      "createdAt": "2026-09-30T14:47:45.730Z",
+      "role": "workflow:owner",
+      "workflowId": "SPbqZlQMSoHpoqRx",
+      "projectId": "6fLB1uBc0gD1ogBQ",
+      "project": {
+        "updatedAt": "2026-09-30T14:32:33.272Z",
+        "createdAt": "2026-09-30T13:39:28.905Z",
+        "id": "6fLB1uBc0gD1ogBQ",
+        "name": "Đoàn Huy <doanthanhhuy1309@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "f74528cc-054d-4509-863b-f3ddb16b799d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }
