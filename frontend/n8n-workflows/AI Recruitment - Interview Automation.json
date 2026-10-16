@@ -5,50 +5,307 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "interview-schedule",
+        "responseMode": "responseNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
+        -1104,
+        208
+      ],
+      "id": "ba916cc4-3e7b-4663-9396-ab6e9c3ad4cd",
+      "name": "1. Webhook Trigger",
+      "webhookId": "ba01be4a-a972-45e5-97ad-0b1a677eb9b0"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        -880,
+        208
+      ],
+      "id": "17ad9422-8b5d-4682-846e-6131d7d5bdfb",
+      "name": "2. Sanitize Input"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.candidateEmail }}",
+              "operation": "contains",
+              "value2": "@"
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        208
+      ],
+      "id": "74f303fd-b5f1-40d4-98b9-b281aea7b643",
+      "name": "3. Validate Email"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"error\",\n  \"message\": \"Email ứng viên không hợp lệ!\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        400
+      ],
+      "id": "5ca9e905-1bc9-4dd8-8b49-80cb6295d9e8",
+      "name": "4. Invalid Error Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst randomId = Math.floor(1000 + Math.random() * 9000);\nconst pos = String(item.position || '').toLowerCase();\nconst isSenior = pos.includes('senior') || pos.includes('lead');\n\nreturn [{\n  json: {\n    ...item,\n    interviewCode: 'INT-' + randomId,\n    level: isSenior ? 'Senior' : 'Standard',\n    meetingLink: item.meetingLink || 'https://meet.google.com/abc-xyz-def'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        112
+      ],
+      "id": "06169db9-1551-4acc-9d63-11914e5d8655",
+      "name": "5. Generate Code & Track"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.level }}",
+              "value2": "Senior"
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        112
+      ],
+      "id": "5f5753f4-a3e9-4268-838b-d00e44b536f2",
+      "name": "6. Check Level"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
         0,
         0
       ],
-      "id": "ac1e6ed2-840a-41a0-9053-d3cea19738e8",
-      "name": "Webhook",
-      "webhookId": "ba01be4a-a972-45e5-97ad-0b1a677eb9b0"
+      "id": "d2a7ff0b-b6ce-40b8-af73-3a3c07b06475",
+      "name": "7. Set Senior Interviewer"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        208
+      ],
+      "id": "c0cce602-7ac1-418b-b579-628279cfe288",
+      "name": "8. Set Standard Interviewer"
     },
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
         "toEmail": "={{ $json.body.candidateEmail }}",
-        "subject": "=Thư mời phỏng vấn vị trí {{ $json.body.position }}",
-        "html": "=Xin chào {{ $json.body.candidateName }},\n\nBạn có lịch phỏng vấn vị trí {{ $json.body.position }}.\nThời gian: {{ $json.body.interviewTime }}\nLink meeting: {{ $json.body.meetingLink }}",
+        "subject": "=Thư mời phỏng vấn vị trí {{ $json.body.position }} - Mã: {{ $json.interviewCode }}",
+        "html": "=Xin chào {{ $json.body.candidateName }},\n\nBạn có lịch phỏng vấn vị trí {{ $json.body.position }}.\n- Mã hồ sơ: {{ $json.interviewCode }}\n- Thời gian: {{ $json.body.interviewTime }}\n- Người phỏng vấn: Hội đồng tuyển dụng\n- Link meeting: {{$json.meetingLink }}\n\nTrân trọng,\nHR Department",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        224,
-        0
+        448,
+        112
       ],
-      "id": "f011d231-e31d-4dee-8f9f-b98247c4642a",
-      "name": "Send an Email",
-      "webhookId": "608898f3-ea37-4d10-a387-c59264c333ac",
+      "id": "34127ed5-01db-42d4-a04c-18244968f161",
+      "name": "10. Send an Email",
+      "webhookId": "a0adc732-e6a3-48bf-9e64-acd57c306245",
       "credentials": {
         "smtp": {
-          "id": "CkQNwI9UjsCUzHPR",
-          "name": "SMTP account"
+          "id": "nezQyKCLCjlNRiAF",
+          "name": "SMTP account 2"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        112
+      ],
+      "id": "58851945-d80c-4288-acd0-6c8a734996da",
+      "name": "11. Audit Log"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Gửi thư mời phỏng vấn thành công qua 12-node workflow!\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        112
+      ],
+      "id": "0f5c3bf6-254a-4b1b-b303-ea78e800e343",
+      "name": "12. Respond to Frontend"
     }
   ],
   "pinData": {},
   "connections": {
-    "Webhook": {
+    "1. Webhook Trigger": {
       "main": [
         [
           {
-            "node": "Send an Email",
+            "node": "2. Sanitize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Sanitize Input": {
+      "main": [
+        [
+          {
+            "node": "3. Validate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Validate Email": {
+      "main": [
+        [
+          {
+            "node": "5. Generate Code & Track",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4. Invalid Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Generate Code & Track": {
+      "main": [
+        [
+          {
+            "node": "6. Check Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Check Level": {
+      "main": [
+        [
+          {
+            "node": "7. Set Senior Interviewer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8. Set Standard Interviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Set Senior Interviewer": {
+      "main": [
+        [
+          {
+            "node": "10. Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Set Standard Interviewer": {
+      "main": [
+        [
+          {
+            "node": "10. Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Send an Email": {
+      "main": [
+        [
+          {
+            "node": "11. Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Audit Log": {
+      "main": [
+        [
+          {
+            "node": "12. Respond to Frontend",
             "type": "main",
             "index": 0
           }
@@ -61,12 +318,12 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "69c29331-c83a-4775-b68c-663ca9517882",
+  "versionId": "435bfc4a-653e-4c5c-ab89-2261b7482031",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "8b4307105391188a5185b593287056c6bac6bca68fb4075694aab58c256f7d4a"
+    "instanceId": "fbaaddc30935f6ae646254b0113ffc52427273127c19547e8b40591fa616f2aa"
   },
   "nodeGroups": [],
-  "id": "1Mrco94cBEqatce1",
+  "id": "l8Buy2BQ53alvScw",
   "tags": []
 }

@@ -7,7 +7,7 @@ import { ArrowLeft, UserPlus, Send, CheckCircle2, Calendar, Mail, User, Briefcas
 export default function RecruitmentPage() {
   const [formData, setFormData] = useState({
     candidateName: 'Trần Anh Tân',
-    candidateEmail: 'tan19506@gmail.com',
+    candidateEmail: 'anhtanht1905@gmail.com',
     position: 'AI / Fullstack Developer',
     interviewTime: '09:00 AM - 15/10/2026',
     meetingLink: 'https://meet.google.com/abc-xyz-hr'
@@ -21,7 +21,6 @@ export default function RecruitmentPage() {
     setLoading(true);
     setStatus(null);
 
-    // Làm sạch dữ liệu trước khi gửi tới n8n (Loại bỏ khoảng trắng và ký tự = thừa nếu có)
     const cleanedFormData = {
       ...formData,
       candidateEmail: formData.candidateEmail.trim().replace(/^=/, ''),
@@ -29,7 +28,6 @@ export default function RecruitmentPage() {
     };
 
     try {
-      // Bắn trực tiếp sang Webhook n8n (Production URL)
       const res = await fetch('http://localhost:5678/webhook/interview-schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,10 +37,9 @@ export default function RecruitmentPage() {
       if (res.ok) {
         setStatus({
           type: 'success',
-          message: 'Lịch phỏng vấn đã được tự động gửi qua n8n & Gmail thành công!'
+          message: 'Lịch phỏng vấn và thư mời đã được tự động gửi đến ứng viên thành công!'
         });
       } else {
-        // Fallback sang webhook-test nếu n8n đang ở chế độ Test
         const testRes = await fetch('http://localhost:5678/webhook-test/interview-schedule', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -52,16 +49,16 @@ export default function RecruitmentPage() {
         if (testRes.ok) {
           setStatus({
             type: 'success',
-            message: 'Đã kích hoạt Workflow n8n (chế độ Test) thành công!'
+            message: 'Đã gửi lịch phỏng vấn thành công!'
           });
         } else {
-          throw new Error('Không thể kết nối n8n Webhook');
+          throw new Error('Không thể kết nối hệ thống');
         }
       }
     } catch (err: any) {
       setStatus({
         type: 'error',
-        message: 'Lỗi kết nối Webhook n8n. Vui lòng đảm bảo n8n đang chạy và đã kích hoạt Workflow.'
+        message: 'Lỗi kết nối hệ thống tự động hóa. Vui lòng thử lại sau.'
       });
     } finally {
       setLoading(false);
@@ -82,7 +79,7 @@ export default function RecruitmentPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">AI Recruitment Agent</h1>
-              <p className="text-sm text-gray-500">Lên lịch phỏng vấn tự động & gửi thư mời ứng viên qua n8n Automation</p>
+              <p className="text-sm text-gray-500">Lên lịch phỏng vấn tự động & gửi thư mời ứng viên</p>
             </div>
           </div>
 
@@ -171,9 +168,9 @@ export default function RecruitmentPage() {
               disabled={loading}
               className="w-full mt-4 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {loading ? 'Đang gửi tới n8n...' : (
+              {loading ? 'Đang xử lý...' : (
                 <>
-                  <Send className="w-4 h-4" /> Bắn Webhook & Lên lịch Phỏng vấn
+                  <Send className="w-4 h-4" /> Gửi Lịch Phỏng Vấn
                 </>
               )}
             </button>

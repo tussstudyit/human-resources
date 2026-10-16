@@ -40,9 +40,9 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: null,
+  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false, // Sửa thành false để không khóa nút Login/Register
   error: null,
 
   clearError: () => set({ error: null }),
@@ -55,6 +55,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
+    set({ isLoading: true });
     try {
       const res = await api.get('/auth/me');
       set({
@@ -64,14 +65,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
         error: null,
       });
-    } catch {
-      localStorage.removeItem('token');
-      set({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
+    } catch (err: any) {
+      // Chỉ xóa token nếu thực sự lỗi 401 (Token sai/hết hạn)
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      } else {
+        set({ isLoading: false });
+      }
     }
   },
 
