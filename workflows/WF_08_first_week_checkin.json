@@ -1,0 +1,20 @@
+{
+  "name": "WF_08_first_week_checkin",
+  "nodes": [
+    {
+      "parameters": { "triggerTimes": { "item": [{ "mode": "everyX", "value": 3, "unit": "days" }] } },
+      "name": "Cronjob - After 3 Days",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": { "conditions": { "number": [{ "value1": "={{$json[\"progressPercent\"]}}", "operation": "smaller", "value2": 50 }] } },
+      "name": "Check Progress < 50%",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {}
+}
