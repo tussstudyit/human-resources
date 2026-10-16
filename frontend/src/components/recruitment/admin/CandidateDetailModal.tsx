@@ -349,7 +349,7 @@ export default function CandidateDetailModal({
             <div className="px-4 py-2 bg-white border-b border-[#ebebeb] flex items-center justify-between text-xs text-[#8f8f8f] font-mono">
               <span className="flex items-center font-medium text-[#171717]">
                 <FileText className="w-3.5 h-3.5 mr-1.5 text-[#0070f3]" />
-                // CV_DOCUMENT_PREVIEW.pdf
+                BẢN XEM TRƯỚC HỒ SƠ CV
               </span>
               <span className="text-[10px] truncate max-w-xs">{candidate.cvUrl}</span>
             </div>
@@ -386,7 +386,7 @@ export default function CandidateDetailModal({
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    // GEMINI AI EVALUATION
+                    ĐÁNH GIÁ TỪ GEMINI AI
                   </div>
                   <h3 className="text-xs font-semibold text-[#171717] mt-0.5">
                     Độ Tương Thích Tuyển Dụng
@@ -422,11 +422,11 @@ export default function CandidateDetailModal({
                   <p>{candidate.summary}</p>
                 ) : isPending ? (
                   <p className="text-[#854d0e] italic font-mono text-[11px] flex items-center space-x-1.5">
-                    <span>// AI Agent đang trích xuất kỹ năng & tính toán độ tương thích...</span>
+                    <span>AI Agent đang trích xuất kỹ năng & tính toán độ tương thích...</span>
                   </p>
                 ) : (
                   <p className="text-[#8f8f8f] italic font-mono text-[11px]">
-                    // Chưa có bản tóm tắt từ AI.
+                    Chưa có bản tóm tắt từ AI.
                   </p>
                 )}
               </div>
@@ -438,7 +438,7 @@ export default function CandidateDetailModal({
                 <div className="flex items-center justify-between">
                   <div className="font-mono text-[10px] font-semibold text-[#0070f3] uppercase tracking-wider flex items-center space-x-1.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>// INTERVIEW_SCHEDULED</span>
+                    <span>LỊCH PHỎNG VẤN ĐÃ TẠO</span>
                   </div>
                   <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-[#0070f3] text-white">
                     CONFIRMED
@@ -512,7 +512,7 @@ export default function CandidateDetailModal({
                 <div className="flex items-center justify-between">
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider flex items-center space-x-1.5">
                     <Archive className="w-3.5 h-3.5 text-[#171717]" />
-                    <span>// TALENT_POOL_ARCHIVE</span>
+                    <span>KHO LƯU TRỮ NHÂN TÀI</span>
                   </div>
                   <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-white border border-[#ebebeb] text-[#171717]">
                     {talentPool.tier || 'ACTIVE'}
@@ -549,7 +549,7 @@ export default function CandidateDetailModal({
             {/* Extracted Skills Section */}
             <div className="border border-[#ebebeb] rounded-[8px] p-4 space-y-2.5">
               <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider flex items-center justify-between">
-                <span>// SKILLS_EXTRACTED ({skillsList.length})</span>
+                <span>KỸ NĂNG BÓC TÁCH ({skillsList.length})</span>
               </div>
 
               {skillsList.length > 0 ? (
@@ -565,7 +565,7 @@ export default function CandidateDetailModal({
                 </div>
               ) : (
                 <p className="text-xs text-[#8f8f8f] italic font-mono text-[11px]">
-                  // Không tìm thấy dữ liệu kỹ năng bóc tách.
+                  Không tìm thấy dữ liệu kỹ năng bóc tách.
                 </p>
               )}
             </div>

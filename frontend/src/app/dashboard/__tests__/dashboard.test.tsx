@@ -223,12 +223,12 @@ describe('DashboardPage - Chức Năng Bảng Điều Khiển Quản Lý', () =>
       expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1);
       // 2 phòng ban
       expect(screen.getByText('2')).toBeInTheDocument();
-      // 1 Agent
-      expect(screen.getByText('1 Agent')).toBeInTheDocument();
+      // 5 Agents
+      expect(screen.getByText('5 Agents')).toBeInTheDocument();
     });
   });
 
-  it('5. Hiển thị thông tin AI Recruitment Agent và liên kết đến (/recruitment), không hiển thị các tác tử chưa phát triển', () => {
+  it('5. Hiển thị thông tin các AI Agents và liên kết đến (/recruitment)', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
@@ -246,10 +246,7 @@ describe('DashboardPage - Chức Năng Bảng Điều Khiển Quản Lý', () =>
     render(<DashboardPage />);
 
     expect(screen.getAllByText('AI Recruitment Agent').length).toBeGreaterThanOrEqual(1);
-    expect(screen.queryByText('AI Onboarding Agent')).not.toBeInTheDocument();
-    expect(screen.queryByText('AI Performance Tracking')).not.toBeInTheDocument();
-    expect(screen.queryByText('AI Training & Skills Agent')).not.toBeInTheDocument();
-    expect(screen.queryByText('AI Employee Engagement')).not.toBeInTheDocument();
+    expect(screen.getAllByText('AI Onboarding Agent').length).toBeGreaterThanOrEqual(1);
 
     const recruitmentLinks = screen.getAllByRole('link', { name: /AI Recruitment Agent/i });
     expect(recruitmentLinks.length).toBeGreaterThan(0);
@@ -285,7 +282,7 @@ describe('DashboardPage - Chức Năng Bảng Điều Khiển Quản Lý', () =>
     expect(screen.queryByText('Le Thi Mai')).not.toBeInTheDocument();
   });
 
-  it('7. Hiển thị trạng thái // NO_EMPLOYEES_FOUND khi từ khóa tìm kiếm không khớp', async () => {
+  it('7. Hiển thị trạng thái Không tìm thấy nhân sự khi từ khóa tìm kiếm không khớp', async () => {
     vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
@@ -309,7 +306,7 @@ describe('DashboardPage - Chức Năng Bảng Điều Khiển Quản Lý', () =>
     const searchInput = screen.getByPlaceholderText('Tìm nhân viên theo tên, email...');
     fireEvent.change(searchInput, { target: { value: 'khong_ton_tai_123456' } });
 
-    expect(screen.getByText('// NO_EMPLOYEES_FOUND')).toBeInTheDocument();
+    expect(screen.getByText('Không tìm thấy nhân sự')).toBeInTheDocument();
   });
 
   it('8. Hiển thị đầy đủ danh sách các phòng ban với số lượng nhân sự', async () => {

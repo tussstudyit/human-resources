@@ -187,6 +187,7 @@ describe('ApplyModal', () => {
       const submitBtn = screen.getByRole('button', { name: /Nộp hồ sơ ứng tuyển/i });
       const honeypotInput = screen.getByLabelText(/Website URL/i);
 
+      await new Promise((resolve) => setTimeout(resolve, 150));
       closeBtn.focus();
       expect(document.activeElement).toBe(closeBtn);
 

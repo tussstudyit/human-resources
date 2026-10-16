@@ -4,10 +4,13 @@ import { AppService } from './app.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { DepartmentsModule } from './departments/departments.module.js';
+import { OnboardingModule } from './onboarding/onboarding.module.js';
+import { PerformanceModule } from './performance/performance.module.js';
 
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { RecruitmentModule } from './recruitment/recruitment.module.js';
+import { TrainingModule } from './training/training.module.js';
 
 @Module({
   imports: [
@@ -21,6 +24,9 @@ import { RecruitmentModule } from './recruitment/recruitment.module.js';
     AuthModule,
     DepartmentsModule,
     RecruitmentModule,
+    OnboardingModule,
+    PerformanceModule,
+    TrainingModule,
   ],
   controllers: [AppController],
   providers: [

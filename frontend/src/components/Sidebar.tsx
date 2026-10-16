@@ -11,6 +11,10 @@ import {
   ChevronRight,
   Globe,
   ExternalLink,
+  Compass,
+  TrendingUp,
+  Heart,
+  GraduationCap,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 
@@ -21,10 +25,38 @@ export default function Sidebar() {
   const agents = [
     {
       name: 'AI Recruitment Agent',
-      desc: 'CV parse, AI score, Meet schedule',
+      desc: 'CV parse, AI score, Phỏng vấn',
       icon: Briefcase,
       href: '/recruitment',
       badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Onboarding Agent',
+      desc: 'Checklist nhận việc & cấp tài khoản',
+      icon: Compass,
+      href: '/onboarding',
+      badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Performance Agent',
+      desc: 'Theo dõi KPI & đánh giá 360°',
+      icon: TrendingUp,
+      href: '/performance',
+      badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Training & Skills',
+      desc: 'Skill Gap Radar & Chứng chỉ',
+      icon: GraduationCap,
+      href: '/training',
+      badge: 'ACTIVE',
+    },
+    {
+      name: 'AI Employee Engagement',
+      desc: 'Khảo sát eNPS & Wellbeing (n8n)',
+      icon: Heart,
+      href: '#',
+      badge: 'LIVE N8N',
     },
   ];
 
@@ -52,8 +84,8 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto p-3 space-y-5">
         {/* Overview section */}
         <div>
-          <div className="font-mono text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2.5 mb-1.5">
-            // Overview
+          <div className="font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">
+            Tổng quan
           </div>
           <Link
             href="/dashboard"
@@ -70,8 +102,8 @@ export default function Sidebar() {
 
         {/* AI AGENT LIST */}
         <div>
-          <div className="font-mono text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2.5 mb-1.5 flex items-center justify-between">
-            <span>// AI Agent</span>
+          <div className="font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5 flex items-center justify-between">
+            <span>AI Agents</span>
             <span className="flex items-center gap-1 text-[9px] text-emerald-600 font-mono font-medium">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               ONLINE
@@ -158,8 +190,8 @@ export default function Sidebar() {
 
         {/* Administration Section */}
         <div>
-          <div className="font-mono text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2.5 mb-1.5">
-            // Management
+          <div className="font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-2.5 mb-1.5">
+            Quản trị hệ thống
           </div>
           <div className="space-y-0.5">
             <Link

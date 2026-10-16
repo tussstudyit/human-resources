@@ -90,7 +90,7 @@ export default function LoginPage() {
           <div className="pt-2">
             <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-red-500" />
-              <span>// AUTHENTICATION_GATEWAY</span>
+              <span>XÁC THỰC TÀI KHOẢN</span>
             </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
               Đăng nhập hệ thống
@@ -197,7 +197,7 @@ export default function LoginPage() {
             </div>
             <div>
               <p className="font-semibold text-slate-900">Bạn là ứng viên?</p>
-              <p className="text-[10px] text-slate-400 font-mono">// CỔNG_VIỆC_LÀM_UPCAREER</p>
+              <p className="text-[10px] text-slate-400 font-mono">CỔNG TUYỂN DỤNG UPCAREER</p>
             </div>
           </div>
           <Link

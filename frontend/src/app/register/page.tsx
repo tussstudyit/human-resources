@@ -108,7 +108,7 @@ export default function RegisterPage() {
 
           <div className="pt-2">
             <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <span>// NEW_USER_REGISTRATION</span>
+              <span>ĐĂNG KÝ THÀNH VIÊN MỚI</span>
             </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
               Đăng ký tài khoản

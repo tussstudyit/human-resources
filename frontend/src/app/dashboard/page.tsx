@@ -24,6 +24,11 @@ import {
   Calendar,
   Archive,
   ExternalLink,
+  Compass,
+  Heart,
+  Bot,
+  UserPlus,
+  GraduationCap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { RecruitmentDashboardStats } from '@/types/recruitment';
@@ -205,7 +210,7 @@ export default function DashboardPage() {
             <div className="relative z-10 space-y-1.5">
               <div className="inline-flex items-center space-x-2 font-mono text-[10px] text-slate-400 uppercase tracking-wider">
                 <Sparkles className="h-3 w-3 text-red-500" aria-hidden="true" />
-                <span>// UPCAREER_CONSOLE_OVERVIEW</span>
+                <span>TRUNG TÂM ĐIỀU HÀNH DOANH NGHIỆP UPCAREER</span>
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 font-mono">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
                   AI RECRUITMENT ONLINE (100%)
@@ -267,7 +272,7 @@ export default function DashboardPage() {
                   +8.5%
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">// TĂNG TRƯỞNG THÁNG NÀY</p>
+              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">TĂNG TRƯỞNG THÁNG NÀY</p>
             </div>
 
             {/* Card 2: Phòng ban */}
@@ -286,27 +291,27 @@ export default function DashboardPage() {
                   Đang hoạt động
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">// CƠ CẤU TỔ CHỨC</p>
+              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">CƠ CẤU TỔ CHỨC</p>
             </div>
 
             {/* Card 3: AI Agent */}
             <div className="bg-white p-5 rounded-[12px] border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover-lift flex flex-col justify-between">
               <div className="flex items-center justify-between">
                 <p className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  AI Agent
+                  AI Agents
                 </p>
                 <div className="h-8 w-8 rounded-[6px] bg-[#f0fdf4] border border-[#bbf7d0] text-[#166534] flex items-center justify-center">
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 </div>
               </div>
               <div className="mt-2 flex items-baseline justify-between">
-                <h3 className="text-2xl font-semibold text-[#171717] tracking-tight">1 Agent</h3>
+                <h3 className="text-2xl font-semibold text-[#171717] tracking-tight">5 Agents</h3>
                 <span className="inline-flex items-center text-[10px] font-mono font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 mr-1 animate-pulse"></span>
                   ONLINE (ACTIVE)
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">// RECRUITMENT HOẠT ĐỘNG</p>
+              <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">5 TÁC TỬ TỰ ĐỘNG HÓA</p>
             </div>
 
             {/* Card 4: Phòng ban của bạn */}
@@ -328,17 +333,170 @@ export default function DashboardPage() {
                 </span>
               </div>
               <p className="text-[10px] font-mono text-[#8f8f8f] mt-1.5">
-                // {recruitmentStats ? `ĐIỂM TB: ${recruitmentStats.avgMatchScore}%` : 'ĐỒNG BỘ N8N'}
+                {recruitmentStats ? `ĐIỂM TB: ${recruitmentStats.avgMatchScore}%` : 'ĐỒNG BỘ N8N'}
               </p>
             </div>
           </div>
+
+          {/* AI Agents Squad Grid (5 Agents System) */}
+          <div className="bg-white rounded-[12px] p-6 border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#ebebeb]">
+              <div>
+                <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
+                  HỆ THỐNG MULTI-AGENT
+                </div>
+                <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
+                  5 Tác Tử AI Doanh Nghiệp (Multi-Agent Squad)
+                </h3>
+              </div>
+              <span className="font-mono text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                HỆ THỐNG ĐANG HOẠT ĐỘNG
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {/* Agent 1: Recruitment */}
+              <Link
+                href="/recruitment"
+                className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="h-8 w-8 rounded-[6px] bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center">
+                    <UserPlus className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-100/70 text-amber-800 border border-amber-200">
+                    Tuyển dụng
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors flex items-center justify-between">
+                  AI Recruitment Agent
+                  <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
+                  Đăng tin tuyển dụng, trích xuất kỹ năng CV & lên lịch phỏng vấn tự động.
+                </p>
+                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
+                  <span>TRẠNG THÁI</span>
+                  <span className="font-semibold">Hoạt động (n8n WF 04-06)</span>
+                </div>
+              </Link>
+
+              {/* Agent 2: Onboarding */}
+              <Link
+                href="/onboarding"
+                className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="h-8 w-8 rounded-[6px] bg-cyan-50 text-cyan-700 border border-cyan-200 flex items-center justify-center">
+                    <Compass className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-100/70 text-cyan-800 border border-cyan-200">
+                    Hội nhập
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors flex items-center justify-between">
+                  AI Onboarding Agent
+                  <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
+                  Checklist nhận việc cho nhân viên mới & kích hoạt cấp tài khoản IT.
+                </p>
+                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
+                  <span>TRẠNG THÁI</span>
+                  <span className="font-semibold">Hoạt động (Checklist)</span>
+                </div>
+              </Link>
+
+              {/* Agent 3: Performance */}
+              <Link
+                href="/performance"
+                className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="h-8 w-8 rounded-[6px] bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100/70 text-emerald-800 border border-emerald-200">
+                    Hiệu suất
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors flex items-center justify-between">
+                  AI Performance Agent
+                  <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
+                  Thu thập phản hồi 360 độ, theo dõi tiến độ mục tiêu & báo cáo KPI.
+                </p>
+                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
+                  <span>TRẠNG THÁI</span>
+                  <span className="font-semibold">Hoạt động (KPI & 360°)</span>
+                </div>
+              </Link>
+
+              {/* Agent 4: Training */}
+              <Link
+                href="/training"
+                className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="h-8 w-8 rounded-[6px] bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center">
+                    <GraduationCap className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-100/70 text-indigo-800 border border-indigo-200">
+                    Đào tạo
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors flex items-center justify-between">
+                  AI Training & Skills Agent
+                  <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
+                  Đánh giá khoảng cách kỹ năng (Radar Chart), quản lý chứng chỉ & hạn cấp.
+                </p>
+                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
+                  <span>TRẠNG THÁI</span>
+                  <span className="font-semibold">Hoạt động (Radar & Certs)</span>
+                </div>
+              </Link>
+
+              {/* Agent 5: Employee Engagement (Nguyen's) */}
+              <a
+                href="https://docs.google.com/spreadsheets/d/1ndgrNwA8BYH_O35FfsrqzJaSjMY9xSL8sqD151NefRA/edit"
+                target="_blank"
+                rel="noreferrer"
+                className="group p-4 bg-[#fafafa] rounded-[8px] border border-[#ebebeb] hover:border-[#171717]/40 transition-all hover-lift block"
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="h-8 w-8 rounded-[6px] bg-rose-50 text-rose-700 border border-rose-200 flex items-center justify-center">
+                    <Heart className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-100/70 text-rose-800 border border-rose-200">
+                    Gắn kết & Wellbeing
+                  </span>
+                </div>
+                <h4 className="text-xs font-semibold text-[#171717] group-hover:text-rose-600 transition-colors flex items-center justify-between">
+                  AI Employee Engagement
+                  <ExternalLink className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
+                </h4>
+                <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
+                  Khảo sát định kỳ, phân tích cảm xúc Gemini 1.5, đề xuất Wellbeing & theo dõi eNPS.
+                </p>
+                <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
+                  <span>DỮ LIỆU REAL-TIME</span>
+                  <span className="font-semibold underline">Google Sheets Live ↗</span>
+                </div>
+              </a>
+            </div>
+          </div>
+
 
           {/* Candidate Funnel Flow Mini-Widget (ui-ux-pro-max Chart Spec - 100% Dynamic Synced) */}
           <div className="bg-white rounded-[12px] p-5 border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#ebebeb]">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // RECRUITMENT_PIPELINE_CONVERSION
+                  TIẾN ĐỘ PHỄU TUYỂN DỤNG
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   Phễu Tuyển Dụng & Sàng Lọc AI (5 Giai đoạn Đồng Bộ)
@@ -388,7 +546,7 @@ export default function DashboardPage() {
             <div className="mb-3.5 flex items-center justify-between">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // AUTOMATION_SYSTEM
+                  HỆ THỐNG TỰ ĐỘNG HÓA
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   Tác Tử AI Tuyển Dụng Thông Minh (Live Agent)
@@ -448,7 +606,7 @@ export default function DashboardPage() {
               {/* 3 Live Connected Workflows */}
               <div className="pt-5">
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider mb-3">
-                  // QUY_TRINH_TU_DONG_HOA_N8N_DANG_CHAY (3 ACTIVE WORKFLOWS)
+                  QUY TRÌNH TỰ ĐỘNG HÓA N8N ĐANG HOẠT ĐỘNG (3 WORKFLOWS)
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
@@ -518,7 +676,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#ebebeb]">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    // N8N_GEMINI_LIVE_EVALUATIONS
+                    ĐÁNH GIÁ TRỰC TIẾP N8N & GEMINI AI
                   </div>
                   <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                     Hồ Sơ Được Thẩm Định Gần Nhất Qua n8n & Gemini AI
@@ -624,7 +782,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    // EMPLOYEES
+                    NHÂN SỰ
                   </div>
                   <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                     Danh Sách Nhân Sự Tổ Chức
@@ -725,7 +883,7 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-[#4d4d4d]">
-                        {emp.department?.name || <span className="text-[#8f8f8f] font-mono">// UNASSIGNED</span>}
+                        {emp.department?.name || <span className="text-[#8f8f8f] font-mono">Chưa phân bổ</span>}
                       </td>
                       <td className="px-5 py-3 text-center">
                         <span className="font-mono text-[10px] text-[#166534] bg-[#f0fdf4] border border-[#bbf7d0] px-2 py-0.5 rounded-[4px]">
@@ -742,7 +900,7 @@ export default function DashboardPage() {
                             <Search className="h-4 w-4" aria-hidden="true" />
                           </div>
                           <p className="font-mono text-xs text-[#8f8f8f]">
-                            // NO_EMPLOYEES_FOUND
+                            Không tìm thấy nhân sự
                           </p>
                           <p className="text-xs text-[#4d4d4d]">
                             Không tìm thấy nhân viên nào phù hợp với bộ lọc hiện tại.
@@ -772,7 +930,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  // DEPARTMENTS
+                  PHÒNG BAN
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
                   Cơ Cấu Phòng Ban

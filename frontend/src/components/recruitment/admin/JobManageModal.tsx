@@ -191,7 +191,7 @@ export default function JobManageModal({
           <div>
             <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse"></span>
-              <span>// UPCAREER_JOB_POSITION_MANAGEMENT</span>
+              <span>QUẢN LÝ VỊ TRÍ TUYỂN DỤNG UPCAREER</span>
             </div>
             <h2 className="text-base font-bold text-slate-900 tracking-tight mt-0.5">
               {isEditing ? 'Chỉnh Sửa Vị Trí Tuyển Dụng' : 'Tạo Vị Trí Tuyển Dụng Mới'}
@@ -301,6 +301,9 @@ export default function JobManageModal({
               placeholder="VD: Tối thiểu 3 năm kinh nghiệm với Node.js, NestJS, PostgreSQL. Thành thạo Docker..."
               className="w-full px-3.5 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors leading-relaxed resize-y shadow-xs"
             />
+            <p className="font-mono text-[10px] text-slate-400 mt-1">
+              AI Agent sẽ dựa vào tiêu chí này để đối sánh và xếp hạng Match Score.
+            </p>
           </div>
 
           {/* Form Actions */}

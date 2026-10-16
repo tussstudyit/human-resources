@@ -6,7 +6,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "user-registered",
+        "path": "it-provisioning",
         "responseMode": "onReceived",
         "options": {}
       },
