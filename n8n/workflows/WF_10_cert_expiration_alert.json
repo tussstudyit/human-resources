@@ -1,5 +1,10 @@
 {
+  "id": "WF10certexp00001",
   "name": "WF_10_cert_expiration_alert",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
   "nodes": [
     {
       "parameters": {
@@ -24,7 +29,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT c.id, c.name, c.user_id, c.expiry_date, u.email, u.name AS employee_name FROM certifications c LEFT JOIN users u ON u.id = c.user_id WHERE c.expiry_date >= CURRENT_DATE AND c.expiry_date < CURRENT_DATE + INTERVAL '31 days' ORDER BY c.expiry_date ASC;",
+        "query": "SELECT c.id, c.name, c.\"userId\", c.\"expirationDate\", u.email, u.\"fullName\" AS employee_name\nFROM certifications c\nLEFT JOIN users u ON u.id = c.\"userId\"\nWHERE c.\"expirationDate\" >= CURRENT_DATE AND c.\"expirationDate\" < CURRENT_DATE + INTERVAL '31 days'\nORDER BY c.\"expirationDate\" ASC;",
         "options": {}
       },
       "id": "get-expiring-certificates",
@@ -34,11 +39,17 @@
       "position": [
         460,
         300
-      ]
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "PostgresHrDbCred",
+          "name": "Postgres HR DB"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(({json: row}) => { const expiry = new Date(row.expiry_date); const daysLeft = Math.ceil((expiry - new Date()) / 86400000); return {json:{...row,days_left:daysLeft,alert_message:`Certificate \"${row.name}\" for ${row.employee_name || row.user_id || 'an employee'} expires in ${daysLeft} day(s) on ${row.expiry_date}.`}}; });"
+        "jsCode": "return $input.all().map(({json: row}) => {\n  const expiry = new Date(row.expirationDate);\n  const now = new Date();\n  const daysLeft = Math.max(0, Math.ceil((expiry - now) / 86400000));\n  const expStr = expiry.toISOString().split('T')[0];\n  return {\n    json: {\n      ...row,\n      days_left: daysLeft,\n      expiry_formatted: expStr,\n      alert_subject: `[Chứng chỉ sắp hết hạn] ${row.name} - ${row.employee_name || 'Nhân sự'} (còn ${daysLeft} ngày)`,\n      alert_message: `Chứng chỉ \"${row.name}\" của nhân sự ${row.employee_name || row.userId} sẽ hết hạn trong ${daysLeft} ngày tới (ngày ${expStr}). Vui lòng lên kế hoạch tái cấp hoặc đăng ký thi gia hạn.`\n    }\n  };\n});"
       },
       "id": "prepare-alert-rows",
       "name": "Prepare alert rows",
@@ -85,21 +96,28 @@
     },
     {
       "parameters": {
-        "fromEmail": "={{ $env.HR_ALERT_FROM || 'configure-sender@example.com' }}",
-        "toEmail": "={{ $env.HR_ALERT_TO || 'configure-hr@example.com' }}",
-        "subject": "=Certificate expiring soon: {{$json.name}}",
-        "emailFormat": "text",
-        "text": "={{$json.alert_message}}",
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.email || 'hr.training@company.vn' }}",
+        "subject": "={{ $json.alert_subject }}",
+        "emailFormat": "html",
+        "html": "=Xin chào <b>{{ $json.employee_name }}</b> và Bộ phận Đào tạo,<br><br>{{ $json.alert_message }}<br><br><b>Thông tin chi tiết:</b><br>- Chứng chỉ: {{ $json.name }}<br>- Ngày hết hạn: {{ $json.expiry_formatted }} (còn {{ $json.days_left }} ngày)<br><br>Trân trọng,<br>Hệ thống Quản lý Kỹ năng & Đào tạo HR",
         "options": {}
       },
-      "id": "send-alert-to-hr-(configure)",
+      "id": "send-alert-to-hr",
       "name": "Send alert to HR (configure)",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
         1120,
         220
-      ]
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {},
@@ -165,14 +183,5 @@
         ]
       ]
     }
-  },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "training-cert-expiration-v1",
-  "meta": {
-    "templateCredsSetupCompleted": false
-  },
-  "tags": []
+  }
 }

@@ -1,28 +1,358 @@
 {
+  "id": "WF07itprovision01",
   "name": "WF_07_it_tool_provisioning",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
   "nodes": [
     {
-      "parameters": { "httpMethod": "POST", "path": "it-provisioning", "responseMode": "onReceived" },
-      "name": "Webhook - Task Completed",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "it-provisioning",
+        "responseMode": "responseNode",
+        "options": {}
+      },
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        200
+      ],
+      "name": "1. Webhook Trigger",
+      "id": "wf07-webhook-trigger",
+      "webhookId": "it-provisioning-webhook"
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            { "name": "companyEmail", "value": "tan.tran@company.vn" },
-            { "name": "slackAccount", "value": "@tan.tran" },
-            { "name": "jiraAccess", "value": "granted" }
-          ]
+        "jsCode": "const body = $json.body || $json;\nreturn [{\n  json: {\n    userEmail: body.userEmail || body.email || 'newhire@company.vn',\n    fullName: body.fullName || body.name || 'Nhân sự mới',\n    department: body.department || 'Tech',\n    role: body.role || 'EMPLOYEE',\n    requestedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        200
+      ],
+      "name": "2. Sanitize Data",
+      "id": "wf07-sanitize-data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-email-valid",
+              "leftValue": "={{ $json.userEmail }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
         }
       },
-      "name": "Mock API - Create Jira/Slack/Email",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
-      "position": [500, 300]
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -700,
+        200
+      ],
+      "name": "3. Validate Email",
+      "id": "wf07-validate-email"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\"status\":\"error\",\"message\":\"Invalid Email: userEmail must contain @\"}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -500,
+        380
+      ],
+      "name": "4. Error Response",
+      "id": "wf07-error-response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst randNum = Math.floor(10000 + Math.random() * 90000);\nconst tempPwd = 'IT@' + Math.random().toString(36).slice(-6);\nreturn [{\n  json: {\n    ...item,\n    empId: 'EMP-' + randNum,\n    tempPwd: tempPwd,\n    slackHandle: '@' + (item.userEmail.split('@')[0] || 'user'),\n    githubAccount: item.userEmail.split('@')[0]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        100
+      ],
+      "name": "5. Generate Credentials",
+      "id": "wf07-gen-creds"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-dept-tech",
+              "leftValue": "={{ $json.department }}",
+              "rightValue": "Tech",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -300,
+        100
+      ],
+      "name": "6. Check Department",
+      "id": "wf07-check-dept"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tools: ['Google Workspace', 'Slack Dev Channels', 'Jira Software', 'GitHub Organization', 'AWS Sandbox'],\n    tier: 'TECHNICAL_STACK'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        0
+      ],
+      "name": "7. Setup Tech Stack (Jira/Slack)",
+      "id": "wf07-tech-stack"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tools: ['Google Workspace', 'Slack General Channels', 'HR Portal', 'Notion Team Docs'],\n    tier: 'STANDARD_STACK'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        200
+      ],
+      "name": "8. Setup Standard Stack",
+      "id": "wf07-standard-stack"
+    },
+    {
+      "parameters": {
+        "url": "https://httpbin.org/post",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        100
+      ],
+      "name": "9. Mock IT Provisioning API",
+      "id": "wf07-mock-api"
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.userEmail || $json.body?.userEmail || 'anhtanht1905@gmail.com' }}",
+        "subject": "=[IT Provisioning] Hoàn tất cấp phát tài khoản - {{$json.empId || $json.body?.empId}}",
+        "emailFormat": "html",
+        "html": "=Xin chào {{$json.fullName || $json.body?.fullName || 'bạn'}},<br><br>Tài khoản công ty của bạn đã sẵn sàng!<br><b>Mã nhân viên:</b> {{$json.empId || $json.body?.empId}}<br><b>Email:</b> {{$json.userEmail || $json.body?.userEmail}}<br><b>Mật khẩu tạm thời:</b> {{$json.tempPwd || $json.body?.tempPwd}}<br><b>Công cụ cấp phát:</b> {{$json.tools ? $json.tools.join(', ') : ($json.body?.tools ? $json.body.tools.join(', ') : 'IT Tools')}}.<br><br>Trân trọng,<br>IT Helpdesk",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        300,
+        100
+      ],
+      "name": "10. Send Notification Email",
+      "id": "wf07-send-email",
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const prev = $('9. Mock IT Provisioning API').first().json;\nconst data = prev.data ? (typeof prev.data === 'string' ? JSON.parse(prev.data) : prev.data) : (prev.json || prev);\nreturn [{\n  json: {\n    ...data,\n    auditStatus: 'PROVISIONED_AND_LOGGED',\n    auditTimestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        100
+      ],
+      "name": "11. Audit Log Database",
+      "id": "wf07-audit-log"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  message: 'WF_07 IT Provisioning completed successfully',\n  empId: $json.empId,\n  userEmail: $json.userEmail,\n  fullName: $json.fullName,\n  department: $json.department,\n  tools: $json.tools,\n  auditStatus: $json.auditStatus,\n  provisionedAt: $json.auditTimestamp\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        100
+      ],
+      "name": "12. Respond to Frontend",
+      "id": "wf07-respond-fe"
     }
   ],
-  "connections": {}
+  "connections": {
+    "1. Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "2. Sanitize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Sanitize Data": {
+      "main": [
+        [
+          {
+            "node": "3. Validate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Validate Email": {
+      "main": [
+        [
+          {
+            "node": "5. Generate Credentials",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4. Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Generate Credentials": {
+      "main": [
+        [
+          {
+            "node": "6. Check Department",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Check Department": {
+      "main": [
+        [
+          {
+            "node": "7. Setup Tech Stack (Jira/Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8. Setup Standard Stack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Setup Tech Stack (Jira/Slack)": {
+      "main": [
+        [
+          {
+            "node": "9. Mock IT Provisioning API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Setup Standard Stack": {
+      "main": [
+        [
+          {
+            "node": "9. Mock IT Provisioning API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Mock IT Provisioning API": {
+      "main": [
+        [
+          {
+            "node": "10. Send Notification Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Send Notification Email": {
+      "main": [
+        [
+          {
+            "node": "11. Audit Log Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Audit Log Database": {
+      "main": [
+        [
+          {
+            "node": "12. Respond to Frontend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
 }

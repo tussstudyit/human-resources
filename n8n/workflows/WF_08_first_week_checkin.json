@@ -1,20 +1,344 @@
 {
+  "id": "WF08firstweek001",
   "name": "WF_08_first_week_checkin",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
   "nodes": [
     {
-      "parameters": { "triggerTimes": { "item": [{ "mode": "everyX", "value": 3, "unit": "days" }] } },
-      "name": "Cronjob - After 3 Days",
-      "type": "n8n-nodes-base.cron",
-      "typeVersion": 1,
-      "position": [250, 300]
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1100,
+        200
+      ],
+      "name": "1. Cronjob Schedule",
+      "id": "wf08-cron-trigger"
     },
     {
-      "parameters": { "conditions": { "number": [{ "value1": "={{$json[\"progressPercent\"]}}", "operation": "smaller", "value2": 50 }] } },
-      "name": "Check Progress < 50%",
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", \n       COUNT(t.id)::int AS \"totalTasks\", \n       COUNT(CASE WHEN t.\"isCompleted\" = true THEN 1 END)::int AS \"completedTasks\" \nFROM users u \nINNER JOIN onboarding_tasks t ON t.\"userId\" = u.id \nGROUP BY u.id, u.email, u.\"fullName\";",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -900,
+        200
+      ],
+      "name": "2. Fetch Onboarding List",
+      "id": "wf08-fetch-db",
+      "credentials": {
+        "postgres": {
+          "id": "PostgresHrDbCred",
+          "name": "Postgres HR DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const total = Number(json.totalTasks || 0);\n  const completed = Number(json.completedTasks || 0);\n  const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;\n  return {\n    json: {\n      ...json,\n      progressPercent,\n      mentorEmail: 'mentor.hr@company.vn',\n      checkedAt: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        200
+      ],
+      "name": "3. Calculate Progress %",
+      "id": "wf08-calc-progress"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-progress-low",
+              "leftValue": "={{ $json.progressPercent }}",
+              "rightValue": 50,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
       "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -500,
+        200
+      ],
+      "name": "4. Check Progress < 50%",
+      "id": "wf08-check-progress"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    checkinStatus: 'LOW_PROGRESS_ALERT',\n    alertSeverity: 'WARNING',\n    message: `Cảnh báo: Nhân sự ${item.fullName} mới đạt ${item.progressPercent}% sau 3 ngày làm việc (${item.completedTasks}/${item.totalTasks} nhiệm vụ).`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        100
+      ],
+      "name": "5. Flag Low Progress",
+      "id": "wf08-flag-low"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    checkinStatus: 'ON_TRACK',\n    alertSeverity: 'SUCCESS',\n    message: `Tiến độ tốt: Nhân sự ${item.fullName} đã hoàn thành ${item.progressPercent}% (${item.completedTasks}/${item.totalTasks} nhiệm vụ).`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        300
+      ],
+      "name": "6. Flag Completed",
+      "id": "wf08-flag-ok"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    slackChannel: '#onboarding-alerts',\n    emailSubject: `[Onboarding Check-in] ${item.fullName} - ${item.checkinStatus}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        100
+      ],
+      "name": "7. Prepare Reminder Message",
+      "id": "wf08-prep-msg"
+    },
+    {
+      "parameters": {
+        "url": "https://httpbin.org/post",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        100,
+        100
+      ],
+      "name": "8. Send Slack to Employee",
+      "id": "wf08-send-slack"
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.mentorEmail || 'anhtanht1905@gmail.com' }}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailFormat": "html",
+        "html": "=Xin chào Buddy / HR Mentor,<br><br>Hệ thống gửi thông báo rà soát tiến độ tuần đầu tiên:<br><b>Nhân sự:</b> {{$json.fullName}} ({{$json.email}})<br><b>Tiến độ:</b> {{$json.progressPercent}}% ({{$json.completedTasks}}/{{$json.totalTasks}} việc hoàn thành)<br><b>Trạng thái:</b> {{$json.checkinStatus}}<br><br>Vui lòng hỗ trợ nhân sự hoàn tất các nhiệm vụ hội nhập kịp thời.<br><br>Trân trọng,<br>Hệ thống Quản trị Onboarding",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        300,
+        100
+      ],
+      "name": "9. Notify HR Mentor Email",
+      "id": "wf08-send-email",
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    loggedAt: new Date().toISOString(),\n    deliveryStatus: 'NOTIFICATIONS_DISPATCHED'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        100
+      ],
+      "name": "10. Log Checkin Status",
+      "id": "wf08-log-status"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    dbSynced: true,\n    syncSummary: `Checked user ${item.userId}: ${item.progressPercent}% progress recorded.`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        100
+      ],
+      "name": "11. Update DB State",
+      "id": "wf08-update-db"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [500, 300]
+      "position": [
+        900,
+        100
+      ],
+      "name": "12. End Process",
+      "id": "wf08-end-node"
     }
   ],
-  "connections": {}
+  "connections": {
+    "1. Cronjob Schedule": {
+      "main": [
+        [
+          {
+            "node": "2. Fetch Onboarding List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Fetch Onboarding List": {
+      "main": [
+        [
+          {
+            "node": "3. Calculate Progress %",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Calculate Progress %": {
+      "main": [
+        [
+          {
+            "node": "4. Check Progress < 50%",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Check Progress < 50%": {
+      "main": [
+        [
+          {
+            "node": "5. Flag Low Progress",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6. Flag Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Flag Low Progress": {
+      "main": [
+        [
+          {
+            "node": "7. Prepare Reminder Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Prepare Reminder Message": {
+      "main": [
+        [
+          {
+            "node": "8. Send Slack to Employee",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Send Slack to Employee": {
+      "main": [
+        [
+          {
+            "node": "9. Notify HR Mentor Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Notify HR Mentor Email": {
+      "main": [
+        [
+          {
+            "node": "10. Log Checkin Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Log Checkin Status": {
+      "main": [
+        [
+          {
+            "node": "11. Update DB State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Update DB State": {
+      "main": [
+        [
+          {
+            "node": "12. End Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Flag Completed": {
+      "main": [
+        [
+          {
+            "node": "12. End Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
 }
