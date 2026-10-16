@@ -70,11 +70,11 @@ export class PerformanceService {
 
     const totalKpis = kpis.length;
     const avgCompletion = totalKpis > 0
-      ? kpis.reduce((acc, k) => acc + (k.actualValue / (k.targetValue || 1)) * 100, 0) / totalKpis
+      ? kpis.reduce((acc: number, k: any) => acc + (k.actualValue / (k.targetValue || 1)) * 100, 0) / totalKpis
       : 0;
 
     const avgFeedbackScore = feedbacks.length > 0
-      ? feedbacks.reduce((acc, f) => acc + f.score, 0) / feedbacks.length
+      ? feedbacks.reduce((acc: number, f: any) => acc + f.score, 0) / feedbacks.length
       : 0;
 
     return {

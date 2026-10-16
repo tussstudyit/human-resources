@@ -1,30 +1,24 @@
 import { Metadata } from 'next';
 import { getJobs } from '@/lib/api/recruitment';
-import CareersClient from '@/components/recruitment/CareersClient';
+import { UpCareerPortalClient } from '@/components/topdev/TopDevPortalClient';
 import { JobPost } from '@/types/recruitment';
 
 export const metadata: Metadata = {
-  title: 'Cơ hội nghề nghiệp & Việc làm | HR Platform',
+  title: 'Cơ Hội Việc Làm IT Hàng Đầu | UpCareer & HR Platform',
   description:
-    'Khám phá các vị trí tuyển dụng hấp dẫn tại HR Platform. Nộp hồ sơ nhanh chóng và kết nối trực tiếp với đội ngũ tuyển dụng.',
+    'Tìm kiếm việc làm IT, kỹ sư phần mềm, lập trình viên tại các doanh nghiệp công nghệ hàng đầu Việt Nam. Ứng tuyển nhanh chóng với CV trực tuyến.',
 };
 
-// Giữ force-dynamic để Next.js SSR tại thời điểm request, bỏ qua fetch cache,
-// đảm bảo danh sách vị trí tuyển dụng luôn cập nhật và tránh lỗi build tĩnh khi backend chưa chạy
 export const dynamic = 'force-dynamic';
 
 export default async function CareersPage() {
   let initialJobs: JobPost[] = [];
-  let initialError: boolean = false;
 
   try {
     initialJobs = await getJobs();
   } catch (err) {
     console.error('Lỗi SSR khi tải danh sách việc làm:', err);
-    initialError = true;
   }
 
-  return (
-    <CareersClient initialJobs={initialJobs} initialError={initialError} />
-  );
+  return <UpCareerPortalClient initialRealJobs={initialJobs} />;
 }

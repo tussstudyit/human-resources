@@ -322,69 +322,99 @@ export class RecruitmentService {
     };
   }
 
-  // 13. Get Recruitment dashboard stats
+  // 13. HR & DASHBOARD: Aggregated recruitment & n8n metrics
   async getStats() {
-    const totalJobs = await this.prisma.jobPost.count();
-    const openJobs = await this.prisma.jobPost.count({ where: { status: JobStatus.OPEN } });
-    const candidates = await this.prisma.candidate.findMany({
-      include: {
-        job: { select: { title: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
-
-    const totalCandidates = candidates.length;
-    const scores = candidates
-      .filter((c) => c.matchScore !== null && c.matchScore !== undefined)
-      .map((c) => c.matchScore as number);
-    const avgMatchScore =
-      scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : 0;
+    const [totalJobs, openJobs, candidates] = await Promise.all([
+      this.prisma.jobPost.count(),
+      this.prisma.jobPost.count({ where: { status: JobStatus.OPEN } }),
+      this.prisma.candidate.findMany({
+        include: {
+          job: {
+            select: { id: true, title: true },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      }),
+    ]);
 
     let pending = 0;
     let evaluated = 0;
     let interview = 0;
     let talentPool = 0;
     let rejected = 0;
+    let scoreSum = 0;
+    let scoreCount = 0;
 
-    const recentEvaluations = candidates.slice(0, 5).map((c) => {
-      const parsed = (c.parsedSkillsJson as any) || {};
-      let stage: 'PENDING' | 'EVALUATED' | 'INTERVIEW' | 'TALENT_POOL' | 'REJECTED' = 'PENDING';
+    for (const c of candidates) {
+      const parsed = c.parsedSkillsJson as any;
+      let hasMeet = false;
+      let hasPool = false;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        if (parsed.interviewSchedule && parsed.interviewSchedule.googleMeetUrl) {
+          hasMeet = true;
+        }
+        if (parsed.talentPool && parsed.talentPool.tier) {
+          hasPool = true;
+        }
+      }
 
       if (c.aiStatus === 'PENDING') {
-        stage = 'PENDING';
+        pending++;
+      } else if (hasMeet) {
+        interview++;
+      } else if (hasPool) {
+        talentPool++;
       } else if (c.aiStatus === 'FAILED') {
-        stage = 'REJECTED';
-      } else if (parsed?.interviewSchedule) {
-        stage = 'INTERVIEW';
-      } else if (parsed?.talentPool) {
-        stage = 'TALENT_POOL';
+        rejected++;
       } else {
-        stage = 'EVALUATED';
+        evaluated++;
       }
+
+      if (c.matchScore !== null && c.matchScore !== undefined) {
+        scoreSum += c.matchScore;
+        scoreCount++;
+      }
+    }
+
+    const avgMatchScore = scoreCount > 0 ? Math.round((scoreSum / scoreCount) * 10) / 10 : 0;
+
+    const recentEvaluations = candidates.slice(0, 5).map((c) => {
+      const parsed = c.parsedSkillsJson as any;
+      let skills: string[] = [];
+      let stage: 'PENDING' | 'EVALUATED' | 'INTERVIEW' | 'TALENT_POOL' | 'REJECTED' = 'EVALUATED';
+      let poolTier: string | undefined;
+      let meetUrl: string | undefined;
+
+      if (Array.isArray(parsed)) {
+        skills = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        if (Array.isArray(parsed.skills)) skills = parsed.skills;
+        if (parsed.interviewSchedule?.googleMeetUrl) {
+          stage = 'INTERVIEW';
+          meetUrl = parsed.interviewSchedule.googleMeetUrl;
+        } else if (parsed.talentPool?.tier) {
+          stage = 'TALENT_POOL';
+          poolTier = parsed.talentPool.tier;
+        }
+      }
+
+      if (c.aiStatus === 'PENDING') stage = 'PENDING';
+      if (c.aiStatus === 'FAILED') stage = 'REJECTED';
 
       return {
         id: c.id,
         name: c.name,
         email: c.email,
         jobId: c.jobId,
-        jobTitle: c.job?.title || 'Chưa xác định',
+        jobTitle: c.job?.title || 'Chưa phân loại',
         matchScore: c.matchScore,
         aiStatus: c.aiStatus,
         stage,
-        poolTier: parsed?.talentPool?.tier,
-        meetUrl: parsed?.interviewSchedule?.googleMeetUrl,
-        skills: Array.isArray(parsed?.skills) ? parsed.skills : [],
+        poolTier,
+        meetUrl,
+        skills: skills.slice(0, 4),
         updatedAt: c.updatedAt.toISOString(),
       };
-    });
-
-    candidates.forEach((c) => {
-      const parsed = (c.parsedSkillsJson as any) || {};
-      if (c.aiStatus === 'PENDING') pending++;
-      else if (c.aiStatus === 'FAILED') rejected++;
-      else if (parsed?.interviewSchedule) interview++;
-      else if (parsed?.talentPool) talentPool++;
-      else evaluated++;
     });
 
     const agents = [
@@ -396,16 +426,16 @@ export class RecruitmentService {
         isLive: true,
         summary: 'Tự động bóc tách CV, chấm điểm tương thích bằng Gemini 1.5/2.5 & lên lịch phỏng vấn.',
         workflows: ['WF_04', 'WF_05', 'WF_06'],
-        tasksProcessedCount: totalCandidates,
-        tasksProcessedLabel: 'Hồ sơ đã xử lý',
-        lastActive: new Date().toISOString(),
+        tasksProcessedCount: candidates.length,
+        tasksProcessedLabel: `${candidates.length} hồ sơ đã tiếp nhận`,
+        lastActive: candidates[0]?.updatedAt ? candidates[0].updatedAt.toISOString() : new Date().toISOString(),
       },
     ];
 
     return {
       totalJobs,
       openJobs,
-      totalCandidates,
+      totalCandidates: candidates.length,
       avgMatchScore,
       pipeline: {
         pending,
@@ -419,9 +449,16 @@ export class RecruitmentService {
     };
   }
 
-  // 14. Schedule candidate interview
+  async getRecruitmentStats() {
+    return this.getStats();
+  }
+
+  // 14. Schedule candidate interview & create Google Meet
   async scheduleInterview(id: string, interviewType: string = 'ONLINE') {
-    const candidate = await this.prisma.candidate.findUnique({ where: { id } });
+    const candidate = await this.prisma.candidate.findUnique({
+      where: { id },
+      include: { job: true },
+    });
     if (!candidate) {
       throw new NotFoundException('Candidate not found');
     }
@@ -450,11 +487,32 @@ export class RecruitmentService {
       where: { id },
       data: {
         parsedSkillsJson: {
-          ...currentSkills,
+          ...(typeof currentSkills === 'object' && !Array.isArray(currentSkills) ? currentSkills : {}),
           interviewSchedule: schedule,
         },
       },
     });
+
+    try {
+      const webhookUrl = process.env.N8N_SCHEDULE_WEBHOOK;
+      if (webhookUrl) {
+        const payload = {
+          candidateId: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          jobTitle: candidate.job?.title || 'Vị trí tuyển dụng',
+          matchScore: candidate.matchScore || 85,
+          schedule,
+          interviewType,
+          companyName: 'Công ty Cổ phần Công nghệ HR Tech Hub',
+        };
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (process.env.N8N_API_KEY) headers['x-api-key'] = process.env.N8N_API_KEY;
+        await axios.post(webhookUrl, payload, { timeout: 5000, headers });
+      }
+    } catch (err: any) {
+      this.logger.warn(`Could not notify n8n interview scheduler: ${err.message}`);
+    }
 
     return {
       success: true,
@@ -464,9 +522,16 @@ export class RecruitmentService {
     };
   }
 
-  // 15. Archive candidate into talent pool
+  async scheduleCandidateInterview(candidateId: string, interviewType: string = 'ONLINE') {
+    return this.scheduleInterview(candidateId, interviewType);
+  }
+
+  // 15. Archive candidate into talent pool & send notification
   async archiveTalentPool(id: string, scenario: string = 'TOP_TALENT') {
-    const candidate = await this.prisma.candidate.findUnique({ where: { id } });
+    const candidate = await this.prisma.candidate.findUnique({
+      where: { id },
+      include: { job: true },
+    });
     if (!candidate) {
       throw new NotFoundException('Candidate not found');
     }
@@ -477,7 +542,7 @@ export class RecruitmentService {
     const talentPool = {
       tier,
       status: 'ARCHIVED',
-      scenario,
+      scenario: scenario || 'TOP_TALENT',
       emailSent: true,
       archivedAt: new Date().toISOString(),
       recommendedNextRole: 'Senior / Mid Candidate Pool',
@@ -487,11 +552,32 @@ export class RecruitmentService {
       where: { id },
       data: {
         parsedSkillsJson: {
-          ...currentSkills,
+          ...(typeof currentSkills === 'object' && !Array.isArray(currentSkills) ? currentSkills : {}),
           talentPool,
         },
       },
     });
+
+    try {
+      const webhookUrl = process.env.N8N_REJECTION_WEBHOOK;
+      if (webhookUrl) {
+        const payload = {
+          candidateId: candidate.id,
+          name: candidate.name,
+          email: candidate.email,
+          jobTitle: candidate.job?.title || 'Vị trí tuyển dụng',
+          matchScore: candidate.matchScore ?? 50,
+          talentPool,
+          rejectionType: scenario,
+          companyName: 'Công ty Cổ phần Công nghệ HR Tech Hub',
+        };
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (process.env.N8N_API_KEY) headers['x-api-key'] = process.env.N8N_API_KEY;
+        await axios.post(webhookUrl, payload, { timeout: 5000, headers });
+      }
+    } catch (err: any) {
+      this.logger.warn(`Could not notify n8n rejection notification: ${err.message}`);
+    }
 
     return {
       success: true,
@@ -499,5 +585,9 @@ export class RecruitmentService {
       updatedCandidate: updated,
       tier,
     };
+  }
+
+  async archiveCandidateTalentPool(candidateId: string, scenario?: string) {
+    return this.archiveTalentPool(candidateId, scenario);
   }
 }

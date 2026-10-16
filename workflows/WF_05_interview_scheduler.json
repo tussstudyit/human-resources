@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-10-09T14:05:47.000Z",
+  "createdAt": "2026-10-09T12:04:04.509Z",
+  "id": "Z8f05InterviewSc",
   "name": "[HR] WF_05 - Enterprise Smart Interview Orchestrator & Calendar Sync",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -259,9 +265,43 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "id": "Z8f05InterviewSc"
+  "staticData": null,
+  "meta": {
+    "instanceId": "d513a217739c970f06ba5b7905d56e04f8bf5bbc9d4fc9cc5d08fdd4d8b7ae7b"
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "45e82d68-705b-45c9-a786-2ee5808dab73",
+  "activeVersionId": "45e82d68-705b-45c9-a786-2ee5808dab73",
+  "versionCounter": 7,
+  "triggerCount": 1,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-10-09T12:04:04.512Z",
+      "createdAt": "2026-10-09T12:04:04.512Z",
+      "role": "workflow:owner",
+      "workflowId": "Z8f05InterviewSc",
+      "projectId": "6fLB1uBc0gD1ogBQ",
+      "project": {
+        "updatedAt": "2026-09-30T14:32:33.272Z",
+        "createdAt": "2026-09-30T13:39:28.905Z",
+        "id": "6fLB1uBc0gD1ogBQ",
+        "name": "Đoàn Huy <doanthanhhuy1309@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "f74528cc-054d-4509-863b-f3ddb16b799d"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
 }
