@@ -359,4 +359,55 @@ describe('DashboardPage - Chức Năng Bảng Điều Khiển Quản Lý', () =>
       expect(screen.getByText('6 hồ sơ đã tiếp nhận')).toBeInTheDocument();
     });
   });
+
+  it('10. Hiển thị các nút điều hướng chuyển trang/view (Nhân sự, Phòng ban) trên cards và thanh chuyển view', async () => {
+    vi.mocked(useAuthStore).mockReturnValue({
+      user: mockUser,
+      isAuthenticated: true,
+      isInitialized: true,
+      initAuth: vi.fn(),
+      token: 'valid-token',
+      isLoading: false,
+      error: null,
+      login: vi.fn(),
+      register: vi.fn(),
+      logout: vi.fn(),
+      clearError: vi.fn(),
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      // Metric cards navigation buttons
+      expect(screen.getByText('Xem danh sách nhân sự')).toBeInTheDocument();
+      expect(screen.getByText('Xem cơ cấu phòng ban')).toBeInTheDocument();
+      expect(screen.getByText('Xem 5 Tác tử AI')).toBeInTheDocument();
+
+      // Lower view switcher bar
+      expect(screen.getByText('CHUYỂN VIEW:')).toBeInTheDocument();
+      expect(screen.getByText(/Danh sách Nhân sự \(3\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Cơ cấu Phòng ban \(2\)/)).toBeInTheDocument();
+    });
+
+    // Test switching to DEPARTMENTS view hides employees
+    const deptViewBtn = screen.getByText(/Cơ cấu Phòng ban \(2\)/);
+    fireEvent.click(deptViewBtn);
+
+    expect(screen.getByText('2 PHÒNG BAN')).toBeInTheDocument();
+    expect(screen.queryByText('Danh Sách Nhân Sự Tổ Chức')).not.toBeInTheDocument();
+
+    // Test switching to EMPLOYEES view shows employees and hides departments
+    const empViewBtn = screen.getByText(/Danh sách Nhân sự \(3\)/);
+    fireEvent.click(empViewBtn);
+
+    expect(screen.getByText('Danh Sách Nhân Sự Tổ Chức')).toBeInTheDocument();
+    expect(screen.queryByText('2 PHÒNG BAN')).not.toBeInTheDocument();
+
+    // Test switching back to ALL shows both
+    const allViewBtn = screen.getByText('Tất cả');
+    fireEvent.click(allViewBtn);
+
+    expect(screen.getByText('Danh Sách Nhân Sự Tổ Chức')).toBeInTheDocument();
+    expect(screen.getByText('2 PHÒNG BAN')).toBeInTheDocument();
+  });
 });
