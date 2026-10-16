@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Lock, Mail, User, CheckCircle2 } from 'lucide-react';
+import { X, Lock, Mail, User, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,22 +17,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const { login, register } = useAuthStore();
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
+    try {
+      if (tab === 'login') {
+        await login(email, password);
+      } else {
+        await register({ email, password, fullName });
+      }
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
-        onLoginSuccess(email || 'developer@upcareer.vn');
+        onLoginSuccess(email);
         onClose();
         setSuccess(false);
-      }, 1000);
-    }, 800);
+      }, 700);
+    } catch (err: any) {
+      setLoading(false);
+      const msg = err?.response?.data?.message || err?.message || 'Đăng nhập không thành công. Vui lòng kiểm tra lại thông tin.';
+      setErrorMessage(Array.isArray(msg) ? msg.join(', ') : msg);
+    }
   };
 
   return (
@@ -57,7 +71,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
         {/* Tab switch */}
         <div className="flex border-b border-slate-200 bg-slate-50">
           <button
-            onClick={() => setTab('login')}
+            onClick={() => { setTab('login'); setErrorMessage(null); }}
             className={`flex-1 py-3 text-xs font-bold transition-colors cursor-pointer ${
               tab === 'login'
                 ? 'border-b-2 border-red-600 text-red-600 bg-white'
@@ -67,7 +81,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
             Đăng nhập ứng viên
           </button>
           <button
-            onClick={() => setTab('register')}
+            onClick={() => { setTab('register'); setErrorMessage(null); }}
             className={`flex-1 py-3 text-xs font-bold transition-colors cursor-pointer ${
               tab === 'register'
                 ? 'border-b-2 border-red-600 text-red-600 bg-white'
@@ -90,6 +104,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {errorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               {tab === 'register' && (
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -118,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSu
                   <input
                     type="email"
                     required
-                    placeholder="dev@upcareer.vn"
+                    placeholder="hr.lead@example.com hoặc dev.john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none"

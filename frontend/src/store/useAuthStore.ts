@@ -40,10 +40,25 @@ interface AuthState {
   clearError: () => void;
 }
 
+const getInitialUser = (): User | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getInitialToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('token');
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
-  isAuthenticated: false,
+  user: getInitialUser(),
+  token: getInitialToken(),
+  isAuthenticated: typeof window !== 'undefined' ? Boolean(getInitialToken()) : false,
   isLoading: false,
   isInitialized: false,
   error: null,
@@ -54,6 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (typeof window === 'undefined') return;
     const token = localStorage.getItem('token');
     if (!token) {
+      localStorage.removeItem('user');
       set({
         isLoading: false,
         isInitialized: true,
@@ -67,6 +83,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const res = await api.get('/auth/me');
+      localStorage.setItem('user', JSON.stringify(res.data));
       set({
         user: res.data,
         token,
@@ -79,6 +96,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       // Chỉ xóa token nếu thực sự lỗi 401 (Token sai/hết hạn)
       if (err?.response?.status === 401) {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         set({
           user: null,
           token: null,
@@ -101,6 +119,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await api.post('/auth/login', { email, password });
       const { user, accessToken } = res.data;
       localStorage.setItem('token', accessToken);
+      localStorage.setItem('user', JSON.stringify(user));
       set({
         user,
         token: accessToken,
@@ -128,6 +147,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const res = await api.post('/auth/register', data);
       const { user, accessToken } = res.data;
       localStorage.setItem('token', accessToken);
+      localStorage.setItem('user', JSON.stringify(user));
       set({
         user,
         token: accessToken,
@@ -152,6 +172,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
     set({
       user: null,

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bookmark, 
   Calculator, 
@@ -12,8 +12,15 @@ import {
   User, 
   Menu, 
   X,
-  ExternalLink
+  ExternalLink,
+  ChevronDown,
+  LogOut,
+  LayoutDashboard,
+  GraduationCap,
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface HeaderProps {
   savedJobsCount: number;
@@ -35,10 +42,40 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectNav
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { user, isAuthenticated, logout, initAuth } = useAuthStore();
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
+  // Click outside listener for profile dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleNavClick = (sectionId: string) => {
     onSelectNav(sectionId);
     setMobileMenuOpen(false);
+  };
+
+  const getRoleBadgeColor = (role?: string) => {
+    switch (role) {
+      case 'HR':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'MANAGER':
+        return 'bg-sky-50 text-sky-700 border-sky-200';
+      default:
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    }
   };
 
   return (
@@ -49,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-3 shrink-0">
             <button 
               onClick={() => handleNavClick('hero')} 
-              className="flex items-center gap-1.5 focus:outline-none group text-left"
+              className="flex items-center gap-1.5 focus:outline-none group text-left cursor-pointer"
               title="UpCareer - Việc Làm IT Hàng Đầu Việt Nam"
             >
               <div className="w-10 h-10 rounded-lg bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-extrabold text-xl shadow-xs group-hover:scale-105 transition-transform">
@@ -118,7 +155,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </nav>
 
-          {/* Zone 3: Actions & Primary CTA */}
+          {/* Zone 3: Actions & Primary CTA / Profile Box */}
           <div className="flex items-center gap-3 shrink-0">
             {/* Bookmarked Jobs button */}
             <button
@@ -134,24 +171,139 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Candidate Login */}
-            <button
-              onClick={onOpenAuthModal}
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
-            >
-              <User className="w-4 h-4 text-slate-500" />
-              Đăng nhập / Đăng ký
-            </button>
+            {/* Authenticated User Profile Box vs Guest Login */}
+            {isAuthenticated && user ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl transition-all cursor-pointer shadow-xs focus:outline-none"
+                  title="Tài khoản cá nhân"
+                  aria-label="Mở menu tài khoản"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-linear-to-br from-red-600 to-rose-700 text-white font-extrabold text-xs flex items-center justify-center uppercase shadow-xs shrink-0">
+                    {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                  </div>
+                  <div className="hidden sm:flex flex-col text-left">
+                    <span className="text-xs font-bold text-slate-900 leading-tight max-w-[130px] truncate">
+                      {user.fullName}
+                    </span>
+                    <span className="text-[10px] font-semibold text-red-600 tracking-wide uppercase">
+                      {user.role}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-            {/* Employer Primary CTA button -> Link to HR Admin Portal */}
-            <Link
-              href="/login"
-              className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg transition-all shadow-xs hover:shadow whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
-              title="Truy cập Cổng Quản trị Tuyển dụng HR ATS"
-            >
-              <span>Cổng Quản Trị HR</span>
-              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-            </Link>
+                {/* Profile Dropdown Menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                    {/* User Card */}
+                    <div className="px-4 py-2.5 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-lg bg-linear-to-br from-red-600 to-rose-700 text-white font-extrabold text-sm flex items-center justify-center uppercase shadow-xs shrink-0">
+                          {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-xs font-bold text-slate-900 truncate">{user.fullName}</p>
+                          <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${getRoleBadgeColor(user.role)} uppercase`}>
+                          {user.role}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {user.department?.name || 'Hệ thống HR Tech'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <div className="py-1 text-xs font-semibold text-slate-700">
+                      <Link
+                        href="/recruitment"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                      >
+                        <Briefcase className="w-4 h-4 text-slate-400" />
+                        <span>Cổng Quản Trị Tuyển Dụng HR</span>
+                      </Link>
+
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                        <span>Bảng Điều Khiển Tổng Quan</span>
+                      </Link>
+
+                      <Link
+                        href="/onboarding"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                      >
+                        <Sparkles className="w-4 h-4 text-slate-400" />
+                        <span>Quy Trình Hội Nhập Onboarding</span>
+                      </Link>
+
+                      <Link
+                        href="/training"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                      >
+                        <GraduationCap className="w-4 h-4 text-slate-400" />
+                        <span>Đào Tạo & Kỹ Năng (AI Skills)</span>
+                      </Link>
+
+                      <Link
+                        href="/performance"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-slate-400" />
+                        <span>Đánh Giá Hiệu Suất 360°</span>
+                      </Link>
+                    </div>
+
+                    {/* Logout Button */}
+                    <div className="border-t border-slate-100 pt-1 mt-1">
+                      <button
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer text-left"
+                      >
+                        <LogOut className="w-4 h-4 text-rose-500" />
+                        <span>Đăng xuất tài khoản</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Candidate Login */}
+                <button
+                  onClick={onOpenAuthModal}
+                  className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+                >
+                  <User className="w-4 h-4 text-slate-500" />
+                  Đăng nhập / Đăng ký
+                </button>
+
+                {/* Employer Primary CTA button -> Link to HR Admin Portal */}
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-lg transition-all shadow-xs hover:shadow whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer"
+                  title="Truy cập Cổng Quản trị Tuyển dụng HR ATS"
+                >
+                  <span>Cổng Quản Trị HR</span>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                </Link>
+              </>
+            )}
 
             {/* Mobile hamburger */}
             <button
@@ -168,6 +320,32 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-5 space-y-2 text-sm font-semibold">
+          {isAuthenticated && user && (
+            <div className="p-3 mb-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-linear-to-br from-red-600 to-rose-700 text-white font-extrabold text-xs flex items-center justify-center uppercase shadow-xs">
+                  {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">{user.fullName}</p>
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${getRoleBadgeColor(user.role)} uppercase`}>
+                    {user.role}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  logout();
+                }}
+                className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
+                title="Đăng xuất"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           <button
             onClick={() => handleNavClick('jobs-section')}
             className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
@@ -209,20 +387,33 @@ export const Header: React.FC<HeaderProps> = ({
           >
             Blog IT & Xu Hướng
           </button>
+
           <div className="pt-2 border-t border-slate-100 space-y-2">
-            <button
-              onClick={() => { setMobileMenuOpen(false); onOpenAuthModal(); }}
-              className="w-full text-center py-2.5 px-3 bg-slate-100 text-slate-800 font-bold rounded-lg cursor-pointer"
-            >
-              Đăng nhập / Đăng ký ứng viên
-            </button>
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2.5 px-3 bg-red-600 text-white font-bold rounded-lg block cursor-pointer"
-            >
-              Cổng Quản Trị Tuyển Dụng HR
-            </Link>
+            {isAuthenticated && user ? (
+              <Link
+                href="/recruitment"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2.5 px-3 bg-red-600 text-white font-bold rounded-lg block cursor-pointer"
+              >
+                Vào Cổng Quản Trị HR
+              </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); onOpenAuthModal(); }}
+                  className="w-full text-center py-2.5 px-3 bg-slate-100 text-slate-800 font-bold rounded-lg cursor-pointer"
+                >
+                  Đăng nhập / Đăng ký ứng viên
+                </button>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-2.5 px-3 bg-red-600 text-white font-bold rounded-lg block cursor-pointer"
+                >
+                  Cổng Quản Trị Tuyển Dụng HR
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

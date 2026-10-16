@@ -1,10 +1,17 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { LogIn, Briefcase } from 'lucide-react';
+import { LogIn, Briefcase, LogOut, LayoutDashboard } from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function PublicHeader() {
+  const { user, isAuthenticated, logout, initAuth } = useAuthStore();
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
   return (
     <header className="h-14 md:h-16 bg-white/95 backdrop-blur-md border-b border-[#ebebeb] px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-[0px_1px_1px_rgba(0,0,0,0.02)] transition-all font-sans">
       {/* Brand logo & company name */}
@@ -41,13 +48,47 @@ export default function PublicHeader() {
           <span>Vị trí tuyển dụng</span>
         </Link>
 
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#171717] hover:bg-[#fafafa] bg-white px-3 py-1.5 rounded-[6px] transition-colors border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] focus-ring cursor-pointer"
-        >
-          <LogIn className="h-3.5 w-3.5 text-[#8f8f8f]" />
-          <span>Cổng Quản Trị HR</span>
-        </Link>
+        {isAuthenticated && user ? (
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/recruitment"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-800 hover:text-red-600 bg-slate-50 hover:bg-red-50/60 px-3 py-1.5 rounded-lg border border-slate-200 transition-colors"
+            >
+              <div className="w-6 h-6 rounded-md bg-linear-to-br from-red-600 to-rose-700 text-white font-extrabold text-[10px] flex items-center justify-center uppercase shadow-xs">
+                {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+              </div>
+              <span>{user.fullName}</span>
+              <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-red-100 text-red-700 uppercase">
+                {user.role}
+              </span>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="hidden sm:inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+              title="Bảng điều khiển"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-slate-500" />
+            </Link>
+
+            <button
+              onClick={logout}
+              className="inline-flex items-center gap-1 text-xs font-medium text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 px-2.5 py-1.5 rounded-lg border border-rose-200 transition-colors cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-500" />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#171717] hover:bg-[#fafafa] bg-white px-3 py-1.5 rounded-[6px] transition-colors border border-[#ebebeb] shadow-[0px_1px_1px_rgba(0,0,0,0.04)] focus-ring cursor-pointer"
+          >
+            <LogIn className="h-3.5 w-3.5 text-[#8f8f8f]" />
+            <span>Cổng Quản Trị HR</span>
+          </Link>
+        )}
       </div>
     </header>
   );
