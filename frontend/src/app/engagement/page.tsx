@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
-import AgentNavBar from '@/components/AgentNavBar';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   HeartHandshake,
@@ -151,7 +150,6 @@ export default function EngagementPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       <Header />
-      <AgentNavBar />
 
       <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Hero Banner Header */}

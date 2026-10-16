@@ -4,7 +4,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Header } from '@/components/topdev/Header';
-import AgentNavBar from '@/components/AgentNavBar';
 import { api } from '@/lib/api';
 import {
   Users,
@@ -197,7 +196,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       <Header />
-      <AgentNavBar />
 
       <main className="p-6 md:p-8 space-y-7 flex-1 max-w-7xl w-full mx-auto">
           {/* Welcome Banner - UpCareer Dark Slate with Agent live status & Portal shortcut */}

@@ -4,7 +4,6 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
-import AgentNavBar from '@/components/AgentNavBar';
 import {
   ArrowLeft,
   GraduationCap,
@@ -328,7 +327,6 @@ export default function TrainingPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       <Header />
-      <AgentNavBar />
 
       <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Hero Banner Header */}

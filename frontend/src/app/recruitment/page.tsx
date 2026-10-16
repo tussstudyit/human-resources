@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Header } from '@/components/topdev/Header';
-import AgentNavBar from '@/components/AgentNavBar';
 import RecruitmentAdminClient from '@/components/recruitment/admin/RecruitmentAdminClient';
 import Link from 'next/link';
 import { Lock, ArrowRight } from 'lucide-react';
@@ -71,7 +70,6 @@ export default function RecruitmentAdminPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       <Header />
-      <AgentNavBar />
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         <RecruitmentAdminClient />
       </main>
