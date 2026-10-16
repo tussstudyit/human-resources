@@ -1,14 +1,18 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/useAuthStore';
 import { LogOut, Globe, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, initAuth } = useAuthStore();
   const router = useRouter();
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
 
   const handleLogout = () => {
     logout();
