@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, MapPin, Layers, Sparkles, ArrowRight } from 'lucide-react';
+import { Search, MapPin, Layers, Sparkles, ArrowRight, ChevronDown } from 'lucide-react';
 import { POPULAR_TECH_KEYWORDS, VIETNAM_LOCATIONS, JOB_LEVELS } from '@/data/topdevMockData';
 
 interface HeroSearchProps {
@@ -81,12 +81,12 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
         </p>
 
         {/* Search Bar Container */}
-        <div className="mt-8 bg-white p-3 sm:p-3.5 rounded-2xl shadow-2xl border border-slate-200/20 text-slate-900">
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+        <div className="mt-8 bg-white p-2 sm:p-2.5 rounded-2xl shadow-2xl border border-slate-200/20 text-slate-900">
+          <form onSubmit={handleSubmit} className="flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
             
             {/* Input 1: Keyword / Role */}
-            <div className="md:col-span-5 relative flex items-center">
-              <div className="absolute left-3.5 text-slate-400">
+            <div className="flex-1 relative flex items-center min-w-0">
+              <div className="absolute left-3.5 text-slate-400 pointer-events-none">
                 <Search className="w-5 h-5 text-red-600" />
               </div>
               <input
@@ -94,22 +94,22 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Vị trí, kỹ năng (React, Golang, Java, Python, AI...)"
-                className="w-full pl-11 pr-3 py-3 text-sm font-medium text-slate-900 bg-slate-50 md:bg-transparent rounded-xl md:rounded-none border border-slate-200 md:border-0 focus:outline-none focus:ring-2 focus:ring-red-500/20 placeholder:text-slate-400"
+                className="w-full pl-11 pr-3 py-3 text-sm font-medium text-slate-900 bg-slate-50 md:bg-transparent rounded-xl md:rounded-none border border-slate-200 md:border-0 focus:outline-none placeholder:text-slate-400"
               />
             </div>
 
             {/* Divider in desktop */}
-            <div className="hidden md:block w-px h-8 bg-slate-200" />
+            <div className="hidden md:block w-px h-8 bg-slate-200 shrink-0 mx-2" />
 
             {/* Select 2: Location */}
-            <div className="md:col-span-3 relative flex items-center">
-              <div className="absolute left-3 text-slate-400">
+            <div className="relative flex items-center md:w-52 shrink-0">
+              <div className="absolute left-3 text-slate-400 pointer-events-none">
                 <MapPin className="w-4 h-4 text-slate-500" />
               </div>
               <select
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full pl-9 pr-8 py-3 text-sm font-medium text-slate-700 bg-slate-50 md:bg-transparent rounded-xl md:rounded-none border border-slate-200 md:border-0 focus:outline-none focus:ring-2 focus:ring-red-500/20 appearance-none cursor-pointer"
+                className="w-full pl-9 pr-8 py-3 text-sm font-medium text-slate-700 bg-slate-50 md:bg-transparent rounded-xl md:rounded-none border border-slate-200 md:border-0 focus:outline-none appearance-none cursor-pointer"
               >
                 {VIETNAM_LOCATIONS.map((loc) => (
                   <option key={loc} value={loc} className="text-slate-900">
@@ -117,20 +117,23 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   </option>
                 ))}
               </select>
+              <div className="absolute right-3 pointer-events-none text-slate-400">
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </div>
 
             {/* Divider in desktop */}
-            <div className="hidden md:block w-px h-8 bg-slate-200" />
+            <div className="hidden md:block w-px h-8 bg-slate-200 shrink-0 mx-2" />
 
             {/* Select 3: Level */}
-            <div className="md:col-span-2 relative flex items-center">
-              <div className="absolute left-3 text-slate-400">
+            <div className="relative flex items-center md:w-44 shrink-0">
+              <div className="absolute left-3 text-slate-400 pointer-events-none">
                 <Layers className="w-4 h-4 text-slate-500" />
               </div>
               <select
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full pl-9 pr-6 py-3 text-sm font-medium text-slate-700 bg-slate-50 md:bg-transparent rounded-xl md:rounded-none border border-slate-200 md:border-0 focus:outline-none focus:ring-2 focus:ring-red-500/20 appearance-none cursor-pointer truncate"
+                className="w-full pl-9 pr-8 py-3 text-sm font-medium text-slate-700 bg-slate-50 md:bg-transparent rounded-xl md:rounded-none border border-slate-200 md:border-0 focus:outline-none appearance-none cursor-pointer truncate"
               >
                 {JOB_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl} className="text-slate-900">
@@ -138,13 +141,16 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   </option>
                 ))}
               </select>
+              <div className="absolute right-3 pointer-events-none text-slate-400">
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </div>
 
             {/* Submit Button */}
-            <div className="md:col-span-2">
+            <div className="shrink-0 md:pl-2">
               <button
                 type="submit"
-                className="w-full py-3.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full md:w-auto py-3 px-6 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
               >
                 <Search className="w-4 h-4" />
                 <span>Tìm Kiếm</span>
