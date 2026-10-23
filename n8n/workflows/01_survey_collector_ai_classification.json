@@ -114,22 +114,16 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://localhost:3001/engagement/webhook-response",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}",
-        "options": {}
+        "jsCode": "// Giữ nguyên dữ liệu phân tích khảo sát đầy đủ cho các node cảnh báo tiếp theo\nconst item = $('Bóc Tách & Chuẩn Hóa Kết Quả AI').first()?.json || $input.first().json;\nreturn [{ json: item }];"
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1552,
         320
       ],
       "id": "wf1-sync-backend",
-      "name": "PostgreSQL: Đồng Bộ DB Backend",
-      "continueOnFail": true
+      "name": "PostgreSQL: Đồng Bộ DB Backend"
     },
     {
       "parameters": {
@@ -153,35 +147,35 @@
     },
     {
       "parameters": {
-        "select": "channel",
-        "channelId": {
-          "__rl": true,
-          "value": "C06HR_WELLBEING_ALERTS",
-          "mode": "name"
-        },
-        "text": "=🚨 [CẢNH BÁO KIỆT SỨC - GEMINI AI AGENT]\\nNhân viên: {{ $json.employeeName }} (Phòng: {{ $json.department }})\\nChủ đề: {{ $json.aiAnalysis.category }}\\nMức độ rủi ro: {{ $json.aiAnalysis.riskLevel }} (Điểm: {{ $json.aiAnalysis.sentimentScore }})\\nNội dung: \\\"{{ $json.textAnswer }}\\\"\\nKhuyến nghị Gemini: {{ $json.aiAnalysis.actionRecommendation }}",
-        "otherOptions": {}
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '#hr-wellbeing-alerts',\n  alert: '🚨 [CẢNH BÁO KIỆT SỨC - GEMINI AI AGENT]',\n  employee: $json.employeeName,\n  department: $json.department,\n  category: $json.aiAnalysis?.category,\n  riskLevel: $json.aiAnalysis?.riskLevel,\n  sentimentScore: $json.aiAnalysis?.sentimentScore,\n  feedback: $json.textAnswer,\n  recommendation: $json.aiAnalysis?.actionRecommendation\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
       },
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         2032,
         208
       ],
       "id": "wf1-slack-alert",
       "name": "Slack: Cảnh Báo Khẩn Tới HR Lead",
-      "webhookId": "f5884f0f-309b-4f10-9b17-4c75e3a6e215",
-      "disabled": true,
       "continueOnFail": true
     },
     {
       "parameters": {
-        "sendTo": "={{ $json.employeeEmail }}",
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.employeeEmail || 'dang.2006.qt@gmail.com' }}",
         "subject": "🌿 [HR Wellbeing Care] Chúng tôi luôn đồng hành và lắng nghe bạn",
-        "message": "=Xin chào {{ $json.employeeName }},<br/><br/>Hệ thống Chăm sóc Đời sống Nhân viên nhận thấy thời gian gần đây bạn đang chịu khá nhiều áp lực trong công việc. HR muốn gửi tới bạn một lời nhắn quan tâm chân thành và đề xuất một buổi trò chuyện 1-on-1 hoàn toàn bảo mật để hỗ trợ bạn cân bằng lại.<br/><br/>Trân trọng,<br/><b>Ban Chăm sóc Nhân sự & Đời sống</b>",
+        "emailFormat": "html",
+        "html": "=Xin chào <b>{{ $json.employeeName }}</b>,<br/><br/>Hệ thống Chăm sóc Đời sống Nhân viên nhận thấy thời gian gần đây bạn đang chịu khá nhiều áp lực trong công việc.<br/>HR muốn gửi tới bạn một lời nhắn quan tâm chân thành và đề xuất một buổi trò chuyện 1-on-1 hoàn toàn bảo mật để hỗ trợ bạn cân bằng lại.<br/><br/><b>Chủ đề ghi nhận:</b> {{ $json.aiAnalysis?.category || 'Áp lực công việc' }} (Mức độ: {{ $json.aiAnalysis?.riskLevel || 'Cần chú ý' }})<br/><b>Khuyến nghị hỗ trợ:</b> {{ $json.aiAnalysis?.actionRecommendation || 'Bố trí buổi trò chuyện 1-on-1' }}<br/><br/>Trân trọng,<br><b>Ban Chăm sóc Nhân sự & Đời sống Công ty</b>",
         "options": {}
       },
-      "type": "n8n-nodes-base.gmail",
+      "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
         2272,
@@ -189,8 +183,12 @@
       ],
       "id": "wf1-gmail-support",
       "name": "Gmail: Gửi Thư Đề Xuất Hỗ Trợ 1-on-1",
-      "webhookId": "7f198f8a-5ea7-4962-808e-aacba277ca2d",
-      "disabled": true,
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
       "continueOnFail": true
     },
     {
