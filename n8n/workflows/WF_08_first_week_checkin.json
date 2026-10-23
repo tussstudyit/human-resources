@@ -5,6 +5,21 @@
   "settings": {
     "executionOrder": "v1"
   },
+  "pinData": {
+    "1. Cronjob Schedule": [
+      {
+        "json": {
+          "timestamp": "2026-10-23T21:00:00.000Z",
+          "userId": "usr-dev-001",
+          "email": "dang.2006.qt@gmail.com",
+          "fullName": "Đặng Tú Nguyên",
+          "totalTasks": 10,
+          "completedTasks": 3,
+          "mentorEmail": "dang.2006.qt@gmail.com"
+        }
+      }
+    ]
+  },
   "nodes": [
     {
       "parameters": {
@@ -28,45 +43,63 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "first-week-checkin",
-        "responseMode": "responseNode",
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf08-set-uid",
+              "name": "userId",
+              "value": "={{ $json.userId || 'usr-dev-001' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf08-set-email",
+              "name": "email",
+              "value": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf08-set-name",
+              "name": "fullName",
+              "value": "={{ $json.fullName || 'Đặng Tú Nguyên' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf08-set-total",
+              "name": "totalTasks",
+              "value": "={{ $json.totalTasks || 10 }}",
+              "type": "number"
+            },
+            {
+              "id": "wf08-set-completed",
+              "name": "completedTasks",
+              "value": "={{ $json.completedTasks !== undefined ? $json.completedTasks : 3 }}",
+              "type": "number"
+            },
+            {
+              "id": "wf08-set-mentor",
+              "name": "mentorEmail",
+              "value": "={{ $json.mentorEmail || 'dang.2006.qt@gmail.com' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
         "options": {}
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -1100,
-        380
-      ],
-      "name": "1b. Webhook Trigger",
-      "id": "wf08-webhook-trigger",
-      "webhookId": "first-week-checkin-webhook"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", \n       COUNT(t.id)::int AS \"totalTasks\", \n       COUNT(CASE WHEN t.\"isCompleted\" = true THEN 1 END)::int AS \"completedTasks\" \nFROM users u \nINNER JOIN onboarding_tasks t ON t.\"userId\" = u.id \nGROUP BY u.id, u.email, u.\"fullName\";",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -900,
         200
       ],
       "name": "2. Fetch Onboarding List",
-      "id": "wf08-fetch-db",
-      "credentials": {
-        "postgres": {
-          "id": "PostgresHrDbCred",
-          "name": "Postgres HR DB"
-        }
-      }
+      "id": "wf08-fetch-onboarding"
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const total = Number(json.totalTasks || 0);\n  const completed = Number(json.completedTasks || 0);\n  const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;\n  return {\n    json: {\n      ...json,\n      progressPercent,\n      mentorEmail: 'mentor.hr@company.vn',\n      checkedAt: new Date().toISOString()\n    }\n  };\n});"
+        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const total = Number(json.totalTasks || 10);\n  const completed = Number(json.completedTasks || 0);\n  const progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;\n  return {\n    json: {\n      ...json,\n      progressPercent,\n      checkedAt: new Date().toISOString()\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -111,10 +144,35 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    checkinStatus: 'LOW_PROGRESS_ALERT',\n    alertSeverity: 'WARNING',\n    message: `Cảnh báo: Nhân sự ${item.fullName} mới đạt ${item.progressPercent}% sau 3 ngày làm việc (${item.completedTasks}/${item.totalTasks} nhiệm vụ).`\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf08-flag-status",
+              "name": "checkinStatus",
+              "value": "LOW_PROGRESS_ALERT",
+              "type": "string"
+            },
+            {
+              "id": "wf08-flag-sev",
+              "name": "alertSeverity",
+              "value": "WARNING",
+              "type": "string"
+            },
+            {
+              "id": "wf08-flag-msg",
+              "name": "message",
+              "value": "={{ 'Cảnh báo: Nhân sự ' + $json.fullName + ' mới đạt ' + $json.progressPercent + '% sau 3 ngày làm việc (' + $json.completedTasks + '/' + $json.totalTasks + ' nhiệm vụ).' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -300,
         100
@@ -124,48 +182,106 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    checkinStatus: 'ON_TRACK',\n    alertSeverity: 'SUCCESS',\n    message: `Tiến độ tốt: Nhân sự ${item.fullName} đã hoàn thành ${item.progressPercent}% (${item.completedTasks}/${item.totalTasks} nhiệm vụ).`\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf08-flag-ok-status",
+              "name": "checkinStatus",
+              "value": "ON_TRACK",
+              "type": "string"
+            },
+            {
+              "id": "wf08-flag-ok-sev",
+              "name": "alertSeverity",
+              "value": "SUCCESS",
+              "type": "string"
+            },
+            {
+              "id": "wf08-flag-ok-msg",
+              "name": "message",
+              "value": "={{ 'Tiến độ tốt: Nhân sự ' + $json.fullName + ' đã hoàn thành ' + $json.progressPercent + '% (' + $json.completedTasks + '/' + $json.totalTasks + ' nhiệm vụ).' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -300,
         300
       ],
       "name": "6. Flag Completed",
-      "id": "wf08-flag-ok"
+      "id": "wf08-flag-completed"
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    slackChannel: '#onboarding-alerts',\n    emailSubject: `[Onboarding Check-in] ${item.fullName} - ${item.checkinStatus}`\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf08-prep-chan",
+              "name": "slackChannel",
+              "value": "#onboarding-alerts",
+              "type": "string"
+            },
+            {
+              "id": "wf08-prep-subj",
+              "name": "emailSubject",
+              "value": "={{ '[Onboarding Check-in] ' + $json.fullName + ' - ' + $json.checkinStatus }}",
+              "type": "string"
+            },
+            {
+              "id": "wf08-prep-note",
+              "name": "reminderNote",
+              "value": "Nhắc nhở tự động tuần đầu tiên - Cần hỗ trợ mentor",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -100,
         100
       ],
       "name": "7. Prepare Reminder Message",
-      "id": "wf08-prep-msg"
+      "id": "wf08-prep-reminder"
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    slackStatus: 'SLACK_ALERT_SENT',\n    slackChannel: item.slackChannel || '#onboarding-alerts',\n    dispatchedAt: new Date().toISOString()\n  }\n}];"
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: $json.slackChannel || '#onboarding-alerts',\n  text: $json.message,\n  user: $json.fullName,\n  email: $json.email,\n  progress: $json.progressPercent + '%'\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         100,
         100
       ],
       "name": "8. Send Slack to Employee",
-      "id": "wf08-send-slack"
+      "id": "wf08-send-slack",
+      "continueOnFail": true
     },
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
         "toEmail": "={{ $json.mentorEmail || 'dang.2006.qt@gmail.com' }}",
-        "subject": "={{ $json.emailSubject || '[Onboarding Check-in] ' + $json.fullName + ' - Cảnh báo tiến độ tuần đầu' }}",
+        "subject": "={{ $json.emailSubject || '[Onboarding Check-in] Cảnh báo tiến độ tuần đầu' }}",
         "emailFormat": "html",
         "html": "=Xin chào Buddy / HR Mentor,<br><br>Hệ thống gửi thông báo rà soát tiến độ tuần đầu tiên:<br><b>Nhân sự:</b> {{$json.fullName}} ({{$json.email}})<br><b>Tiến độ:</b> {{$json.progressPercent}}% ({{$json.completedTasks}}/{{$json.totalTasks}} việc hoàn thành)<br><b>Trạng thái:</b> {{$json.checkinStatus}}<br><br>Vui lòng hỗ trợ nhân sự hoàn tất các nhiệm vụ hội nhập kịp thời.<br><br>Trân trọng,<br>Hệ thống Quản trị Onboarding",
         "options": {}
@@ -188,10 +304,35 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    loggedAt: new Date().toISOString(),\n    deliveryStatus: 'NOTIFICATIONS_DISPATCHED'\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf08-log-deliv",
+              "name": "deliveryStatus",
+              "value": "NOTIFICATIONS_DISPATCHED",
+              "type": "string"
+            },
+            {
+              "id": "wf08-log-time",
+              "name": "loggedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "wf08-log-audit",
+              "name": "auditLog",
+              "value": "={{ 'Logged check-in for ' + $json.fullName + ' with status: ' + $json.checkinStatus }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         500,
         100
@@ -201,48 +342,39 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    dbSynced: true,\n    syncSummary: `Checked user ${item.userId}: ${item.progressPercent}% progress recorded.`\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf08-db-synced",
+              "name": "dbSynced",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "wf08-db-summary",
+              "name": "syncSummary",
+              "value": "={{ 'Checked user ' + $json.userId + ': ' + $json.progressPercent + '% progress recorded.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         700,
         100
       ],
       "name": "11. Update DB State",
       "id": "wf08-update-db"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  workflow: 'WF_08_first_week_checkin',\n  message: 'First week check-in completed successfully',\n  checkedAt: new Date().toISOString()\n}) }}",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        900,
-        100
-      ],
-      "name": "12. End Process",
-      "id": "wf08-end-node"
     }
   ],
   "connections": {
     "1. Cronjob Schedule": {
-      "main": [
-        [
-          {
-            "node": "2. Fetch Onboarding List",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "1b. Webhook Trigger": {
       "main": [
         [
           {
@@ -342,28 +474,6 @@
         [
           {
             "node": "11. Update DB State",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "11. Update DB State": {
-      "main": [
-        [
-          {
-            "node": "12. End Process",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "6. Flag Completed": {
-      "main": [
-        [
-          {
-            "node": "12. End Process",
             "type": "main",
             "index": 0
           }

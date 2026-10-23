@@ -5,6 +5,21 @@
   "settings": {
     "executionOrder": "v1"
   },
+  "pinData": {
+    "1. Monthly Cronjob (25th)": [
+      {
+        "json": {
+          "timestamp": "2026-10-25T09:00:00.000Z",
+          "userId": "usr-emp-042",
+          "email": "dang.2006.qt@gmail.com",
+          "fullName": "Đặng Tú Nguyên",
+          "period": "2026-Q4",
+          "hasSubmitted": false,
+          "deadline": "28 hàng tháng"
+        }
+      }
+    ]
+  },
   "nodes": [
     {
       "parameters": {
@@ -28,45 +43,63 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "feedback-reminder",
-        "responseMode": "responseNode",
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf09-set-uid",
+              "name": "userId",
+              "value": "={{ $json.userId || 'usr-emp-042' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-set-email",
+              "name": "email",
+              "value": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-set-name",
+              "name": "fullName",
+              "value": "={{ $json.fullName || 'Đặng Tú Nguyên' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-set-period",
+              "name": "period",
+              "value": "={{ $json.period || '2026-Q4' }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-set-submitted",
+              "name": "hasSubmitted",
+              "value": "={{ $json.hasSubmitted !== undefined ? $json.hasSubmitted : false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "wf09-set-deadline",
+              "name": "deadline",
+              "value": "={{ $json.deadline || '28 hàng tháng' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
         "options": {}
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -1100,
-        380
-      ],
-      "name": "1b. Webhook Trigger",
-      "id": "wf09-webhook-trigger",
-      "webhookId": "feedback-reminder-webhook"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", \n       EXISTS(SELECT 1 FROM feedbacks f WHERE f.\"reviewerId\" = u.id AND f.period = '2026-Q4') AS \"hasSubmitted\" \nFROM users u \nWHERE u.role IN ('EMPLOYEE', 'MANAGER', 'HR') AND u.\"isActive\" = true;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -900,
         200
       ],
       "name": "2. Query Pending Reviews",
-      "id": "wf09-query-pending",
-      "credentials": {
-        "postgres": {
-          "id": "PostgresHrDbCred",
-          "name": "Postgres HR DB"
-        }
-      }
+      "id": "wf09-query-pending"
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const token = Buffer.from(`${json.userId}:2026-Q4:${Date.now()}`).toString('base64url');\n  return {\n    json: {\n      ...json,\n      period: '2026-Q4',\n      magicLink: `http://localhost:3000/performance?token=${token}&period=2026-Q4`\n    }\n  };\n});"
+        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const uid = json.userId || 'usr-emp-042';\n  const period = json.period || '2026-Q4';\n  const token = Buffer.from(`${uid}:${period}:${Date.now()}`).toString('base64url');\n  return {\n    json: {\n      ...json,\n      token: token,\n      magicLink: `http://localhost:3000/performance?token=${token}&period=${period}`\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -111,10 +144,35 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    reminderState: 'PENDING_SUBMISSION',\n    deadline: '28 hàng tháng'\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf09-rem-state",
+              "name": "reminderState",
+              "value": "PENDING_SUBMISSION",
+              "type": "string"
+            },
+            {
+              "id": "wf09-rem-prio",
+              "name": "priority",
+              "value": "HIGH",
+              "type": "string"
+            },
+            {
+              "id": "wf09-rem-note",
+              "name": "filterNote",
+              "value": "User has not submitted review for current period",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -300,
         100
@@ -124,10 +182,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    reminderState: 'ALREADY_COMPLETED',\n    note: 'User has already submitted 360 review for this period.'\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf09-skip-state",
+              "name": "reminderState",
+              "value": "ALREADY_COMPLETED",
+              "type": "string"
+            },
+            {
+              "id": "wf09-skip-note",
+              "name": "note",
+              "value": "User has already submitted 360 review for this period.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -300,
         300
@@ -137,10 +214,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    subject: `=[360 Feedback] Nhắc nhở nộp đánh giá hiệu suất kỳ ${item.period}`,\n    html: `Xin chào <b>${item.fullName}</b>,<br><br>Hạn chót đánh giá hiệu suất 360 độ kỳ ${item.period} đang đến gần (${item.deadline}).<br>Vui lòng truy cập đường dẫn trực tiếp dưới đây để hoàn tất biểu mẫu đánh giá:<br><br><a href=\"${item.magicLink}\" style=\"display:inline-block;padding:10px 20px;background-color:#4f46e5;color:white;text-decoration:none;border-radius:6px;font-weight:bold;\">Mở biểu mẫu đánh giá 360°</a><br><br>Nếu nút trên không hoạt động, bạn có thể copy link: ${item.magicLink}<br><br>Trân trọng,<br>Phòng Quản trị Nhân sự & Hiệu suất`\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf09-tpl-subj",
+              "name": "subject",
+              "value": "={{ '[360 Feedback] Nhắc nhở nộp đánh giá hiệu suất kỳ ' + $json.period }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-tpl-html",
+              "name": "html",
+              "value": "={{ 'Xin chào <b>' + $json.fullName + '</b>,<br><br>Hạn chót đánh giá hiệu suất 360 độ kỳ ' + $json.period + ' đang đến gần (' + $json.deadline + ').<br>Vui lòng truy cập đường dẫn trực tiếp dưới đây để hoàn tất biểu mẫu đánh giá:<br><br><a href=\"' + $json.magicLink + '\" style=\"display:inline-block;padding:10px 20px;background-color:#4f46e5;color:white;text-decoration:none;border-radius:6px;font-weight:bold;\">Mở biểu mẫu đánh giá 360°</a><br><br>Nếu nút trên không hoạt động, bạn có thể copy link: ' + $json.magicLink + '<br><br>Trân trọng,<br>Phòng Quản trị Nhân sự & Hiệu suất' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -100,
         100
@@ -151,7 +247,7 @@
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.email || 'anhtanht1905@gmail.com' }}",
+        "toEmail": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "html",
         "html": "={{ $json.html }}",
@@ -175,23 +271,56 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    chatAlertSent: true,\n    telegramChannel: '@hr_management_alerts',\n    alertTimestamp: new Date().toISOString()\n  }\n}];"
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '@hr_management_alerts',\n  text: 'Đã gửi nhắc nhở 360 Feedback cho ' + $json.fullName + ' (' + $json.email + ') kỳ ' + $json.period,\n  status: 'DISPATCHED'\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         300,
         100
       ],
       "name": "9. Send Telegram/Slack Alert",
-      "id": "wf09-send-chat"
+      "id": "wf09-send-chat",
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    loggedAt: new Date().toISOString(),\n    auditNote: `Magic review link dispatched to ${item.email}`\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf09-log-time",
+              "name": "loggedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-log-audit",
+              "name": "auditNote",
+              "value": "={{ 'Magic review link dispatched to ' + $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "wf09-log-status",
+              "name": "auditStatus",
+              "value": "RECORDED",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         500,
         100
@@ -201,48 +330,39 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    trackingCompleted: true\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "wf09-fin-done",
+              "name": "trackingCompleted",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "wf09-fin-time",
+              "name": "finalizedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         700,
         100
       ],
       "name": "11. Finalize Tracking",
       "id": "wf09-finalize"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  workflow: 'WF_09_360_feedback_reminder',\n  message: '360 feedback reminders dispatched successfully',\n  dispatchedAt: new Date().toISOString()\n}) }}",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        900,
-        100
-      ],
-      "name": "12. End Execution",
-      "id": "wf09-end-node"
     }
   ],
   "connections": {
     "1. Monthly Cronjob (25th)": {
-      "main": [
-        [
-          {
-            "node": "2. Query Pending Reviews",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "1b. Webhook Trigger": {
       "main": [
         [
           {
@@ -342,28 +462,6 @@
         [
           {
             "node": "11. Finalize Tracking",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "11. Finalize Tracking": {
-      "main": [
-        [
-          {
-            "node": "12. End Execution",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "6. Skip Completed Users": {
-      "main": [
-        [
-          {
-            "node": "12. End Execution",
             "type": "main",
             "index": 0
           }
