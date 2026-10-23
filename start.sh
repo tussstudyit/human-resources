@@ -9,23 +9,25 @@ echo "=================================================="
 echo "🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG HUMAN RESOURCES AI PLATFORM"
 echo "=================================================="
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # 1. Bật Docker (PostgreSQL, pgAdmin, n8n)
 echo -e "\n[1/3] Khởi động Docker Containers..."
-cd /home/tuss/human-resources
+cd "$SCRIPT_DIR"
 docker compose up -d
 
 # 2. Bật Backend NestJS
 echo -e "\n[2/3] Khởi động Backend NestJS (Port 3001)..."
-cd /home/tuss/human-resources/backend
+cd "$SCRIPT_DIR/backend"
 pkill -f "node dist/main.js" 2>/dev/null || true
-nohup node dist/main.js > /home/tuss/human-resources/backend.log 2>&1 &
+nohup node dist/main.js > "$SCRIPT_DIR/backend.log" 2>&1 &
 echo "-> Backend khởi động tại http://localhost:3001"
 
 # 3. Bật Frontend Next.js
 echo -e "\n[3/3] Khởi động Frontend Next.js (Port 3000)..."
-cd /home/tuss/human-resources/frontend
+cd "$SCRIPT_DIR/frontend"
 pkill -f "next-server" 2>/dev/null || true
-nohup npm run start -- -p 3000 > /home/tuss/human-resources/frontend.log 2>&1 &
+nohup npm run start -- -p 3000 > "$SCRIPT_DIR/frontend.log" 2>&1 &
 echo "-> Frontend khởi động tại http://localhost:3000"
 
 # Chờ 3s để các tiến trình ổn định
