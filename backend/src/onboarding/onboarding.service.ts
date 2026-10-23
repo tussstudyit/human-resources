@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
@@ -72,22 +73,34 @@ export class OnboardingService {
     return updatedTask;
   }
 
-  // Hàm mô phỏng gọi n8n workflow IT Tool Provisioning
+  // Hàm gọi n8n workflow IT Tool Provisioning (WF_07)
   private async triggerITProvisioningWorkflow(task: any) {
-    const webhookUrl = process.env.N8N_IT_PROVISIONING_WEBHOOK_URL || 'http://localhost:5678/webhook/it-provisioning';
+    const n8nBase = process.env.N8N_URL || 'http://localhost:5679';
+    const payload = {
+      taskId: task.id,
+      userId: task.userId,
+      userEmail: task.user?.email || 'newhire@company.vn',
+      fullName: task.user?.fullName || 'Nhân sự mới',
+      department: task.user?.department?.name || 'Tech',
+      role: task.user?.role || 'EMPLOYEE',
+      completedAt: new Date().toISOString(),
+    };
+
     try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          taskId: task.id,
-          userId: task.userId,
-          userEmail: task.user?.email,
-          userName: task.user?.fullName,
-          completedAt: new Date().toISOString(),
-        }),
-      });
-      console.log(`[n8n Workflow] Dispatched IT Tool Provisioning for ${task.user?.fullName}`);
+      // 1. Thử webhook-test (khi người dùng bấm "Execute workflow" trong giao diện n8n)
+      try {
+        await axios.post(`${n8nBase}/webhook-test/it-provisioning`, payload, { timeout: 15000 });
+        console.log(`[n8n Workflow Test] Dispatched IT Tool Provisioning (Test mode) for ${payload.fullName}`);
+        return;
+      } catch (testErr: any) {
+        if (testErr?.response?.status === 404) {
+          // 2. Không ở chế độ test, gọi production webhook
+          await axios.post(`${n8nBase}/webhook/it-provisioning`, payload, { timeout: 15000 });
+          console.log(`[n8n Workflow Prod] Dispatched IT Tool Provisioning (Production) for ${payload.fullName}`);
+          return;
+        }
+        throw testErr;
+      }
     } catch (error) {
       console.warn(`[n8n Workflow Warning] Could not reach n8n webhook: ${(error as any).message}`);
     }

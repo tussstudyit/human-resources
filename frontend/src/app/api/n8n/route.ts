@@ -16,13 +16,26 @@ export async function POST(req: NextRequest) {
 
     // 1. Kịch bản WF_07: IT Tool Provisioning (Cấp phát tài khoản công ty)
     if (workflow === 'it_provisioning') {
+      const itPayload = {
+        userEmail: payload?.employee?.personalEmail || payload?.userEmail || 'employee@company.vn',
+        fullName: payload?.employee?.name || payload?.fullName || 'Nhân sự mới',
+        department: payload?.employee?.department || payload?.department || 'Tech',
+        role: payload?.employee?.role || payload?.role || 'EMPLOYEE',
+      };
+
       try {
-        const n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/it-provisioning`, {
-          userEmail: payload?.employee?.personalEmail || payload?.userEmail || 'employee@company.vn',
-          fullName: payload?.employee?.name || payload?.fullName || 'Nhân sự mới',
-          department: payload?.employee?.department || payload?.department || 'Tech',
-          role: payload?.employee?.role || payload?.role || 'EMPLOYEE',
-        }, { timeout: 6000 });
+        let n8nRes;
+        try {
+          // Thử gửi webhook-test trước (dành cho khi bấm "Execute workflow" trong giao diện n8n)
+          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook-test/it-provisioning`, itPayload, { timeout: 15000 });
+        } catch (testErr: any) {
+          // Nếu không trong chế độ test (404), gọi webhook production chính thức
+          if (testErr?.response?.status === 404) {
+            n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/it-provisioning`, itPayload, { timeout: 15000 });
+          } else {
+            throw testErr;
+          }
+        }
 
         return NextResponse.json({
           status: 'success',

@@ -17,6 +17,7 @@ cd /home/tuss/human-resources/backend
 # Kiểm tra nếu chưa chạy thì bật
 if ! ss -tulpn | grep -q ':3001 '; then
   nohup node dist/main.js > /home/tuss/human-resources/backend.log 2>&1 &
+  disown
   echo "-> Backend đã được bật tại http://localhost:3001"
 else
   echo "-> Backend đã đang chạy sẵn tại http://localhost:3001"
@@ -27,6 +28,7 @@ echo -e "\n[3/3] Khởi động Frontend Next.js (Port 3000)..."
 cd /home/tuss/human-resources/frontend
 if ! ss -tulpn | grep -q ':3000 '; then
   nohup npm run start -- -p 3000 > /home/tuss/human-resources/frontend.log 2>&1 &
+  disown
   echo "-> Frontend đã được bật tại http://localhost:3000"
 else
   echo "-> Frontend đã đang chạy sẵn tại http://localhost:3000"
@@ -36,6 +38,6 @@ echo -e "\n=================================================="
 echo "🎉 TẤT CẢ DỊCH VỤ ĐÃ SẴN SÀNG:"
 echo "👉 1. Giao diện người dùng (Frontend):  http://localhost:3000"
 echo "👉 2. Backend API (NestJS):             http://localhost:3001"
-echo "👉 3. n8n Automation Engine:           http://localhost:5678"
+echo "👉 3. n8n Automation Engine:           http://localhost:5679"
 echo "👉 4. pgAdmin Quản trị Database:        http://localhost:5050"
 echo "=================================================="
