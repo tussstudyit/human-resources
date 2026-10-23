@@ -34,7 +34,9 @@ frontend/out/
 *.sln
 *.sw?
 
-# Temporary test files
+# Backups & Temporary test files
+backup/
+backend/test_cv_*.pdf
 scratch/
 test_e2e_suite.sh
 

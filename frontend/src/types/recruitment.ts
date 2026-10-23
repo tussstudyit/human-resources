@@ -39,13 +39,30 @@ export interface TalentPoolInfo {
   tier?: 'PRIORITY_TALENT_POOL' | 'RETAINED_TALENT_POOL' | 'GENERAL_TALENT_POOL' | string;
   status?: 'ARCHIVED' | 'ACTIVE' | string;
   scenario?: 'TOP_TALENT' | 'POST_INTERVIEW' | 'CV_SCREENING' | string;
+  tag?: string;
   emailSent?: boolean;
   archivedAt?: string;
   recommendedNextRole?: string;
+  suggestedSkills?: string[];
+}
+
+export interface InterviewKitItem {
+  question: string;
+  targetSkill?: string;
+  whyAsk?: string;
+  goodAnswerSignals?: string;
 }
 
 export interface ParsedSkillsData {
   skills?: string[];
+  coreSkills?: string[];
+  secondarySkills?: string[];
+  systemScaleScore?: number;
+  githubUrl?: string | null;
+  keywordStuffingFlag?: boolean;
+  interviewFocusPoints?: string[];
+  interviewKit?: InterviewKitItem[];
+  careerAdvice?: string;
   interviewSchedule?: InterviewScheduleInfo;
   talentPool?: TalentPoolInfo;
   decision?: string;
@@ -77,6 +94,7 @@ export interface ApplyJobPayload {
   email: string;
   phone?: string;
   file_cv: File;
+  consentDataProcessing?: string;
 }
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';

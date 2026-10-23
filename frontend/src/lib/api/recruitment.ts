@@ -67,6 +67,10 @@ export async function applyJob(
     formData.append('phone', payload.phone.trim());
   }
 
+  if (payload.consentDataProcessing !== undefined) {
+    formData.append('consentDataProcessing', String(payload.consentDataProcessing));
+  }
+
   formData.append('file_cv', payload.file_cv);
 
   try {

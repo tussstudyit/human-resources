@@ -97,6 +97,14 @@ export default function CandidateDetailModal({
   // Extract parsedSkillsJson data safely
   const parsed = candidate.parsedSkillsJson;
   let skillsList: string[] = [];
+  let coreSkillsList: string[] = [];
+  let secondarySkillsList: string[] = [];
+  let githubUrl: string | null = null;
+  let keywordStuffing = false;
+  let systemScaleScore: number | null = null;
+  let interviewKit: any[] = [];
+  let careerAdvice: string | null = null;
+  let talentPoolTag: string | null = null;
   let interviewSchedule: InterviewScheduleInfo | undefined;
   let talentPool: TalentPoolInfo | undefined;
 
@@ -106,11 +114,35 @@ export default function CandidateDetailModal({
     if (Array.isArray(parsed.skills)) {
       skillsList = parsed.skills;
     }
+    if (Array.isArray(parsed.coreSkills)) {
+      coreSkillsList = parsed.coreSkills;
+    }
+    if (Array.isArray(parsed.secondarySkills)) {
+      secondarySkillsList = parsed.secondarySkills;
+    }
+    if (parsed.githubUrl) {
+      githubUrl = parsed.githubUrl;
+    }
+    if (parsed.keywordStuffingFlag) {
+      keywordStuffing = true;
+    }
+    if (parsed.systemScaleScore !== undefined && parsed.systemScaleScore !== null) {
+      systemScaleScore = parsed.systemScaleScore;
+    }
+    if (Array.isArray(parsed.interviewKit)) {
+      interviewKit = parsed.interviewKit;
+    }
+    if (parsed.careerAdvice) {
+      careerAdvice = parsed.careerAdvice;
+    }
     if (parsed.interviewSchedule) {
       interviewSchedule = parsed.interviewSchedule;
     }
     if (parsed.talentPool) {
       talentPool = parsed.talentPool;
+      if (parsed.talentPool.tag) {
+        talentPoolTag = parsed.talentPool.tag;
+      }
     }
   }
 
@@ -271,6 +303,11 @@ export default function CandidateDetailModal({
                     MATCH_SCORE: {score}%
                   </span>
                 )}
+                {keywordStuffing && (
+                  <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-[4px] bg-red-100 text-red-800 border border-red-200" title="AI Screener phát hiện mật độ từ khóa kỹ thuật bất thường so với nội dung thực tế">
+                    ⚠️ KEYWORD_STUFFING
+                  </span>
+                )}
               </div>
               <div className="flex items-center space-x-3 font-mono text-[11px] text-slate-500 mt-0.5">
                 <span className="flex items-center">
@@ -285,6 +322,22 @@ export default function CandidateDetailModal({
                       • {candidate.experienceYears}Y EXP
                     </span>
                   )}
+                {githubUrl && (
+                  <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center text-blue-600 hover:text-blue-800 hover:underline font-semibold"
+                    title="Mở hồ sơ GitHub của ứng viên"
+                  >
+                    • GitHub
+                  </a>
+                )}
+                {systemScaleScore !== null && (
+                  <span className="text-purple-700 font-semibold" title="Điểm thẩm định năng lực xử lý tải hệ thống (System Scale)">
+                    • Scale: {systemScaleScore}/100
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -506,17 +559,64 @@ export default function CandidateDetailModal({
               </div>
             )}
 
+            {/* AI Technical Interview Kit Card */}
+            {interviewKit.length > 0 && (
+              <div className="border border-blue-200 bg-blue-50/30 rounded-[8px] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-[10px] font-semibold text-blue-700 uppercase tracking-wider flex items-center space-x-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>// AI_INTERVIEW_KIT (GỢI Ý HỘI ĐỒNG PHỎNG VẤN)</span>
+                  </div>
+                  <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-blue-600 text-white">
+                    {interviewKit.length} CÂU HỎI TÌNH HUỐNG
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {interviewKit.map((item, idx) => (
+                    <div key={idx} className="p-3 bg-white rounded-[6px] border border-blue-100 text-xs space-y-1.5 shadow-2xs">
+                      <div className="font-semibold text-slate-900 leading-snug">
+                        {idx + 1}. {item.question}
+                      </div>
+                      {item.targetSkill && (
+                        <div className="text-[11px] text-blue-700 font-mono">
+                          🎯 Trọng tâm: {item.targetSkill}
+                        </div>
+                      )}
+                      {item.whyAsk && (
+                        <div className="text-[11px] text-slate-600 leading-relaxed">
+                          🔍 <span className="font-medium">Lý do hỏi (CV Insight):</span> {item.whyAsk}
+                        </div>
+                      )}
+                      {item.goodAnswerSignals && (
+                        <div className="text-[11px] text-emerald-700 leading-relaxed bg-emerald-50/60 p-1.5 rounded-[4px]">
+                          ✅ <span className="font-medium">Dấu hiệu trả lời tốt:</span> {item.goodAnswerSignals}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Talent Pool Card */}
             {talentPool && (
-              <div className="border border-[#ebebeb] bg-[#fafafa] rounded-[8px] p-4 space-y-2">
+              <div className="border border-[#ebebeb] bg-[#fafafa] rounded-[8px] p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider flex items-center space-x-1.5">
                     <Archive className="w-3.5 h-3.5 text-[#171717]" />
                     <span>// TALENT_POOL_ARCHIVE</span>
                   </div>
-                  <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-white border border-[#ebebeb] text-[#171717]">
-                    {talentPool.tier || 'ACTIVE'}
-                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    {talentPoolTag && (
+                      <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-[4px] bg-blue-100 text-blue-800 border border-blue-200">
+                        {talentPoolTag}
+                      </span>
+                    )}
+                    <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-white border border-[#ebebeb] text-[#171717]">
+                      {talentPool.tier || 'ACTIVE'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-[#4d4d4d]">
@@ -542,17 +642,59 @@ export default function CandidateDetailModal({
                       <span>Đã gửi email thông báo từ chối tinh tế đến ứng viên</span>
                     </div>
                   )}
+                  {careerAdvice && (
+                    <div className="p-2.5 rounded-[6px] bg-white border border-[#ebebeb] text-[11px] text-slate-700 leading-relaxed mt-2">
+                      <p className="font-semibold text-slate-900 mb-1">💡 Góp ý phát triển chuyên môn:</p>
+                      <p>{careerAdvice}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Extracted Skills Section */}
-            <div className="border border-[#ebebeb] rounded-[8px] p-4 space-y-2.5">
+            <div className="border border-[#ebebeb] rounded-[8px] p-4 space-y-3">
               <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider flex items-center justify-between">
-                <span>// SKILLS_EXTRACTED ({skillsList.length})</span>
+                <span>// SKILLS_EXTRACTED ({coreSkillsList.length + secondarySkillsList.length || skillsList.length})</span>
               </div>
 
-              {skillsList.length > 0 ? (
+              {coreSkillsList.length > 0 ? (
+                <div className="space-y-2">
+                  <div>
+                    <div className="text-[10px] font-mono text-blue-700 font-semibold uppercase mb-1">
+                      Core Skills (Kỹ năng cốt lõi):
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {coreSkillsList.map((skill, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2 py-1 rounded-[4px] font-mono text-[11px] bg-blue-50 text-blue-800 border border-blue-200 font-semibold"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {secondarySkillsList.length > 0 && (
+                    <div className="pt-1">
+                      <div className="text-[10px] font-mono text-slate-500 font-medium uppercase mb-1">
+                        Secondary Skills:
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {secondarySkillsList.map((skill, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-2 py-1 rounded-[4px] font-mono text-[11px] bg-[#f2f2f2] text-[#4d4d4d] border border-[#ebebeb]"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : skillsList.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
                   {skillsList.map((skill, idx) => (
                     <span

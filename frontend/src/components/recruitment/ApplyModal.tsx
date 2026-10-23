@@ -40,6 +40,7 @@ export default function ApplyModal({
   const [cvError, setCvError] = useState<string | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const [inlineConflict, setInlineConflict] = useState<boolean>(false);
+  const [consentDataProcessing, setConsentDataProcessing] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -56,6 +57,7 @@ export default function ApplyModal({
     setCvError(null);
     setInlineError(null);
     setInlineConflict(false);
+    setConsentDataProcessing(true);
     setIsSubmitting(false);
     setIsSuccess(false);
   };
@@ -211,6 +213,7 @@ export default function ApplyModal({
         email: trimmedEmail,
         phone: phone.trim() || undefined,
         file_cv: fileCv,
+        consentDataProcessing: consentDataProcessing ? 'true' : 'false',
       });
 
       // Thành công (HTTP 201)
@@ -436,6 +439,21 @@ export default function ApplyModal({
                   onErrorChange={setCvError}
                   disabled={isSubmitting}
                 />
+              </div>
+
+              {/* Quyền riêng tư & Lưu trữ Talent Pool */}
+              <div className="flex items-start space-x-2.5 pt-1">
+                <input
+                  id="consent-talent-pool"
+                  type="checkbox"
+                  checked={consentDataProcessing}
+                  onChange={(e) => setConsentDataProcessing(e.target.checked)}
+                  disabled={isSubmitting}
+                  className="h-4 w-4 mt-0.5 rounded border-[#CBD5E1] text-[#0070f3] focus:ring-[#0070f3] cursor-pointer"
+                />
+                <label htmlFor="consent-talent-pool" className="text-xs text-[#64748B] cursor-pointer select-none leading-relaxed">
+                  Tôi đồng ý để hệ thống lưu trữ hồ sơ trong <strong className="text-[#334155]">Talent Pool</strong> và nhận thông báo các cơ hội việc làm phù hợp trong tương lai.
+                </label>
               </div>
 
               {/* Nút Submit */}

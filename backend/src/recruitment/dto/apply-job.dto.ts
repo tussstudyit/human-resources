@@ -15,6 +15,10 @@ export class ApplyJobDto {
   @IsString()
   phone?: string;
 
+  @IsOptional()
+  @IsString()
+  consentDataProcessing?: string;
+
   @IsUUID()
   @IsNotEmpty()
   jobId: string;
