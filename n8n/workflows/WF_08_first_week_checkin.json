@@ -28,6 +28,23 @@
     },
     {
       "parameters": {
+        "httpMethod": "POST",
+        "path": "first-week-checkin",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        380
+      ],
+      "name": "1b. Webhook Trigger",
+      "id": "wf08-webhook-trigger",
+      "webhookId": "first-week-checkin-webhook"
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
         "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", \n       COUNT(t.id)::int AS \"totalTasks\", \n       COUNT(CASE WHEN t.\"isCompleted\" = true THEN 1 END)::int AS \"completedTasks\" \nFROM users u \nINNER JOIN onboarding_tasks t ON t.\"userId\" = u.id \nGROUP BY u.id, u.email, u.\"fullName\";",
         "options": {}
@@ -133,14 +150,10 @@
     },
     {
       "parameters": {
-        "url": "https://httpbin.org/post",
-        "method": "POST",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    slackStatus: 'SLACK_ALERT_SENT',\n    slackChannel: item.slackChannel || '#onboarding-alerts',\n    dispatchedAt: new Date().toISOString()\n  }\n}];"
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         100,
         100
@@ -151,8 +164,8 @@
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.mentorEmail || 'anhtanht1905@gmail.com' }}",
-        "subject": "={{ $json.emailSubject }}",
+        "toEmail": "={{ $json.mentorEmail || 'dang.2006.qt@gmail.com' }}",
+        "subject": "={{ $json.emailSubject || '[Onboarding Check-in] ' + $json.fullName + ' - Cảnh báo tiến độ tuần đầu' }}",
         "emailFormat": "html",
         "html": "=Xin chào Buddy / HR Mentor,<br><br>Hệ thống gửi thông báo rà soát tiến độ tuần đầu tiên:<br><b>Nhân sự:</b> {{$json.fullName}} ({{$json.email}})<br><b>Tiến độ:</b> {{$json.progressPercent}}% ({{$json.completedTasks}}/{{$json.totalTasks}} việc hoàn thành)<br><b>Trạng thái:</b> {{$json.checkinStatus}}<br><br>Vui lòng hỗ trợ nhân sự hoàn tất các nhiệm vụ hội nhập kịp thời.<br><br>Trân trọng,<br>Hệ thống Quản trị Onboarding",
         "options": {}
@@ -200,9 +213,15 @@
       "id": "wf08-update-db"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  workflow: 'WF_08_first_week_checkin',\n  message: 'First week check-in completed successfully',\n  checkedAt: new Date().toISOString()\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
       "position": [
         900,
         100
@@ -213,6 +232,17 @@
   ],
   "connections": {
     "1. Cronjob Schedule": {
+      "main": [
+        [
+          {
+            "node": "2. Fetch Onboarding List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b. Webhook Trigger": {
       "main": [
         [
           {

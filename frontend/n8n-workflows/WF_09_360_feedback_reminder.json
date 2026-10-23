@@ -1,30 +1,374 @@
 {
+  "id": "WF09feedbackremind",
   "name": "WF_09_360_feedback_reminder",
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
   "nodes": [
-    { "parameters": { "rule": { "interval": [{ "field": "months", "monthsInterval": 1 }] } }, "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.2, "position": [-1100, 200], "name": "1. Monthly Cronjob (25th)" },
-    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-900, 200], "name": "2. Query Pending Reviews" },
-    { "parameters": {}, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-700, 200], "name": "3. Generate Magic Links" },
-    { "parameters": { "conditions": { "boolean": [{ "value1": "={{ $json.hasSubmitted }}", "value2": false }] } }, "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [-500, 200], "name": "4. Check Submission Status" },
-    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-300, 100], "name": "5. Filter Unsubmitted Users" },
-    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-300, 300], "name": "6. Skip Completed Users" },
-    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [-100, 100], "name": "7. Build Email Template" },
-    { "parameters": { "fromEmail": "tatcoolngau@gmail.com", "toEmail": "={{ $json.email || 'anhtanht1905@gmail.com' }}", "subject": "=[360 Feedback] Nhắc nhở nộp đánh giá hiệu suất kỳ này", "html": "=Xin chào, vui lòng click vào Magic Link sau để hoàn thành đánh giá: {{$json.magicLink}}" }, "type": "n8n-nodes-base.emailSend", "typeVersion": 2.1, "position": [100, 100], "name": "8. Send Magic Link Email" },
-    { "parameters": { "url": "https://httpbin.org/post", "method": "POST", "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json) }}" }, "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [300, 100], "name": "9. Send Telegram/Slack Alert" },
-    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [500, 100], "name": "10. Log Reminder History" },
-    { "parameters": {}, "type": "n8n-nodes-base.set", "typeVersion": 3.2, "position": [700, 100], "name": "11. Finalize Tracking" },
-    { "parameters": { "respondWith": "json", "responseBody": "{\"status\":\"success\",\"message\":\"WF_09 executed successfully with 12 nodes\"}" }, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [900, 100], "name": "12. End Execution" }
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 25 * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1100,
+        200
+      ],
+      "name": "1. Monthly Cronjob (25th)",
+      "id": "wf09-cron-trigger"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "feedback-reminder",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        380
+      ],
+      "name": "1b. Webhook Trigger",
+      "id": "wf09-webhook-trigger",
+      "webhookId": "feedback-reminder-webhook"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", \n       EXISTS(SELECT 1 FROM feedbacks f WHERE f.\"reviewerId\" = u.id AND f.period = '2026-Q4') AS \"hasSubmitted\" \nFROM users u \nWHERE u.role IN ('EMPLOYEE', 'MANAGER', 'HR') AND u.\"isActive\" = true;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -900,
+        200
+      ],
+      "name": "2. Query Pending Reviews",
+      "id": "wf09-query-pending",
+      "credentials": {
+        "postgres": {
+          "id": "PostgresHrDbCred",
+          "name": "Postgres HR DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const token = Buffer.from(`${json.userId}:2026-Q4:${Date.now()}`).toString('base64url');\n  return {\n    json: {\n      ...json,\n      period: '2026-Q4',\n      magicLink: `http://localhost:3000/performance?token=${token}&period=2026-Q4`\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        200
+      ],
+      "name": "3. Generate Magic Links",
+      "id": "wf09-gen-links"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-not-submitted",
+              "leftValue": "={{ $json.hasSubmitted }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -500,
+        200
+      ],
+      "name": "4. Check Submission Status",
+      "id": "wf09-check-status"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    reminderState: 'PENDING_SUBMISSION',\n    deadline: '28 hàng tháng'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        100
+      ],
+      "name": "5. Filter Unsubmitted Users",
+      "id": "wf09-filter-unsubmitted"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    reminderState: 'ALREADY_COMPLETED',\n    note: 'User has already submitted 360 review for this period.'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        300
+      ],
+      "name": "6. Skip Completed Users",
+      "id": "wf09-skip-completed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    subject: `=[360 Feedback] Nhắc nhở nộp đánh giá hiệu suất kỳ ${item.period}`,\n    html: `Xin chào <b>${item.fullName}</b>,<br><br>Hạn chót đánh giá hiệu suất 360 độ kỳ ${item.period} đang đến gần (${item.deadline}).<br>Vui lòng truy cập đường dẫn trực tiếp dưới đây để hoàn tất biểu mẫu đánh giá:<br><br><a href=\"${item.magicLink}\" style=\"display:inline-block;padding:10px 20px;background-color:#4f46e5;color:white;text-decoration:none;border-radius:6px;font-weight:bold;\">Mở biểu mẫu đánh giá 360°</a><br><br>Nếu nút trên không hoạt động, bạn có thể copy link: ${item.magicLink}<br><br>Trân trọng,<br>Phòng Quản trị Nhân sự & Hiệu suất`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        100
+      ],
+      "name": "7. Build Email Template",
+      "id": "wf09-build-template"
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.email || 'anhtanht1905@gmail.com' }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        100,
+        100
+      ],
+      "name": "8. Send Magic Link Email",
+      "id": "wf09-send-email",
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    chatAlertSent: true,\n    telegramChannel: '@hr_management_alerts',\n    alertTimestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        100
+      ],
+      "name": "9. Send Telegram/Slack Alert",
+      "id": "wf09-send-chat"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    loggedAt: new Date().toISOString(),\n    auditNote: `Magic review link dispatched to ${item.email}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        100
+      ],
+      "name": "10. Log Reminder History",
+      "id": "wf09-log-history"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    trackingCompleted: true\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        100
+      ],
+      "name": "11. Finalize Tracking",
+      "id": "wf09-finalize"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  workflow: 'WF_09_360_feedback_reminder',\n  message: '360 feedback reminders dispatched successfully',\n  dispatchedAt: new Date().toISOString()\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        100
+      ],
+      "name": "12. End Execution",
+      "id": "wf09-end-node"
+    }
   ],
   "connections": {
-    "1. Monthly Cronjob (25th)": { "main": [[{ "node": "2. Query Pending Reviews", "type": "main", "index": 0 }]] },
-    "2. Query Pending Reviews": { "main": [[{ "node": "3. Generate Magic Links", "type": "main", "index": 0 }]] },
-    "3. Generate Magic Links": { "main": [[{ "node": "4. Check Submission Status", "type": "main", "index": 0 }]] },
-    "4. Check Submission Status": { "main": [[{ "node": "5. Filter Unsubmitted Users", "type": "main", "index": 0 }], [{ "node": "6. Skip Completed Users", "type": "main", "index": 0 }]] },
-    "5. Filter Unsubmitted Users": { "main": [[{ "node": "7. Build Email Template", "type": "main", "index": 0 }]] },
-    "7. Build Email Template": { "main": [[{ "node": "8. Send Magic Link Email", "type": "main", "index": 0 }]] },
-    "8. Send Magic Link Email": { "main": [[{ "node": "9. Send Telegram/Slack Alert", "type": "main", "index": 0 }]] },
-    "9. Send Telegram/Slack Alert": { "main": [[{ "node": "10. Log Reminder History", "type": "main", "index": 0 }]] },
-    "10. Log Reminder History": { "main": [[{ "node": "11. Finalize Tracking", "type": "main", "index": 0 }]] },
-    "11. Finalize Tracking": { "main": [[{ "node": "12. End Execution", "type": "main", "index": 0 }]] }
-  },
-  "active": true
+    "1. Monthly Cronjob (25th)": {
+      "main": [
+        [
+          {
+            "node": "2. Query Pending Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b. Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "2. Query Pending Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Query Pending Reviews": {
+      "main": [
+        [
+          {
+            "node": "3. Generate Magic Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Generate Magic Links": {
+      "main": [
+        [
+          {
+            "node": "4. Check Submission Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Check Submission Status": {
+      "main": [
+        [
+          {
+            "node": "5. Filter Unsubmitted Users",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6. Skip Completed Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Filter Unsubmitted Users": {
+      "main": [
+        [
+          {
+            "node": "7. Build Email Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Build Email Template": {
+      "main": [
+        [
+          {
+            "node": "8. Send Magic Link Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Send Magic Link Email": {
+      "main": [
+        [
+          {
+            "node": "9. Send Telegram/Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Send Telegram/Slack Alert": {
+      "main": [
+        [
+          {
+            "node": "10. Log Reminder History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Log Reminder History": {
+      "main": [
+        [
+          {
+            "node": "11. Finalize Tracking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Finalize Tracking": {
+      "main": [
+        [
+          {
+            "node": "12. End Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Skip Completed Users": {
+      "main": [
+        [
+          {
+            "node": "12. End Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
 }

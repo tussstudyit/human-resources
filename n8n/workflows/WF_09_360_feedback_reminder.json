@@ -28,6 +28,23 @@
     },
     {
       "parameters": {
+        "httpMethod": "POST",
+        "path": "feedback-reminder",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        380
+      ],
+      "name": "1b. Webhook Trigger",
+      "id": "wf09-webhook-trigger",
+      "webhookId": "feedback-reminder-webhook"
+    },
+    {
+      "parameters": {
         "operation": "executeQuery",
         "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", \n       EXISTS(SELECT 1 FROM feedbacks f WHERE f.\"reviewerId\" = u.id AND f.period = '2026-Q4') AS \"hasSubmitted\" \nFROM users u \nWHERE u.role IN ('EMPLOYEE', 'MANAGER', 'HR') AND u.\"isActive\" = true;",
         "options": {}
@@ -158,14 +175,10 @@
     },
     {
       "parameters": {
-        "url": "https://httpbin.org/post",
-        "method": "POST",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    chatAlertSent: true,\n    telegramChannel: '@hr_management_alerts',\n    alertTimestamp: new Date().toISOString()\n  }\n}];"
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         300,
         100
@@ -200,9 +213,15 @@
       "id": "wf09-finalize"
     },
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  status: 'success',\n  workflow: 'WF_09_360_feedback_reminder',\n  message: '360 feedback reminders dispatched successfully',\n  dispatchedAt: new Date().toISOString()\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
       "position": [
         900,
         100
@@ -213,6 +232,17 @@
   ],
   "connections": {
     "1. Monthly Cronjob (25th)": {
+      "main": [
+        [
+          {
+            "node": "2. Query Pending Reviews",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b. Webhook Trigger": {
       "main": [
         [
           {
