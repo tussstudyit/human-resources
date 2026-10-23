@@ -158,32 +158,24 @@
     },
     {
       "parameters": {
-        "url": "https://httpbin.org/post",
-        "method": "POST",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}",
-        "options": {
-          "timeout": 5000
-        }
+        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    mockApiStatus: '200_OK',\n    oktaProvisioned: true,\n    jiraAccessGranted: true,\n    slackAccountCreated: true,\n    provisionedAt: new Date().toISOString()\n  }\n}];"
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         100,
         100
       ],
       "name": "9. Mock IT Provisioning API",
-      "id": "wf07-mock-api",
-      "continueOnFail": true
+      "id": "wf07-mock-api"
     },
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $('5. Generate Credentials').first().json.userEmail || $json.userEmail || 'anhtanht1905@gmail.com' }}",
-        "subject": "=[IT Provisioning] Hoàn tất cấp phát tài khoản - {{ $('5. Generate Credentials').first().json.empId }}",
+        "toEmail": "={{ $json.userEmail || 'anhtanht1905@gmail.com' }}",
+        "subject": "=[IT Provisioning] Hoàn tất cấp phát tài khoản - {{$json.empId}}",
         "emailFormat": "html",
-        "html": "=Xin chào {{ $('2. Sanitize Data').first().json.fullName || 'bạn' }},<br><br>Tài khoản công ty của bạn đã sẵn sàng!<br><b>Mã nhân viên:</b> {{ $('5. Generate Credentials').first().json.empId }}<br><b>Email:</b> {{ $('5. Generate Credentials').first().json.userEmail }}<br><b>Mật khẩu tạm thời:</b> {{ $('5. Generate Credentials').first().json.tempPwd }}<br><b>Công cụ cấp phát:</b> {{ ($('7. Setup Tech Stack (Jira/Slack)').first()?.json?.tools || $('8. Setup Standard Stack').first()?.json?.tools || []).join(', ') }}.<br><br>Trân trọng,<br>IT Helpdesk",
+        "html": "=Xin chào {{$json.fullName || 'bạn'}},<br><br>Tài khoản công ty của bạn đã sẵn sàng!<br><b>Mã nhân viên:</b> {{$json.empId}}<br><b>Email:</b> {{$json.userEmail}}<br><b>Mật khẩu tạm thời:</b> {{$json.tempPwd}}<br><b>Công cụ cấp phát:</b> {{$json.tools ? $json.tools.join(', ') : 'IT Tools'}}.<br><br>Trân trọng,<br>IT Helpdesk",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
@@ -204,7 +196,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const creds = $('5. Generate Credentials').first().json;\nconst stack = $('7. Setup Tech Stack (Jira/Slack)').first()?.json || $('8. Setup Standard Stack').first()?.json || {};\nconst apiResult = $('9. Mock IT Provisioning API').first()?.json;\nreturn [{\n  json: {\n    ...creds,\n    ...stack,\n    mockApiStatus: apiResult?.error ? 'MOCK_API_FALLBACK' : 'PROVISIONED_VIA_API',\n    auditStatus: 'PROVISIONED_AND_LOGGED',\n    auditTimestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "const item = $('9. Mock IT Provisioning API').first().json;\nconst emailResult = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    emailStatus: emailResult.error ? 'EMAIL_FAILED' : 'EMAIL_SENT',\n    emailAccepted: emailResult.accepted || [],\n    auditStatus: 'PROVISIONED_AND_LOGGED',\n    auditTimestamp: new Date().toISOString()\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
