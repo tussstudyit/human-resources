@@ -27,14 +27,11 @@ export async function POST(req: NextRequest) {
         let n8nRes;
         try {
           // Thử gửi webhook-test trước (dành cho khi bấm "Execute workflow" trong giao diện n8n)
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook-test/it-provisioning`, itPayload, { timeout: 15000 });
+          // Timeout ngắn 2000ms để không block nếu n8n không đang lắng nghe test
+          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook-test/it-provisioning`, itPayload, { timeout: 2000 });
         } catch (testErr: any) {
-          // Nếu không trong chế độ test (404), gọi webhook production chính thức
-          if (testErr?.response?.status === 404) {
-            n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/it-provisioning`, itPayload, { timeout: 15000 });
-          } else {
-            throw testErr;
-          }
+          // Nếu test webhook không đang chờ (404, timeout, error), gọi ngay production webhook chính thức
+          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/it-provisioning`, itPayload, { timeout: 15000 });
         }
 
         return NextResponse.json({

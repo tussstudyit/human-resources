@@ -89,17 +89,14 @@ export class OnboardingService {
     try {
       // 1. Thử webhook-test (khi người dùng bấm "Execute workflow" trong giao diện n8n)
       try {
-        await axios.post(`${n8nBase}/webhook-test/it-provisioning`, payload, { timeout: 15000 });
+        await axios.post(`${n8nBase}/webhook-test/it-provisioning`, payload, { timeout: 2000 });
         console.log(`[n8n Workflow Test] Dispatched IT Tool Provisioning (Test mode) for ${payload.fullName}`);
         return;
       } catch (testErr: any) {
-        if (testErr?.response?.status === 404) {
-          // 2. Không ở chế độ test, gọi production webhook
-          await axios.post(`${n8nBase}/webhook/it-provisioning`, payload, { timeout: 15000 });
-          console.log(`[n8n Workflow Prod] Dispatched IT Tool Provisioning (Production) for ${payload.fullName}`);
-          return;
-        }
-        throw testErr;
+        // 2. Nếu test webhook không đang chờ (404, timeout, error), gọi production webhook chính thức
+        await axios.post(`${n8nBase}/webhook/it-provisioning`, payload, { timeout: 15000 });
+        console.log(`[n8n Workflow Prod] Dispatched IT Tool Provisioning (Production) for ${payload.fullName}`);
+        return;
       }
     } catch (error) {
       console.warn(`[n8n Workflow Warning] Could not reach n8n webhook: ${(error as any).message}`);

@@ -5,6 +5,26 @@
   "settings": {
     "executionOrder": "v1"
   },
+  "pinData": {
+    "1. Webhook Trigger": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5679",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "userEmail": "dang.2006.qt@gmail.com",
+            "fullName": "Đặng Tú Nguyên",
+            "department": "Tech",
+            "role": "EMPLOYEE"
+          }
+        }
+      }
+    ]
+  },
   "nodes": [
     {
       "parameters": {
