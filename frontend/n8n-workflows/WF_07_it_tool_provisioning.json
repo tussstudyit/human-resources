@@ -45,10 +45,41 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nreturn [{\n  json: {\n    userEmail: body.userEmail || body.email || 'newhire@company.vn',\n    fullName: body.fullName || body.name || 'Nhân sự mới',\n    department: body.department || 'Tech',\n    role: body.role || 'EMPLOYEE',\n    requestedAt: new Date().toISOString()\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "sanitize-email",
+              "name": "userEmail",
+              "value": "={{ $json.body?.userEmail || $json.body?.personalEmail || $json.userEmail || 'newhire@company.vn' }}",
+              "type": "string"
+            },
+            {
+              "id": "sanitize-name",
+              "name": "fullName",
+              "value": "={{ $json.body?.fullName || $json.body?.name || $json.fullName || 'Nhân sự mới' }}",
+              "type": "string"
+            },
+            {
+              "id": "sanitize-dept",
+              "name": "department",
+              "value": "={{ $json.body?.department || $json.department || 'Tech' }}",
+              "type": "string"
+            },
+            {
+              "id": "sanitize-role",
+              "name": "role",
+              "value": "={{ $json.body?.role || $json.role || 'EMPLOYEE' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -900,
         200
@@ -152,10 +183,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tools: ['Google Workspace', 'Slack Dev Channels', 'Jira Software', 'GitHub Organization', 'AWS Sandbox'],\n    tier: 'TECHNICAL_STACK'\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tech-tools",
+              "name": "tools",
+              "value": "={{ ['Google Workspace', 'Slack Dev Channels', 'Jira Software', 'GitHub Organization', 'AWS Sandbox'] }}",
+              "type": "array"
+            },
+            {
+              "id": "tech-tier",
+              "name": "tier",
+              "value": "TECHNICAL_STACK",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -100,
         0
@@ -165,10 +215,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    tools: ['Google Workspace', 'Slack General Channels', 'HR Portal', 'Notion Team Docs'],\n    tier: 'STANDARD_STACK'\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "std-tools",
+              "name": "tools",
+              "value": "={{ ['Google Workspace', 'Slack General Channels', 'HR Portal', 'Notion Team Docs'] }}",
+              "type": "array"
+            },
+            {
+              "id": "std-tier",
+              "name": "tier",
+              "value": "STANDARD_STACK",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         -100,
         200
@@ -216,10 +285,59 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $('9. Mock IT Provisioning API').first().json;\nconst emailResult = $input.first().json;\nreturn [{\n  json: {\n    ...item,\n    emailStatus: emailResult.error ? 'EMAIL_FAILED' : 'EMAIL_SENT',\n    emailAccepted: emailResult.accepted || [],\n    auditStatus: 'PROVISIONED_AND_LOGGED',\n    auditTimestamp: new Date().toISOString()\n  }\n}];"
+        "mode": "manual",
+        "duplicateItems": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "audit-status",
+              "name": "auditStatus",
+              "value": "PROVISIONED_AND_LOGGED",
+              "type": "string"
+            },
+            {
+              "id": "audit-time",
+              "name": "auditTimestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "audit-empid",
+              "name": "empId",
+              "value": "={{ $('5. Generate Credentials').first().json.empId }}",
+              "type": "string"
+            },
+            {
+              "id": "audit-email",
+              "name": "userEmail",
+              "value": "={{ $('5. Generate Credentials').first().json.userEmail }}",
+              "type": "string"
+            },
+            {
+              "id": "audit-name",
+              "name": "fullName",
+              "value": "={{ $('2. Sanitize Data').first().json.fullName }}",
+              "type": "string"
+            },
+            {
+              "id": "audit-dept",
+              "name": "department",
+              "value": "={{ $('2. Sanitize Data').first().json.department }}",
+              "type": "string"
+            },
+            {
+              "id": "audit-tools",
+              "name": "tools",
+              "value": "={{ $('7. Setup Tech Stack (Jira/Slack)').first()?.json?.tools || $('8. Setup Standard Stack').first()?.json?.tools || ['Google Workspace', 'Slack', 'Jira'] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
       "position": [
         500,
         100
