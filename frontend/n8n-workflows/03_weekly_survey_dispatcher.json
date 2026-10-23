@@ -1,0 +1,334 @@
+{
+  "name": "[HR] 03 - Weekly Pulse Survey Dispatcher, Google Sheets & Gemini AI eNPS",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        320
+      ],
+      "id": "wf3-cron-trigger",
+      "name": "Cron: 09:00 Thứ 2 Hàng Tuần"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Truy vấn danh sách toàn bộ nhân sự từ hệ thống\nreturn [\n  { id: 'usr_1', fullName: 'Trần Thanh Tú', email: 'tu.tranthanh@company.com', department: 'Phòng Kỹ thuật & AI', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_2', fullName: 'Lê Hoàng Nam', email: 'nam.le@company.com', department: 'Phòng Kỹ thuật & AI', isActive: true, preferredChannel: 'SLACK' },\n  { id: 'usr_3', fullName: 'Nguyễn Thị Mai', email: 'mai.nguyen@company.com', department: 'Phòng Nhân sự', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_4', fullName: 'Phạm Đức Anh', email: 'anh.pham@company.com', department: 'Phòng Kinh doanh', isActive: true, preferredChannel: 'SLACK' },\n  { id: 'usr_5', fullName: 'Đỗ Thùy Linh', email: 'linh.do@company.com', department: 'Phòng Marketing', isActive: false, preferredChannel: 'EMAIL' }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        320
+      ],
+      "id": "wf3-roster",
+      "name": "Truy Vấn Danh Sách Nhân Sự"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isActive !== false }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        592,
+        320
+      ],
+      "id": "wf3-if-active",
+      "name": "IF: Nhân Viên Đang Làm Việc (Active)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst weekStr = 'W' + Math.ceil((new Date().getDate()) / 7) + '_' + (new Date().getMonth() + 1);\n\nreturn items.map(item => {\n  const d = item.json;\n  const token = Buffer.from((d.email || 'emp') + '_' + Date.now()).toString('base64').substring(0, 16);\n  return {\n    json: {\n      ...d,\n      surveyWeek: weekStr,\n      surveyToken: token,\n      magicLink: 'http://localhost:3000/engagement/survey?token=' + token + '&week=' + weekStr,\n      preferredChannel: d.preferredChannel || 'EMAIL'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        256
+      ],
+      "id": "wf3-generate-tokens",
+      "name": "Tạo Magic Link & Token Khảo Sát Tuần"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.preferredChannel }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "EMAIL"
+            },
+            {
+              "value2": "SLACK",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        144
+      ],
+      "id": "wf3-switch-channel",
+      "name": "Switch: Kênh Gửi Khảo Sát (Email vs Slack)"
+    },
+    {
+      "parameters": {
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
+        "subject": "📊 [Khảo sát Pulse Tuần] Cảm nhận của bạn về tuần làm việc vừa qua?",
+        "emailFormat": "html",
+        "html": "=Xin chào <b>{{ $json.fullName }}</b>,<br/><br/>Chỉ mất 60 giây để chia sẻ cảm xúc và đề xuất của bạn tuần này:<br/><a href='{{ $json.magicLink }}' style='display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;'>👉 Mở Bài Khảo Sát Tuần</a><br/><br/>Mọi ý kiến đều được Gemini AI bảo mật và xử lý ẩn danh.<br/><br/>Trân trọng,<br>Phòng Quản trị Nhân sự & Đời sống",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1280,
+        -32
+      ],
+      "id": "wf3-gmail-survey",
+      "name": "Gmail: Gửi Thư Mời Khảo Sát Tuần",
+      "credentials": {
+        "smtp": {
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '#pulse-surveys',\n  text: '👋 Chào ' + $json.fullName + ', hãy dành 1 phút tham gia Khảo sát Gắn kết tuần này nhé: ' + $json.magicLink,\n  employee: $json.fullName,\n  email: $json.email,\n  magicLink: $json.magicLink\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        160
+      ],
+      "id": "wf3-slack-survey",
+      "name": "Slack: Gửi Khảo Sát Vào Kênh Team",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tổng hợp sơ bộ tỷ lệ phản hồi và chỉ số eNPS tuần\nconst totalEmployees = 50;\nconst totalResponses = 42;\nconst promoters = 28;\nconst passives = 9;\nconst detractors = 5;\n\nconst enpsScore = Math.round(((promoters - detractors) / totalResponses) * 100);\nconst responseRate = Math.round((totalResponses / totalEmployees) * 100);\n\nreturn {\n  totalEmployees,\n  totalResponses,\n  responseRate: responseRate + '%',\n  promoters,\n  detractors,\n  enpsScore,\n  healthStatus: enpsScore >= 40 ? 'XUẤT SẮC' : (enpsScore >= 20 ? 'TỐT' : 'CẦN CHÚ Ý'),\n  calculatedAt: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        368
+      ],
+      "id": "wf3-calc-enps",
+      "name": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-lite-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-lite-latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=\"Bạn là Giám đốc Phân tích Dữ liệu Nhân sự AI (AI Chief People Officer).\nDữ liệu tuần: eNPS: +\" + $json.enpsScore + \", Tỷ lệ tham gia: \" + $json.responseRate + \" (\" + $json.totalResponses + \"/\" + $json.totalEmployees + \" nhân sự), Xếp loại: \" + $json.healthStatus + \".\nHãy đưa ra 3 kết luận chiến lược súc tích cho Ban Điều Hành (Tình hình gắn kết, Khối phòng ban cần quan tâm, và Kế hoạch can thiệp 7 ngày tới).\""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        1264,
+        368
+      ],
+      "id": "wf3-gemini-executive",
+      "name": "Google Gemini: Phân Tích Xu Hướng & Báo Cáo Lãnh Đạo",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TTSJd7ZLHn9lkF9B",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyZ0mR5bNNA2PRIX_jcD2qNjqyDWIT307tDZgNb6T2vFhZl9ipL4WM03CgmxHx2Uxim/exec",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  sheet: 'Executive_eNPS_Summary',\n  row: [\n    'Tuần ' + Math.ceil((new Date().getDate()) / 7) + '/' + (new Date().getMonth() + 1),\n    $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore,\n    $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus,\n    $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate,\n    $json.content?.parts?.[0]?.text || $json.content || 'Đánh giá tinh thần gắn kết tốt.',\n    new Date().toISOString()\n  ]\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        368
+      ],
+      "id": "wf3-gsheet-enps-report",
+      "name": "Sheets: Lưu Báo Cáo eNPS Executive"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '#executive-leadership',\n  title: '📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]',\n  enpsScore: $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore,\n  healthStatus: $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus,\n  responseRate: $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate,\n  aiReport: $json.content?.parts?.[0]?.text || $json.content || 'Đánh giá tinh thần gắn kết tốt.',\n  status: 'REPORTED_TO_LEADERSHIP'\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1792,
+        368
+      ],
+      "id": "wf3-slack-report",
+      "name": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Cron: 09:00 Thứ 2 Hàng Tuần": {
+      "main": [
+        [
+          {
+            "node": "Truy Vấn Danh Sách Nhân Sự",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Truy Vấn Danh Sách Nhân Sự": {
+      "main": [
+        [
+          {
+            "node": "IF: Nhân Viên Đang Làm Việc (Active)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Nhân Viên Đang Làm Việc (Active)": {
+      "main": [
+        [
+          {
+            "node": "Tạo Magic Link & Token Khảo Sát Tuần",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Tạo Magic Link & Token Khảo Sát Tuần": {
+      "main": [
+        [
+          {
+            "node": "Switch: Kênh Gửi Khảo Sát (Email vs Slack)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Kênh Gửi Khảo Sát (Email vs Slack)": {
+      "main": [
+        [
+          {
+            "node": "Gmail: Gửi Thư Mời Khảo Sát Tuần",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack: Gửi Khảo Sát Vào Kênh Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết": {
+      "main": [
+        [
+          {
+            "node": "Google Gemini: Phân Tích Xu Hướng & Báo Cáo Lãnh Đạo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini: Phân Tích Xu Hướng & Báo Cáo Lãnh Đạo": {
+      "main": [
+        [
+          {
+            "node": "Sheets: Lưu Báo Cáo eNPS Executive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets: Lưu Báo Cáo eNPS Executive": {
+      "main": [
+        [
+          {
+            "node": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}

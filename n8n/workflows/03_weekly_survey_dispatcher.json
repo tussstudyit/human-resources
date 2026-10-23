@@ -94,12 +94,14 @@
     },
     {
       "parameters": {
-        "sendTo": "={{ $json.email || 'employee@company.com' }}",
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
         "subject": "📊 [Khảo sát Pulse Tuần] Cảm nhận của bạn về tuần làm việc vừa qua?",
-        "message": "=Xin chào <b>{{ $json.fullName }}</b>,<br/><br/>Chỉ mất 60 giây để chia sẻ cảm xúc và đề xuất của bạn tuần này:<br/><a href='{{ $json.magicLink }}' style='display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;border-radius:6px;text-decoration:none;'>👉 Mở Bài Khảo Sát Tuần</a><br/><br/>Mọi ý kiến đều được Gemini AI bảo mật và xử lý ẩn danh.",
+        "emailFormat": "html",
+        "html": "=Xin chào <b>{{ $json.fullName }}</b>,<br/><br/>Chỉ mất 60 giây để chia sẻ cảm xúc và đề xuất của bạn tuần này:<br/><a href='{{ $json.magicLink }}' style='display:inline-block;padding:10px 20px;background:#4f46e5;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;'>👉 Mở Bài Khảo Sát Tuần</a><br/><br/>Mọi ý kiến đều được Gemini AI bảo mật và xử lý ẩn danh.<br/><br/>Trân trọng,<br>Phòng Quản trị Nhân sự & Đời sống",
         "options": {}
       },
-      "type": "n8n-nodes-base.gmail",
+      "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
         1280,
@@ -107,29 +109,33 @@
       ],
       "id": "wf3-gmail-survey",
       "name": "Gmail: Gửi Thư Mời Khảo Sát Tuần",
-      "webhookId": "f4e0b797-b182-4e82-b5d0-0056b462bb8a",
+      "credentials": {
+        "smtp": {
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
+        }
+      },
       "continueOnFail": true
     },
     {
       "parameters": {
-        "select": "channel",
-        "channelId": {
-          "__rl": true,
-          "value": "C06PULSE_SURVEYS",
-          "mode": "name"
-        },
-        "text": "=👋 Chào {{ $json.fullName }}, hãy dành 1 phút tham gia Khảo sát Gắn kết tuần này nhé: {{ $json.magicLink }}",
-        "otherOptions": {}
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '#pulse-surveys',\n  text: '👋 Chào ' + $json.fullName + ', hãy dành 1 phút tham gia Khảo sát Gắn kết tuần này nhé: ' + $json.magicLink,\n  employee: $json.fullName,\n  email: $json.email,\n  magicLink: $json.magicLink\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
       },
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1280,
         160
       ],
       "id": "wf3-slack-survey",
       "name": "Slack: Gửi Khảo Sát Vào Kênh Team",
-      "webhookId": "6eab630b-7a4d-4ae1-a060-9e2805954d59",
       "continueOnFail": true
     },
     {
@@ -197,24 +203,23 @@
     },
     {
       "parameters": {
-        "select": "channel",
-        "channelId": {
-          "__rl": true,
-          "value": "C01EXECUTIVE_LEADERSHIP",
-          "mode": "name"
-        },
-        "text": "=📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]\\nChỉ số eNPS: +{{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore }} (Xếp loại: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus }})\\nTỷ lệ tham gia: {{ $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate }}\\nBáo cáo tóm tắt: Đã lưu vào Google Sheet Executive.",
-        "otherOptions": {}
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '#executive-leadership',\n  title: '📈 [BÁO CÁO GẮN KẾT NHÂN VIÊN TUẦN - GEMINI eNPS DIGEST]',\n  enpsScore: $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.enpsScore,\n  healthStatus: $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.healthStatus,\n  responseRate: $('Tổng Hợp Chỉ Số eNPS & Tỷ Lệ Gắn Kết').first().json.responseRate,\n  aiReport: $json.content?.parts?.[0]?.text || $json.content || 'Đánh giá tinh thần gắn kết tốt.',\n  status: 'REPORTED_TO_LEADERSHIP'\n}) }}",
+        "options": {
+          "timeout": 5000
+        }
       },
-      "type": "n8n-nodes-base.slack",
-      "typeVersion": 2.2,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1792,
         368
       ],
       "id": "wf3-slack-report",
       "name": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
-      "webhookId": "ee1e8e1d-acdf-4663-ba0f-ce68ed979e84",
       "continueOnFail": true
     }
   ],
