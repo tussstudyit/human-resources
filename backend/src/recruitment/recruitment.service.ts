@@ -262,11 +262,50 @@ export class RecruitmentService {
       throw new NotFoundException('Candidate not found');
     }
 
+    // Safe merge of parsedSkillsJson to prevent overwriting existing metadata (interviewKit, schedule, talentPool, etc.)
+    let mergedSkillsJson: any = dto.parsedSkillsJson;
+    const existing = candidate.parsedSkillsJson;
+
+    if (
+      existing &&
+      typeof existing === 'object' &&
+      !Array.isArray(existing) &&
+      dto.parsedSkillsJson &&
+      typeof dto.parsedSkillsJson === 'object' &&
+      !Array.isArray(dto.parsedSkillsJson)
+    ) {
+      const existingObj = existing as Record<string, any>;
+      const incomingObj = dto.parsedSkillsJson as Record<string, any>;
+      mergedSkillsJson = {
+        ...existingObj,
+        ...incomingObj,
+        ...(existingObj.interviewSchedule || incomingObj.interviewSchedule
+          ? {
+              interviewSchedule: {
+                ...(existingObj.interviewSchedule || {}),
+                ...(incomingObj.interviewSchedule || {}),
+              },
+            }
+          : {}),
+        ...(existingObj.talentPool || incomingObj.talentPool
+          ? {
+              talentPool: {
+                ...(existingObj.talentPool || {}),
+                ...(incomingObj.talentPool || {}),
+              },
+            }
+          : {}),
+        ...(existingObj.interviewKit && !incomingObj.interviewKit
+          ? { interviewKit: existingObj.interviewKit }
+          : {}),
+      };
+    }
+
     return this.prisma.candidate.update({
       where: { id },
       data: {
         matchScore: dto.matchScore,
-        parsedSkillsJson: dto.parsedSkillsJson,
+        parsedSkillsJson: mergedSkillsJson,
         ...(dto.experienceYears !== undefined && { experienceYears: dto.experienceYears }),
         ...(dto.summary !== undefined && { summary: dto.summary }),
         aiStatus: 'DONE',
