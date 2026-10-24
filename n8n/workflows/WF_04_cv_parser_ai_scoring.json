@@ -199,7 +199,7 @@
         -100
       ],
       "id": "wf4-parse-core-ai",
-      "name": "Parse & Validate Core AI Data"
+      "name": "Parse & Validate AI Evaluation"
     },
     {
       "parameters": {
@@ -616,14 +616,14 @@
       "main": [
         [
           {
-            "node": "Parse & Validate Core AI Data",
+            "node": "Parse & Validate AI Evaluation",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse & Validate Core AI Data": {
+    "Parse & Validate AI Evaluation": {
       "main": [
         [
           {
