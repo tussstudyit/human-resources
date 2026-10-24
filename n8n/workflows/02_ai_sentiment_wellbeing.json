@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Chuẩn hóa & Tra cứu hồ sơ lịch sử sức khỏe nhân sự 4 tuần gần nhất\nconst body = $json.body || $json;\n\nreturn {\n  employeeId: body.employeeId || 'EMP-2026-08',\n  employeeName: body.employeeName || 'Trần Thanh Tú',\n  employeeEmail: body.employeeEmail || 'tu.tranthanh@company.com',\n  department: body.department || 'Phòng Kỹ thuật & AI',\n  sentimentScore: Number(body.sentimentScore !== undefined ? body.sentimentScore : -0.65),\n  burnoutRisk: body.burnoutRisk || 'HIGH',\n  recentSurveysCount: 4,\n  avgWeeklyOTHours: 18,\n  triggerReason: body.triggerReason || 'Phát hiện rủi ro kiệt sức cao từ khảo sát tuần 40'\n};"
+        "jsCode": "const body = $json.body || $json;\n\nreturn {\n  employeeId: body.employeeId || body.userId || 'EMP-2026',\n  employeeName: body.employeeName || body.name || 'Đặng Tú Nguyên',\n  employeeEmail: body.employeeEmail || body.email || 'tunguyen2006.qt@gmail.com',\n  department: body.department || body.dept || 'Phòng Kỹ thuật & AI',\n  sentimentScore: Number(body.sentimentScore !== undefined ? body.sentimentScore : -0.65),\n  burnoutRisk: body.burnoutRisk || 'HIGH',\n  recentSurveysCount: 4,\n  avgWeeklyOTHours: Number(body.avgWeeklyOTHours || 18),\n  triggerReason: body.triggerReason || 'Phát hiện rủi ro kiệt sức cao từ khảo sát tuần',\n  actionType: body.actionType\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

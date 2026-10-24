@@ -12,12 +12,14 @@ export async function POST(request: NextRequest) {
       endpoint = '/webhook/first-week-checkin';
     } else if (workflow === 'feedback_reminder') {
       endpoint = '/webhook/feedback-reminder';
-    } else if (workflow === 'course_recommender') {
+    } else if (workflow === 'course_recommender' || workflow === 'training_reminder') {
       endpoint = '/webhook/recommend-courses';
-    } else if (workflow === 'engagement_survey') {
+    } else if (workflow === 'engagement_survey' || workflow === 'survey_response') {
       endpoint = '/webhook/employee-survey-response';
-    } else if (workflow === 'training_reminder') {
-      endpoint = '/webhook/recommend-courses';
+    } else if (workflow === 'wellbeing_action') {
+      endpoint = '/webhook/wellbeing-action-trigger';
+    } else if (workflow === 'weekly_survey_dispatcher' || workflow === 'dispatch_pulse_survey') {
+      endpoint = '/webhook/weekly-survey-dispatcher';
     }
 
     // Gửi payload tới webhook n8n

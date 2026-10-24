@@ -3,6 +3,22 @@
   "nodes": [
     {
       "parameters": {
+        "httpMethod": "POST",
+        "path": "weekly-survey-dispatcher",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        144,
+        160
+      ],
+      "id": "wf3-webhook-trigger",
+      "name": "Webhook: Kích Hoạt Khảo Sát Tuần"
+    },
+    {
+      "parameters": {
         "rule": {
           "interval": [
             {
@@ -23,7 +39,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Truy vấn danh sách toàn bộ nhân sự từ hệ thống\nreturn [\n  { id: 'usr_1', fullName: 'Trần Thanh Tú', email: 'dang.2006.qt@gmail.com', department: 'Phòng Kỹ thuật & AI', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_2', fullName: 'Lê Hoàng Nam', email: 'nam.le@company.com', department: 'Phòng Kỹ thuật & AI', isActive: true, preferredChannel: 'SLACK' },\n  { id: 'usr_3', fullName: 'Nguyễn Thị Mai', email: 'dang.2006.qt@gmail.com', department: 'Phòng Nhân sự', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_4', fullName: 'Phạm Đức Anh', email: 'anh.pham@company.com', department: 'Phòng Kinh doanh', isActive: true, preferredChannel: 'SLACK' },\n  { id: 'usr_5', fullName: 'Đỗ Thùy Linh', email: 'linh.do@company.com', department: 'Phòng Marketing', isActive: false, preferredChannel: 'EMAIL' }\n];"
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const json = item.json;\n  const body = json.body || json;\n  if (Array.isArray(body.recipients) && body.recipients.length > 0) {\n    for (const r of body.recipients) {\n      results.push({\n        id: r.id || r.userId || 'usr_emp',\n        fullName: r.name || r.fullName || 'Nhân sự',\n        email: r.email,\n        department: r.department || r.dept || 'Toàn công ty',\n        isActive: r.isActive !== false,\n        preferredChannel: r.preferredChannel || 'EMAIL'\n      });\n    }\n  } else if (body.recipient) {\n    const r = body.recipient;\n    results.push({\n      id: r.id || r.userId || 'usr_emp',\n      fullName: r.name || r.fullName || 'Nhân sự',\n      email: r.email,\n      department: r.department || r.dept || 'Toàn công ty',\n      isActive: r.isActive !== false,\n      preferredChannel: r.preferredChannel || 'EMAIL'\n    });\n  }\n}\n\nif (results.length > 0) {\n  return results;\n}\n\n// Danh sách nhân sự thật từ hệ thống công ty\nreturn [\n  { id: 'usr_1', fullName: 'Đặng Tú Nguyên', email: 'tunguyen2006.qt@gmail.com', department: 'Phòng Quản trị & Nhân sự', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_2', fullName: 'Đặng Tú Nguyên', email: 'tudang43.qtdn@gmail.com', department: 'Phòng Kinh doanh & Tiếp thị', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_3', fullName: 'Trần Anh Tân', email: 'anhtanht1905@gmail.com', department: 'Kỹ thuật & Công nghệ', isActive: true, preferredChannel: 'EMAIL' },\n  { id: 'usr_4', fullName: 'Đoàn Thanh Huy', email: 'doanthanhhuy1309@gmail.com', department: 'Phòng Nhân sự', isActive: true, preferredChannel: 'EMAIL' }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -56,7 +72,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst weekStr = 'W' + Math.ceil((new Date().getDate()) / 7) + '_' + (new Date().getMonth() + 1);\n\nreturn items.map(item => {\n  const d = item.json;\n  const token = Buffer.from((d.email || 'emp') + '_' + Date.now()).toString('base64').substring(0, 16);\n  return {\n    json: {\n      ...d,\n      surveyWeek: weekStr,\n      surveyToken: token,\n      magicLink: 'http://localhost:3000/engagement/survey?token=' + token + '&week=' + weekStr,\n      preferredChannel: d.preferredChannel || 'EMAIL'\n    }\n  };\n});"
+        "jsCode": "const items = $input.all();\nconst weekStr = 'W' + Math.ceil((new Date().getDate()) / 7) + '_' + (new Date().getMonth() + 1);\n\nreturn items.map(item => {\n  const d = item.json;\n  const token = Buffer.from((d.email || 'emp') + '_' + Date.now()).toString('base64').substring(0, 16);\n  const host = 'http://192.168.2.123:3000';\n  return {\n    json: {\n      ...d,\n      surveyWeek: weekStr,\n      surveyToken: token,\n      magicLink: host + '/engagement?tab=survey&token=' + token + '&week=' + weekStr + '&email=' + encodeURIComponent(d.email || '') + '&name=' + encodeURIComponent(d.fullName || '') + '&dept=' + encodeURIComponent(d.department || ''),\n      preferredChannel: d.preferredChannel || 'EMAIL'\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -319,6 +335,17 @@
         [
           {
             "node": "Slack: Báo Cáo Tổng Kết Tuần Tới Leadership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Kích Hoạt Khảo Sát Tuần": {
+      "main": [
+        [
+          {
+            "node": "Truy Vấn Danh Sách Nhân Sự",
             "type": "main",
             "index": 0
           }
