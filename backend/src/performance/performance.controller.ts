@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { PerformanceService } from './performance.service.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -10,6 +10,15 @@ export class PerformanceController {
   @Get('employees')
   async getEmployeesForReview() {
     return this.performanceService.getEmployeesForReview();
+  }
+
+  @Get('feedback-detail')
+  async getFeedbackDetail(
+    @Query('userId') userId?: string,
+    @Query('email') email?: string,
+    @Query('period') period?: string,
+  ) {
+    return this.performanceService.getFeedbackDetail(userId, email, period || '2026-Q4');
   }
 
   @Post('feedback-public')

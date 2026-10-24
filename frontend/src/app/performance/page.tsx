@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -35,90 +35,125 @@ interface EmployeeReview {
 export default function PerformancePage() {
   const { user, initAuth } = useAuthStore();
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [employees, setEmployees] = useState<EmployeeReview[]>([]);
+
+  const fetchEmployees = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await axios.get('/api/performance/employees');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.2.123:3000';
+        let stored: Record<string, any> = {};
+        try {
+          stored = JSON.parse(localStorage.getItem('hr_360_submitted_reviews') || '{}');
+        } catch {}
+
+        const mapped = res.data.data.map((emp: EmployeeReview) => {
+          const emailKey = (emp.email || '').trim().toLowerCase();
+          const uidKey = emp.userId ? String(emp.userId).toLowerCase() : '';
+          const isSubmitted = emp.completed ||
+            (emailKey && Boolean(stored[emailKey])) ||
+            (uidKey && Object.values(stored).some((item: any) => item?.userId === emp.userId));
+
+          let link = (emp.magicLink || '').replace('http://localhost:3000', origin).replace('http://192.168.2.123:3000', origin);
+          if (emp.userId && !link.includes('userId=')) link += `&userId=${emp.userId}`;
+          if (emp.email && !link.includes('email=')) link += `&email=${encodeURIComponent(emp.email)}`;
+
+          return {
+            ...emp,
+            status: isSubmitted ? 'Đã hoàn thành' : emp.status,
+            completed: isSubmitted,
+            magicLink: link,
+          };
+        });
+        setEmployees(mapped);
+        return;
+      }
+    } catch (err) {
+      console.warn('Lỗi khi tải nhân viên từ CSDL, sử dụng danh sách dự phòng:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+
+    // Fallback nếu chưa kết nối được CSDL
+    const fallbackList: EmployeeReview[] = [
+      {
+        id: 1,
+        name: 'John Developer',
+        email: 'dev.john@example.com',
+        role: 'Fullstack Engineer',
+        dept: 'Kỹ thuật & AI',
+        status: 'Chờ nộp',
+        completed: false,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_john_9821&period=2026-Q4&name=John%20Developer',
+        reminded: false,
+      },
+      {
+        id: 2,
+        name: 'Nguyễn Văn HR',
+        email: 'hr.lead@example.com',
+        role: 'HR Lead',
+        dept: 'Phòng Nhân sự',
+        status: 'Đã hoàn thành',
+        completed: true,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_hr_4410&period=2026-Q4&name=Nguy%E1%BB%85n%20V%C4%83n%20HR',
+        reminded: false,
+      },
+      {
+        id: 3,
+        name: 'Kiểm Thử Viên 17296',
+        email: 'tester_17296@test.com',
+        role: 'QA Engineer',
+        dept: 'Kỹ thuật & AI',
+        status: 'Chờ nộp',
+        completed: false,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tester_7732&period=2026-Q4&name=Ki%E1%BB%83m%20Th%E1%BB%AD%20Vi%C3%AAn%2017296',
+        reminded: false,
+      },
+      {
+        id: 4,
+        name: 'Đặng Tú Nguyên',
+        email: 'tunguyen2006.qt@gmail.com',
+        role: 'Talent Acquisition',
+        dept: 'Phòng Nhân sự',
+        status: 'Đã hoàn thành',
+        completed: true,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tunguyen_1109&period=2026-Q4&name=%C4%90%E1%BA%B7ng%20T%C3%BA%20Nguy%C3%AAn',
+        reminded: false,
+      },
+    ];
+    setEmployees(fallbackList);
+  }, []);
 
   useEffect(() => {
     initAuth();
+    fetchEmployees();
 
-    const fetchEmployees = async () => {
-      try {
-        const res = await axios.get('/api/performance/employees');
-        if (res.data?.success && Array.isArray(res.data.data)) {
-          const origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.2.123:3000';
-          let stored: Record<string, any> = {};
-          try {
-            stored = JSON.parse(localStorage.getItem('hr_360_submitted_reviews') || '{}');
-          } catch {}
-
-          const mapped = res.data.data.map((emp: EmployeeReview) => {
-            const key = emp.name.trim().toLowerCase();
-            const isSubmitted = emp.completed || Object.keys(stored).some(k => key.includes(k) || k.includes(key));
-            return {
-              ...emp,
-              status: isSubmitted ? 'Đã hoàn thành' : emp.status,
-              completed: isSubmitted,
-              magicLink: (emp.magicLink || '').replace('http://localhost:3000', origin).replace('http://192.168.2.123:3000', origin),
-            };
-          });
-          setEmployees(mapped);
-          return;
-        }
-      } catch (err) {
-        console.warn('Lỗi khi tải nhân viên từ CSDL, sử dụng danh sách dự phòng:', err);
+    const handleFocus = () => {
+      fetchEmployees();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchEmployees();
       }
-
-      // Fallback nếu chưa kết nối được CSDL
-      const fallbackList: EmployeeReview[] = [
-        {
-          id: 1,
-          name: 'John Developer',
-          email: 'dev.john@example.com',
-          role: 'Fullstack Engineer',
-          dept: 'Kỹ thuật & AI',
-          status: 'Chờ nộp',
-          completed: false,
-          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_john_9821&period=2026-Q4&name=John%20Developer',
-          reminded: false,
-        },
-        {
-          id: 2,
-          name: 'Nguyễn Văn HR',
-          email: 'hr.lead@example.com',
-          role: 'HR Lead',
-          dept: 'Phòng Nhân sự',
-          status: 'Đã hoàn thành',
-          completed: true,
-          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_hr_4410&period=2026-Q4&name=Nguy%E1%BB%85n%20V%C4%83n%20HR',
-          reminded: false,
-        },
-        {
-          id: 3,
-          name: 'Kiểm Thử Viên 17296',
-          email: 'tester_17296@test.com',
-          role: 'QA Engineer',
-          dept: 'Kỹ thuật & AI',
-          status: 'Chờ nộp',
-          completed: false,
-          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tester_7732&period=2026-Q4&name=Ki%E1%BB%83m%20Th%E1%BB%AD%20Vi%C3%AAn%2017296',
-          reminded: false,
-        },
-        {
-          id: 4,
-          name: 'Đặng Tú Nguyên',
-          email: 'tunguyen2006.qt@gmail.com',
-          role: 'Talent Acquisition',
-          dept: 'Phòng Nhân sự',
-          status: 'Đã hoàn thành',
-          completed: true,
-          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tunguyen_1109&period=2026-Q4&name=%C4%90%E1%BA%B7ng%20T%C3%BA%20Nguy%C3%AAn',
-          reminded: false,
-        },
-      ];
-      setEmployees(fallbackList);
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'hr_360_submitted_reviews') {
+        fetchEmployees();
+      }
     };
 
-    fetchEmployees();
-  }, [initAuth]);
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [initAuth, fetchEmployees]);
 
   // Dữ liệu biểu đồ so sánh KPI (kpi_metrics)
   const kpiMetrics = [
@@ -141,6 +176,7 @@ export default function PerformancePage() {
           totalPending: pendingList.length,
           recipients: pendingList.map(emp => ({
             id: emp.id,
+            userId: emp.userId || emp.id,
             name: emp.name,
             email: emp.email,
             department: emp.dept,
@@ -168,6 +204,8 @@ export default function PerformancePage() {
         payload: {
           event: 'single_360_feedback_reminder',
           recipient: {
+            id: emp.id,
+            userId: emp.userId || emp.id,
             name: emp.name,
             email: emp.email,
             magicLink: emp.magicLink
@@ -208,6 +246,16 @@ export default function PerformancePage() {
             </div>
 
             <div className="relative z-10 flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => fetchEmployees()}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs text-slate-200 bg-slate-800/80 hover:bg-slate-700 active:bg-slate-900 transition-all border border-slate-700 shadow-sm cursor-pointer disabled:opacity-50"
+                title="Làm mới danh sách và trạng thái nộp"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-slate-300 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Đang tải...' : 'Làm mới'}</span>
+              </button>
+
               <button
                 onClick={handleTriggerAllPending}
                 disabled={loading}
@@ -321,9 +369,19 @@ export default function PerformancePage() {
                       Click vào từng nhân sự để gửi riêng Magic Link nộp đánh giá
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
-                    {employees.filter(e => e.completed).length}/{employees.length} Hoàn tất
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => fetchEmployees()}
+                      disabled={isRefreshing}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-100 transition-all cursor-pointer"
+                      title="Làm mới trạng thái nộp"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-purple-600' : ''}`} />
+                    </button>
+                    <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                      {employees.filter(e => e.completed).length}/{employees.length} Hoàn tất
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-3">

@@ -87,15 +87,26 @@ export class PerformanceService {
   }
 
   // Ghi nhận phản hồi đánh giá 360 công khai từ biểu mẫu Web
-  async createFeedbackPublic(dto: { employeeName?: string; email?: string; revieweeId?: string; score: number; comment?: string; period?: string }) {
+  async createFeedbackPublic(dto: {
+    userId?: string;
+    revieweeId?: string;
+    email?: string;
+    employeeName?: string;
+    score: number;
+    comment?: string;
+    period?: string;
+  }) {
     let reviewee = null;
-    if (dto.revieweeId) {
-      reviewee = await this.prisma.user.findUnique({ where: { id: dto.revieweeId } });
-    } else if (dto.email) {
-      reviewee = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    } else if (dto.employeeName) {
+    const targetId = dto.revieweeId || dto.userId;
+    if (targetId) {
+      reviewee = await this.prisma.user.findUnique({ where: { id: targetId } });
+    }
+    if (!reviewee && dto.email) {
+      reviewee = await this.prisma.user.findUnique({ where: { email: dto.email.trim() } });
+    }
+    if (!reviewee && dto.employeeName) {
       reviewee = await this.prisma.user.findFirst({
-        where: { fullName: { contains: dto.employeeName.trim(), mode: 'insensitive' } },
+        where: { fullName: { equals: dto.employeeName.trim(), mode: 'insensitive' } },
       });
     }
 
@@ -104,16 +115,64 @@ export class PerformanceService {
     }
     if (!reviewee) return null;
 
+    const period = dto.period || '2026-Q4';
+
+    // Nếu đã có đánh giá trong kỳ này -> cập nhật bản ghi đã nộp thay vì tạo trùng lặp
+    const existing = await this.prisma.feedback.findFirst({
+      where: { revieweeId: reviewee.id, period },
+    });
+
+    if (existing) {
+      return this.prisma.feedback.update({
+        where: { id: existing.id },
+        data: {
+          score: Number(dto.score) || existing.score,
+          comment: dto.comment || existing.comment,
+        },
+      });
+    }
+
     return this.prisma.feedback.create({
       data: {
         reviewerId: reviewee.id,
         revieweeId: reviewee.id,
         score: Number(dto.score) || 5,
         comment: dto.comment || 'Tự đánh giá qua biểu mẫu 360°',
-        period: dto.period || '2026-Q4',
+        period,
       },
     });
   }
+
+  // Lấy chi tiết đánh giá 360 đã nộp của nhân viên để hiển thị lên form khi xem lại
+  async getFeedbackDetail(userId?: string, email?: string, period = '2026-Q4') {
+    let user = null;
+    if (userId) {
+      user = await this.prisma.user.findUnique({ where: { id: userId } });
+    }
+    if (!user && email) {
+      user = await this.prisma.user.findUnique({ where: { email: email.trim() } });
+    }
+    if (!user) return null;
+
+    const feedback = await this.prisma.feedback.findFirst({
+      where: { revieweeId: user.id, period },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!feedback) return null;
+
+    return {
+      feedbackId: feedback.id,
+      userId: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      period: feedback.period,
+      score: feedback.score,
+      comment: feedback.comment,
+      submittedAt: feedback.createdAt,
+    };
+  }
+
   async getEmployeesForReview(period = '2026-Q4') {
     const users = await this.prisma.user.findMany({
       where: { isActive: true },
@@ -132,7 +191,7 @@ export class PerformanceService {
       const deptName = u.department?.name || 'Toàn công ty';
       const roleTitle = u.role === 'HR' ? 'HR Specialist' : (u.role === 'MANAGER' ? 'Manager' : 'Nhân sự');
       const token = Buffer.from(`${u.id}:${period}:static`).toString('base64url');
-      const magicLink = `http://192.168.2.123:3000/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(u.fullName)}`;
+      const magicLink = `http://192.168.2.123:3000/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(u.fullName)}&email=${encodeURIComponent(u.email)}&userId=${u.id}`;
 
       return {
         id: index + 1,
