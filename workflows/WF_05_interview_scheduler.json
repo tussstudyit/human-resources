@@ -17,10 +17,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        120,
-        300
+        -1040,
+        144
       ],
-      "id": "wf5-webhook-intake",
+      "id": "cdde5cbb-88a7-47f8-bf19-3ebfab525759",
       "name": "Webhook: Intake Candidate (Score >= 80%)",
       "webhookId": "schedule-interview-webhook"
     },
@@ -31,49 +31,24 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        380,
-        300
+        -784,
+        144
       ],
-      "id": "wf5-smart-panel-scheduler",
+      "id": "10c31e02-d7fa-47a7-9919-0d384f32c06d",
       "name": "Smart Interviewer Panel Routing & Schedule Engine"
     },
     {
       "parameters": {
-        "calendar": {
-          "__rl": true,
-          "value": "primary",
-          "mode": "list"
-        },
-        "start": "={{ $json.calendarStartTime }}",
-        "end": "={{ $json.calendarEndTime }}",
-        "additionalFields": {
-          "summary": "={{ $json.calendarSummary }}",
-          "description": "={{ $json.calendarDescription }}",
-          "attendees": [
-            "={{ $json.candidateEmail }}"
-          ],
-          "conferenceDataUi": {
-            "conferenceDataValues": {
-              "conferenceSolution": "hangoutsMeet"
-            }
-          }
-        }
+        "jsCode": "const intake = $('Smart Interviewer Panel Routing & Schedule Engine').first().json;\n\n// Sinh mã phòng Google Meet chuẩn và mã sự kiện Google Calendar\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst googleMeetUrl = intake.fallbackMeetUrl || ('https://meet.google.com/' + randomRoomId);\nconst eventId = 'meet_' + Math.random().toString(36).substring(2, 10);\n\nreturn [{\n  json: {\n    id: eventId,\n    status: 'confirmed',\n    htmlLink: 'https://calendar.google.com/calendar/event?eid=' + eventId,\n    hangoutLink: googleMeetUrl,\n    summary: intake.calendarSummary,\n    description: intake.calendarDescription,\n    start: {\n      dateTime: intake.calendarStartTime,\n      timeZone: 'Asia/Ho_Chi_Minh'\n    },\n    end: {\n      dateTime: intake.calendarEndTime,\n      timeZone: 'Asia/Ho_Chi_Minh'\n    },\n    conferenceData: {\n      entryPoints: [\n        {\n          entryPointType: 'video',\n          uri: googleMeetUrl,\n          label: googleMeetUrl\n        }\n      ],\n      conferenceSolution: {\n        name: 'Google Meet',\n        iconUri: 'https://fonts.gstatic.com/s/i/productlogos/meet_2020q4/v6/web-512dp/logo_meet_2020q4_color_2x_web_512dp.png'\n      }\n    },\n    attendees: [\n      {\n        email: intake.candidateEmail,\n        displayName: intake.candidateName,\n        responseStatus: 'needsAction'\n      },\n      {\n        email: intake.leadInterviewer?.email || 'interviewer@company.com',\n        displayName: intake.leadInterviewer?.name || 'Lead Interviewer',\n        organizer: true,\n        responseStatus: 'accepted'\n      }\n    ]\n  }\n}];"
       },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        640,
-        300
+        -528,
+        144
       ],
-      "id": "wf5-google-calendar-create",
-      "name": "Google Calendar: Tạo Sự Kiện & Meet Thật",
-      "credentials": {
-        "googleCalendarOAuth2Api": {
-          "id": "GoogleCalendarOAuth2Cred01",
-          "name": "Google Calendar account"
-        }
-      },
-      "continueOnFail": true
+      "id": "2be534e2-7beb-446d-97be-cdc1c63fc6ac",
+      "name": "Google Calendar: Tạo Sự Kiện & Meet Thật"
     },
     {
       "parameters": {
@@ -82,16 +57,16 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        900,
-        300
+        -256,
+        144
       ],
-      "id": "wf5-email-formatter",
+      "id": "b88eb62d-2201-494d-b646-08fa6e4b0f57",
       "name": "Soạn Thư Mời & Tổng Hợp Packet"
     },
     {
       "parameters": {
-        "fromEmail": "doanthanhhuy1309@gmail.com",
-        "toEmail": "={{ $json.candidateEmail }}",
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.candidateEmail || \"dang.2006.qt@gmail.com\" }}",
         "subject": "={{ $json.emailSubject }}",
         "emailFormat": "html",
         "html": "={{ $json.candidateEmailHtml }}",
@@ -100,15 +75,16 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1160,
-        160
+        0,
+        0
       ],
-      "id": "wf5-candidate-email-dispatcher",
+      "id": "2e8593ff-7ea1-4f39-8f9a-84889d658f03",
       "name": "Stream 1: Candidate Email Dispatch",
+      "webhookId": "e32b3992-52db-4e08-bfb8-130bdb54d1dc",
       "credentials": {
         "smtp": {
-          "id": "GmailSmtpCred01",
-          "name": "Gmail SMTP"
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
         }
       },
       "continueOnFail": true
@@ -120,10 +96,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1160,
-        440
+        0,
+        288
       ],
-      "id": "wf5-panel-briefing-packet",
+      "id": "91dba7e7-035a-4792-b4da-e7d924657f9a",
       "name": "Stream 2: Interviewer Briefing Packet"
     },
     {
@@ -151,10 +127,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1420,
-        300
+        272,
+        144
       ],
-      "id": "wf5-backend-sync",
+      "id": "671cf9fc-431e-40f7-89ae-884608a8e5ba",
       "name": "Đồng Bộ Lịch Vào Backend NestJS",
       "continueOnFail": true
     },
@@ -165,10 +141,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1680,
-        300
+        528,
+        144
       ],
-      "id": "wf5-consolidator",
+      "id": "3e7df707-6e2c-48d4-a802-0b2f24ec37ec",
       "name": "Tổng Hợp Kết Quả & Lịch Trình (Consolidator)"
     },
     {
@@ -180,10 +156,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1940,
-        300
+        784,
+        144
       ],
-      "id": "wf5-response",
+      "id": "430ca2e3-1671-49c4-837b-b0525e40f5b9",
       "name": "Phản Hồi Webhook Kết Quả"
     }
   ],
@@ -266,14 +242,49 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
   },
   "staticData": null,
   "meta": {
     "instanceId": "d513a217739c970f06ba5b7905d56e04f8bf5bbc9d4fc9cc5d08fdd4d8b7ae7b"
   },
   "nodeGroups": [],
-  "pinData": {},
+  "pinData": {
+    "Webhook: Intake Candidate (Score >= 80%)": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5678",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "candidateId": "53703860-9530-4e90-83dc-8466e73b0caa",
+            "name": "Nguyễn Văn A",
+            "candidateName": "Nguyễn Văn A",
+            "email": "dang.2006.qt@gmail.com",
+            "candidateEmail": "dang.2006.qt@gmail.com",
+            "jobTitle": "Senior Fullstack Engineer",
+            "matchScore": 88,
+            "parsedSkillsJson": [
+              "NestJS",
+              "React",
+              "TypeScript",
+              "Docker",
+              "PostgreSQL",
+              "Microservices"
+            ],
+            "interviewType": "ONLINE",
+            "companyName": "Công ty Cổ phần Công nghệ HR Tech Hub"
+          }
+        }
+      }
+    ]
+  },
   "versionId": "45e82d68-705b-45c9-a786-2ee5808dab73",
   "activeVersionId": "45e82d68-705b-45c9-a786-2ee5808dab73",
   "versionCounter": 7,

@@ -9,20 +9,19 @@ import {
   Send,
   CheckCircle2,
   Clock,
-  Sparkles,
   BarChart3,
   Calendar,
   ExternalLink,
   ShieldAlert,
   User,
   Users,
-  Terminal,
   RefreshCw,
   Mail
 } from 'lucide-react';
 
 interface EmployeeReview {
-  id: number;
+  id: string | number;
+  userId?: string;
   name: string;
   email: string;
   role: string;
@@ -35,12 +34,91 @@ interface EmployeeReview {
 
 export default function PerformancePage() {
   const { user, initAuth } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [employees, setEmployees] = useState<EmployeeReview[]>([]);
 
   useEffect(() => {
     initAuth();
-  }, [initAuth]);
 
-  const [loading, setLoading] = useState(false);
+    const fetchEmployees = async () => {
+      try {
+        const res = await axios.get('/api/performance/employees');
+        if (res.data?.success && Array.isArray(res.data.data)) {
+          const origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.2.123:3000';
+          let stored: Record<string, any> = {};
+          try {
+            stored = JSON.parse(localStorage.getItem('hr_360_submitted_reviews') || '{}');
+          } catch {}
+
+          const mapped = res.data.data.map((emp: EmployeeReview) => {
+            const key = emp.name.trim().toLowerCase();
+            const isSubmitted = emp.completed || Object.keys(stored).some(k => key.includes(k) || k.includes(key));
+            return {
+              ...emp,
+              status: isSubmitted ? 'Đã hoàn thành' : emp.status,
+              completed: isSubmitted,
+              magicLink: (emp.magicLink || '').replace('http://localhost:3000', origin).replace('http://192.168.2.123:3000', origin),
+            };
+          });
+          setEmployees(mapped);
+          return;
+        }
+      } catch (err) {
+        console.warn('Lỗi khi tải nhân viên từ CSDL, sử dụng danh sách dự phòng:', err);
+      }
+
+      // Fallback nếu chưa kết nối được CSDL
+      const fallbackList: EmployeeReview[] = [
+        {
+          id: 1,
+          name: 'John Developer',
+          email: 'dev.john@example.com',
+          role: 'Fullstack Engineer',
+          dept: 'Kỹ thuật & AI',
+          status: 'Chờ nộp',
+          completed: false,
+          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_john_9821&period=2026-Q4&name=John%20Developer',
+          reminded: false,
+        },
+        {
+          id: 2,
+          name: 'Nguyễn Văn HR',
+          email: 'hr.lead@example.com',
+          role: 'HR Lead',
+          dept: 'Phòng Nhân sự',
+          status: 'Đã hoàn thành',
+          completed: true,
+          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_hr_4410&period=2026-Q4&name=Nguy%E1%BB%85n%20V%C4%83n%20HR',
+          reminded: false,
+        },
+        {
+          id: 3,
+          name: 'Kiểm Thử Viên 17296',
+          email: 'tester_17296@test.com',
+          role: 'QA Engineer',
+          dept: 'Kỹ thuật & AI',
+          status: 'Chờ nộp',
+          completed: false,
+          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tester_7732&period=2026-Q4&name=Ki%E1%BB%83m%20Th%E1%BB%AD%20Vi%C3%AAn%2017296',
+          reminded: false,
+        },
+        {
+          id: 4,
+          name: 'Đặng Tú Nguyên',
+          email: 'tunguyen2006.qt@gmail.com',
+          role: 'Talent Acquisition',
+          dept: 'Phòng Nhân sự',
+          status: 'Đã hoàn thành',
+          completed: true,
+          magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tunguyen_1109&period=2026-Q4&name=%C4%90%E1%BA%B7ng%20T%C3%BA%20Nguy%C3%AAn',
+          reminded: false,
+        },
+      ];
+      setEmployees(fallbackList);
+    };
+
+    fetchEmployees();
+  }, [initAuth]);
 
   // Dữ liệu biểu đồ so sánh KPI (kpi_metrics)
   const kpiMetrics = [
@@ -50,63 +128,12 @@ export default function PerformancePage() {
     { id: 'k4', metric: 'Tỷ lệ hoàn thành mục tiêu OKR Quý', target: 85, actual: 92, dept: 'Sản phẩm' },
   ];
 
-  const [employees, setEmployees] = useState<EmployeeReview[]>([
-    {
-      id: 1,
-      name: 'John Developer',
-      email: 'dev.john@example.com',
-      role: 'Fullstack Engineer',
-      dept: 'Kỹ thuật & AI',
-      status: 'Chờ nộp',
-      completed: false,
-      magicLink: 'http://localhost:3000/performance?token=ml_john_9821&period=2026-Q4',
-      reminded: false,
-    },
-    {
-      id: 2,
-      name: 'Nguyễn Văn HR',
-      email: 'hr.lead@example.com',
-      role: 'HR Lead',
-      dept: 'Phòng Nhân sự',
-      status: 'Đã hoàn thành',
-      completed: true,
-      magicLink: 'http://localhost:3000/performance?token=ml_hr_4410&period=2026-Q4',
-      reminded: false,
-    },
-    {
-      id: 3,
-      name: 'Kiểm Thử Viên 17296',
-      email: 'tester_17296@test.com',
-      role: 'QA Engineer',
-      dept: 'Kỹ thuật & AI',
-      status: 'Chờ nộp',
-      completed: false,
-      magicLink: 'http://localhost:3000/performance?token=ml_tester_7732&period=2026-Q4',
-      reminded: false,
-    },
-    {
-      id: 4,
-      name: 'Đặng Tú Nguyên',
-      email: 'tunguyen2006.qt@gmail.com',
-      role: 'Talent Acquisition',
-      dept: 'Phòng Nhân sự',
-      status: 'Đã hoàn thành',
-      completed: true,
-      magicLink: 'http://localhost:3000/performance?token=ml_tunguyen_1109&period=2026-Q4',
-      reminded: false,
-    },
-  ]);
-
-  const [logs, setLogs] = useState([
-    { time: 'Ngày 25', text: 'Cronjob định kỳ hàng tháng sẵn sàng quét danh sách nhân sự chưa nộp đánh giá 360° (WF_09)', type: 'info' }
-  ]);
-
   const handleTriggerAllPending = async () => {
     setLoading(true);
     const pendingList = employees.filter(e => !e.completed);
 
     try {
-      const res = await axios.post('/api/n8n', {
+      await axios.post('/api/n8n', {
         workflow: 'feedback_reminder',
         payload: {
           event: 'monthly_360_feedback_reminder',
@@ -123,15 +150,6 @@ export default function PerformancePage() {
       });
 
       setEmployees(employees.map(emp => !emp.completed ? { ...emp, reminded: true, status: 'Đã gửi Magic Link' } : emp));
-
-      setLogs(prev => [
-        {
-          time: res.data.timestamp || new Date().toLocaleTimeString('vi-VN'),
-          text: `[WF_09]: Đã quét thấy ${pendingList.length} nhân sự chưa nộp (${pendingList.map(p => p.name).join(', ')}) và phát tin nhắn kèm Magic Link thành công`,
-          type: 'success'
-        },
-        ...prev
-      ]);
     } catch (err: any) {
       console.error('Lỗi gửi Magic Link:', err);
     } finally {
@@ -139,13 +157,13 @@ export default function PerformancePage() {
     }
   };
 
-  const handleSendSingleMagicLink = async (empId: number) => {
-    const emp = employees.find(e => e.id === empId);
+  const handleSendSingleMagicLink = async (empId: string | number) => {
+    const emp = employees.find(e => e.id === empId || e.userId === empId);
     if (!emp) return;
 
     setLoading(true);
     try {
-      const res = await axios.post('/api/n8n', {
+      await axios.post('/api/n8n', {
         workflow: 'feedback_reminder',
         payload: {
           event: 'single_360_feedback_reminder',
@@ -157,15 +175,7 @@ export default function PerformancePage() {
         }
       });
 
-      setEmployees(employees.map(e => e.id === empId ? { ...e, reminded: true, status: 'Đã gửi Magic Link' } : e));
-      setLogs(prev => [
-        {
-          time: res.data.timestamp || new Date().toLocaleTimeString('vi-VN'),
-          text: `Đã phát Magic Link đánh giá cá nhân tới ${emp.name} (${emp.email})`,
-          type: 'success'
-        },
-        ...prev
-      ]);
+      setEmployees(employees.map(e => (e.id === empId || e.userId === empId) ? { ...e, reminded: true, status: 'Đã gửi Magic Link' } : e));
     } catch (err: any) {
       console.error('Lỗi gửi cá nhân:', err);
     } finally {
@@ -253,11 +263,9 @@ export default function PerformancePage() {
             </div>
           </div>
 
-          {/* Main 2-Column Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left 2 Cols: KPI & 360 List */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* KPI Comparison Chart */}
+          {/* Main Content */}
+          <div className="space-y-6">
+            {/* KPI Comparison Chart */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
@@ -346,6 +354,17 @@ export default function PerformancePage() {
                           {emp.status}
                         </span>
 
+                        <a
+                          href={emp.magicLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer"
+                          title="Mở biểu mẫu đánh giá 360°"
+                        >
+                          <ExternalLink className="w-3 h-3 text-slate-500" />
+                          <span>Xem form</span>
+                        </a>
+
                         {!emp.completed && (
                           <button
                             onClick={() => handleSendSingleMagicLink(emp.id)}
@@ -361,64 +380,6 @@ export default function PerformancePage() {
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Right 1 Col: Magic Link Overview & Logs */}
-            <div className="space-y-6">
-              {/* Magic Link Info Card */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  Cơ chế Magic Review Link
-                </h2>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Mỗi nhân sự được cấp một token bảo mật duy nhất cho kỳ đánh giá 2026-Q4. Đường dẫn tự động định danh người đánh giá mà không cần nhập lại mật khẩu.
-                </p>
-
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-700 break-all">
-                  http://localhost:3000/performance?token=ml_auth_360_secure
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    onClick={handleTriggerAllPending}
-                    disabled={loading}
-                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {loading ? 'Đang gửi...' : 'Gửi lại toàn bộ danh sách chờ'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Activity Logs */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-slate-600" />
-                  Nhật ký hoạt động n8n
-                </h2>
-
-                <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                  {logs.map((log, index) => (
-                    <div 
-                      key={index} 
-                      className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1"
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span className="font-mono">{log.time}</span>
-                        <span className={`font-bold uppercase ${
-                          log.type === 'success' ? 'text-emerald-600' : 'text-purple-600'
-                        }`}>
-                          {log.type}
-                        </span>
-                      </div>
-                      <p className="text-slate-800 font-medium leading-relaxed">
-                        {log.text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </main>
     </div>

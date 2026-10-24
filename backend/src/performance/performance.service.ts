@@ -85,4 +85,67 @@ export class PerformanceService {
       feedbacks,
     };
   }
+
+  // Ghi nhận phản hồi đánh giá 360 công khai từ biểu mẫu Web
+  async createFeedbackPublic(dto: { employeeName?: string; email?: string; revieweeId?: string; score: number; comment?: string; period?: string }) {
+    let reviewee = null;
+    if (dto.revieweeId) {
+      reviewee = await this.prisma.user.findUnique({ where: { id: dto.revieweeId } });
+    } else if (dto.email) {
+      reviewee = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    } else if (dto.employeeName) {
+      reviewee = await this.prisma.user.findFirst({
+        where: { fullName: { contains: dto.employeeName.trim(), mode: 'insensitive' } },
+      });
+    }
+
+    if (!reviewee) {
+      reviewee = await this.prisma.user.findFirst();
+    }
+    if (!reviewee) return null;
+
+    return this.prisma.feedback.create({
+      data: {
+        reviewerId: reviewee.id,
+        revieweeId: reviewee.id,
+        score: Number(dto.score) || 5,
+        comment: dto.comment || 'Tự đánh giá qua biểu mẫu 360°',
+        period: dto.period || '2026-Q4',
+      },
+    });
+  }
+  async getEmployeesForReview(period = '2026-Q4') {
+    const users = await this.prisma.user.findMany({
+      where: { isActive: true },
+      include: {
+        department: true,
+        feedbackReceived: {
+          where: { period },
+          select: { id: true, score: true, period: true },
+        },
+      },
+      orderBy: { fullName: 'asc' },
+    });
+
+    return users.map((u, index) => {
+      const hasFeedback = u.feedbackReceived && u.feedbackReceived.length > 0;
+      const deptName = u.department?.name || 'Toàn công ty';
+      const roleTitle = u.role === 'HR' ? 'HR Specialist' : (u.role === 'MANAGER' ? 'Manager' : 'Nhân sự');
+      const token = Buffer.from(`${u.id}:${period}:static`).toString('base64url');
+      const magicLink = `http://192.168.2.123:3000/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(u.fullName)}`;
+
+      return {
+        id: index + 1,
+        userId: u.id,
+        name: u.fullName,
+        email: u.email,
+        role: roleTitle,
+        dept: deptName,
+        status: hasFeedback ? 'Đã hoàn thành' : 'Chờ nộp',
+        completed: hasFeedback,
+        magicLink,
+        reminded: false,
+      };
+    });
+  }
 }

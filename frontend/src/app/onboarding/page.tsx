@@ -107,15 +107,20 @@ export default function OnboardingPage() {
   // LUỒNG 1: Gọi WF_07 (IT Tool Provisioning qua n8n)
   const triggerITProvisioning = async () => {
     setProvisioning(true);
-    const empEmail = user?.email || 'dev.lead@company.vn';
+    const empEmail = user?.email || 'anhtanht1905@gmail.com';
     const empName = user?.fullName || 'Trần Công Nghệ';
 
     try {
       const res = await axios.post('/api/n8n', {
         workflow: 'it_provisioning',
         payload: {
+          userEmail: empEmail,
+          fullName: empName,
+          department: 'Tech',
+          role: user?.role || 'EMPLOYEE',
           employee: {
             name: empName,
+            userEmail: empEmail,
             personalEmail: empEmail,
             department: 'Tech',
             role: user?.role || 'EMPLOYEE'

@@ -9,4 +9,6 @@ pkill -f "next-server" 2>/dev/null || true
 cd /home/tuss/human-resources
 docker compose down
 
+cd /home/tuss/.gemini/antigravity/scratch/chatbox 2>/dev/null && docker compose down
+
 echo " Đã tắt toàn bộ dịch vụ an toàn!"

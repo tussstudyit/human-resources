@@ -63,6 +63,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const hrDropdownRef = useRef<HTMLDivElement>(null);
+  const hrDropdownButtonRef = useRef<HTMLButtonElement>(null);
 
   const { user, isAuthenticated, logout, initAuth } = useAuthStore();
 
@@ -80,9 +81,23 @@ export const Header: React.FC<HeaderProps> = ({
         setHrDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!hrDropdownOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setHrDropdownOpen(false);
+        hrDropdownButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [hrDropdownOpen]);
 
   const handleNavClick = (sectionId: string) => {
     if (onSelectNav) {
@@ -200,8 +215,12 @@ export const Header: React.FC<HeaderProps> = ({
               {/* AI HR Agents Dropdown */}
               <div className="relative" ref={hrDropdownRef}>
                 <button
-                  onClick={() => setHrDropdownOpen(!hrDropdownOpen)}
-                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer ${
+                  ref={hrDropdownButtonRef}
+                  id="hr-agents-trigger"
+                  aria-expanded={hrDropdownOpen}
+                  aria-controls="hr-agents-menu"
+                  onClick={() => setHrDropdownOpen((open) => !open)}
+                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
                     isHRPage ? 'text-red-600 font-bold' : ''
                   }`}
                 >
@@ -211,87 +230,69 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>
 
                 {hrDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                    <div className="px-3.5 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                      Trung Tâm Điều Hành & 5 Agents
-                    </div>
+                  <div
+                    id="hr-agents-menu"
+                    className="absolute left-0 mt-2 w-72 max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
+                  >
                     <Link
                       href="/dashboard"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/dashboard' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Bảng Điều Khiển Tổng Quan</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Chỉ số nhân sự, phòng ban & phễu</div>
-                      </div>
+                      <span className="leading-tight">Tổng quan</span>
                     </Link>
                     <Link
                       href="/recruitment"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/recruitment' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <Briefcase className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 1 · AI Tuyển Dụng (ATS)</div>
-                        <div className="text-[10px] text-slate-400 font-normal">CV parser, AI score & Meet (WF 04-06)</div>
-                      </div>
+                      <span className="leading-tight">Tuyển dụng</span>
                     </Link>
                     <Link
                       href="/onboarding"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/onboarding' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <Compass className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 2 · AI Onboarding</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Cấp tài khoản IT & Tiến độ (WF 07-08)</div>
-                      </div>
+                      <span className="leading-tight">Hội nhập</span>
                     </Link>
                     <Link
                       href="/performance"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/performance' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <TrendingUp className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 3 · AI Performance</div>
-                        <div className="text-[10px] text-slate-400 font-normal">KPI & Magic Link 360° Review (WF 09)</div>
-                      </div>
+                      <span className="leading-tight">Hiệu suất</span>
                     </Link>
                     <Link
                       href="/training"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/training' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <GraduationCap className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 4 · AI Skills & Training</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Skill Gap Radar & Khóa học (WF 10-11)</div>
-                      </div>
+                      <span className="leading-tight">Đào tạo & kỹ năng</span>
                     </Link>
                     <Link
                       href="/engagement"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/engagement' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <Heart className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 5 · AI Engagement</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Khảo sát eNPS & Wellbeing (WF 12)</div>
-                      </div>
+                      <span className="leading-tight">Gắn kết nhân viên</span>
                     </Link>
                   </div>
                 )}

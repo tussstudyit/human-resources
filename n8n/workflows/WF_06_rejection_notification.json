@@ -17,10 +17,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        120,
-        300
+        -560,
+        144
       ],
-      "id": "wf6-webhook-intake",
+      "id": "88f325cb-16ce-4853-a5ad-d8822ad1e12f",
       "name": "Webhook: Tiếp Nhận Hồ Sơ",
       "webhookId": "rejection-notification-webhook"
     },
@@ -31,16 +31,16 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        380,
-        300
+        -304,
+        144
       ],
-      "id": "wf6-classifier-engine",
+      "id": "350e389c-70c0-4492-8e32-bc22942d1cfe",
       "name": "Phân Loại Kịch Bản & Soạn Thư Từ Chối"
     },
     {
       "parameters": {
-        "fromEmail": "doanthanhhuy1309@gmail.com",
-        "toEmail": "={{ $json.candidateEmail }}",
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "={{ $json.candidateEmail || \"dang.2006.qt@gmail.com\" }}",
         "subject": "={{ $json.emailSubject }}",
         "emailFormat": "html",
         "html": "={{ $json.emailHtml }}",
@@ -49,15 +49,16 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        680,
-        160
+        0,
+        0
       ],
-      "id": "wf6-send-rejection-email",
+      "id": "8700c34d-0fe9-41aa-ad51-107867f46ff2",
       "name": "Stream 1: Gửi Email Thật Qua Gmail SMTP",
+      "webhookId": "d8527d67-fe04-4b9f-a386-c8ec2da753cc",
       "credentials": {
         "smtp": {
-          "id": "GmailSmtpCred01",
-          "name": "Gmail SMTP"
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
         }
       },
       "continueOnFail": true
@@ -69,10 +70,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        680,
-        440
+        0,
+        288
       ],
-      "id": "wf6-hr-briefing",
+      "id": "41744a37-b17b-49a3-ac1d-e2e47abbee42",
       "name": "Stream 2: Gói Báo Cáo Phân Loại Cho HR Squad"
     },
     {
@@ -100,10 +101,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        980,
-        300
+        304,
+        144
       ],
-      "id": "wf6-backend-sync",
+      "id": "ff27be88-9923-4377-a7b3-9f753657e594",
       "name": "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend",
       "continueOnFail": true
     },
@@ -114,10 +115,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1260,
-        300
+        592,
+        144
       ],
-      "id": "wf6-consolidator",
+      "id": "18dddfee-e6c2-487b-a441-7244754385ed",
       "name": "Tổng Hợp Kết Quả (Consolidator)"
     },
     {
@@ -129,10 +130,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1520,
-        300
+        848,
+        144
       ],
-      "id": "wf6-response",
+      "id": "320adbab-eebd-4cfd-8d1c-ce0c84998f60",
       "name": "Phản Hồi Webhook Kết Quả"
     }
   ],
@@ -193,12 +194,48 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
   },
   "staticData": null,
   "meta": null,
   "nodeGroups": [],
-  "pinData": null,
+  "pinData": {
+    "Webhook: Tiếp Nhận Hồ Sơ": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5678",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "candidateId": "53703860-9530-4e90-83dc-8466e73b0caa",
+            "name": "Nguyễn Văn A",
+            "candidateName": "Nguyễn Văn A",
+            "email": "dang.2006.qt@gmail.com",
+            "candidateEmail": "dang.2006.qt@gmail.com",
+            "jobTitle": "Senior Fullstack Engineer",
+            "matchScore": 72,
+            "parsedSkillsJson": [
+              "NestJS",
+              "React",
+              "TypeScript",
+              "Docker",
+              "PostgreSQL"
+            ],
+            "companyName": "Công ty Cổ phần Công nghệ HR Tech Hub",
+            "senderName": "Ban Tuyển Dụng & Phát Triển Nhân Tài HR Tech",
+            "senderPhone": "0901 234 567",
+            "senderEmail": "tatcoolngau@gmail.com"
+          }
+        }
+      }
+    ]
+  },
   "versionId": "85b9dab2-ff90-4ac6-a1ed-9e9fc25321c6",
   "activeVersionId": "85b9dab2-ff90-4ac6-a1ed-9e9fc25321c6",
   "versionCounter": 5,

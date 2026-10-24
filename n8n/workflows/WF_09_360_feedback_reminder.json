@@ -5,21 +5,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "pinData": {
-    "1. Monthly Cronjob (25th)": [
-      {
-        "json": {
-          "timestamp": "2026-10-25T09:00:00.000Z",
-          "userId": "usr-emp-042",
-          "email": "dang.2006.qt@gmail.com",
-          "fullName": "Đặng Tú Nguyên",
-          "period": "2026-Q4",
-          "hasSubmitted": false,
-          "deadline": "28 hàng tháng"
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "nodes": [
     {
       "parameters": {
@@ -43,63 +29,29 @@
     },
     {
       "parameters": {
-        "mode": "manual",
-        "duplicateItems": false,
-        "assignments": {
-          "assignments": [
-            {
-              "id": "wf09-set-uid",
-              "name": "userId",
-              "value": "={{ $json.userId || 'usr-emp-042' }}",
-              "type": "string"
-            },
-            {
-              "id": "wf09-set-email",
-              "name": "email",
-              "value": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
-              "type": "string"
-            },
-            {
-              "id": "wf09-set-name",
-              "name": "fullName",
-              "value": "={{ $json.fullName || 'Đặng Tú Nguyên' }}",
-              "type": "string"
-            },
-            {
-              "id": "wf09-set-period",
-              "name": "period",
-              "value": "={{ $json.period || '2026-Q4' }}",
-              "type": "string"
-            },
-            {
-              "id": "wf09-set-submitted",
-              "name": "hasSubmitted",
-              "value": "={{ $json.hasSubmitted !== undefined ? $json.hasSubmitted : false }}",
-              "type": "boolean"
-            },
-            {
-              "id": "wf09-set-deadline",
-              "name": "deadline",
-              "value": "={{ $json.deadline || '28 hàng tháng' }}",
-              "type": "string"
-            }
-          ]
-        },
-        "includeOtherFields": true,
+        "operation": "executeQuery",
+        "query": "SELECT u.id AS \"userId\", u.email, u.\"fullName\", COALESCE(d.name, 'Toàn công ty') AS department, u.role, '2026-Q4' AS period, '28 hàng tháng' AS deadline, CASE WHEN f.id IS NOT NULL THEN true ELSE false END AS \"hasSubmitted\" FROM users u LEFT JOIN departments d ON d.id = u.\"departmentId\" LEFT JOIN feedbacks f ON f.\"reviewerId\" = u.id AND f.period = '2026-Q4' WHERE u.\"isActive\" = true ORDER BY u.\"fullName\" ASC;",
         "options": {}
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
       "position": [
         -900,
         200
       ],
       "name": "2. Query Pending Reviews",
-      "id": "wf09-query-pending"
+      "id": "wf09-query-pending",
+      "credentials": {
+        "postgres": {
+          "id": "tcz0y2dgXpV2NMDm",
+          "name": "Postgres account"
+        }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(item => {\n  const json = item.json;\n  const uid = json.userId || 'usr-emp-042';\n  const period = json.period || '2026-Q4';\n  const token = Buffer.from(`${uid}:${period}:${Date.now()}`).toString('base64url');\n  return {\n    json: {\n      ...json,\n      token: token,\n      magicLink: `http://localhost:3000/performance?token=${token}&period=${period}`\n    }\n  };\n});"
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const json = item.json;\n  const body = json.body || json;\n\n  // 1. Array of recipients from Web payload\n  if (Array.isArray(body.recipients) && body.recipients.length > 0) {\n    for (const r of body.recipients) {\n      const uid = r.id || r.userId || 'usr-emp';\n      const name = r.name || r.fullName || 'Nhân sự';\n      const email = r.email || r.userEmail || '';\n      const period = r.period || body.period || '2026-Q4';\n      const deadline = r.deadline || body.deadline || '28 hàng tháng';\n      const token = Buffer.from(`${uid}:${period}:${Date.now()}`).toString('base64url');\n      let magicLink = r.magicLink;\n      if (!magicLink || magicLink.includes('localhost')) {\n        const baseUrl = 'http://192.168.2.123:3000';\n        magicLink = `${baseUrl}/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(name)}`;\n      }\n      results.push({\n        json: {\n          userId: uid,\n          fullName: name,\n          email: email,\n          department: r.department || r.dept || 'Toàn công ty',\n          period: period,\n          deadline: deadline,\n          hasSubmitted: r.completed === true || r.hasSubmitted === true ? true : false,\n          token: token,\n          magicLink: magicLink\n        }\n      });\n    }\n  }\n  // 2. Single recipient from Web payload\n  else if (body.recipient) {\n    const r = body.recipient;\n    const uid = r.id || r.userId || 'usr-emp';\n    const name = r.name || r.fullName || 'Nhân sự';\n    const email = r.email || r.userEmail || '';\n    const period = r.period || body.period || '2026-Q4';\n    const deadline = r.deadline || body.deadline || '28 hàng tháng';\n    const token = Buffer.from(`${uid}:${period}:${Date.now()}`).toString('base64url');\n    let magicLink = r.magicLink;\n    if (!magicLink || magicLink.includes('localhost')) {\n      const baseUrl = 'http://192.168.2.123:3000';\n      magicLink = `${baseUrl}/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(name)}`;\n    }\n    results.push({\n      json: {\n        userId: uid,\n        fullName: name,\n        email: email,\n        department: r.department || r.dept || 'Toàn công ty',\n        period: period,\n        deadline: deadline,\n        hasSubmitted: r.completed === true || r.hasSubmitted === true ? true : false,\n        token: token,\n        magicLink: magicLink\n      }\n    });\n  }\n  // 3. Direct user row from PostgreSQL query\n  else if (json.email && json.fullName) {\n    const uid = json.userId || json.id || 'usr-emp';\n    const name = json.fullName || 'Nhân sự';\n    const email = json.email;\n    const period = json.period || '2026-Q4';\n    const deadline = json.deadline || '28 hàng tháng';\n    const token = Buffer.from(`${uid}:${period}:${Date.now()}`).toString('base64url');\n    let magicLink = json.magicLink;\n    if (!magicLink || magicLink.includes('localhost')) {\n      const baseUrl = 'http://192.168.2.123:3000';\n      magicLink = `${baseUrl}/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(name)}`;\n    }\n    results.push({\n      json: {\n        userId: uid,\n        fullName: name,\n        email: email,\n        department: json.department || 'Toàn công ty',\n        period: period,\n        deadline: deadline,\n        hasSubmitted: json.hasSubmitted === true || json.completed === true ? true : false,\n        token: token,\n        magicLink: magicLink\n      }\n    });\n  }\n}\n\nreturn results;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -247,7 +199,7 @@
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
+        "toEmail": "={{ $json.email }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "html",
         "html": "={{ $json.html }}",
@@ -263,8 +215,8 @@
       "id": "wf09-send-email",
       "credentials": {
         "smtp": {
-          "id": "GmailSmtpCred01",
-          "name": "Gmail SMTP"
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
         }
       },
       "continueOnFail": true
@@ -275,7 +227,7 @@
         "url": "https://httpbin.org/post",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  channel: '@hr_management_alerts',\n  text: 'Đã gửi nhắc nhở 360 Feedback cho ' + $json.fullName + ' (' + $json.email + ') kỳ ' + $json.period,\n  status: 'DISPATCHED'\n}) }}",
+        "jsonBody": "={{ JSON.stringify({\n  channel: '@hr_management_alerts',\n  text: 'Đã gửi nhắc nhở 360 Feedback cho ' + $('3. Generate Magic Links').first().json.fullName + ' (' + $('3. Generate Magic Links').first().json.email + ') kỳ ' + $('3. Generate Magic Links').first().json.period,\n  status: 'DISPATCHED'\n}) }}",
         "options": {
           "timeout": 5000
         }
@@ -305,7 +257,7 @@
             {
               "id": "wf09-log-audit",
               "name": "auditNote",
-              "value": "={{ 'Magic review link dispatched to ' + $json.email }}",
+              "value": "={{ 'Magic review link dispatched to ' + $('3. Generate Magic Links').first().json.email }}",
               "type": "string"
             },
             {
@@ -359,6 +311,22 @@
       ],
       "name": "11. Finalize Tracking",
       "id": "wf09-finalize"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "feedback-reminder",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        380
+      ],
+      "name": "1b. Webhook Trigger",
+      "id": "wf09-webhook-trigger",
+      "webhookId": "feedback-reminder"
     }
   ],
   "connections": {
@@ -431,13 +399,7 @@
             "node": "8. Send Magic Link Email",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "8. Send Magic Link Email": {
-      "main": [
-        [
+          },
           {
             "node": "9. Send Telegram/Slack Alert",
             "type": "main",
@@ -446,7 +408,7 @@
         ]
       ]
     },
-    "9. Send Telegram/Slack Alert": {
+    "8. Send Magic Link Email": {
       "main": [
         [
           {
@@ -457,11 +419,27 @@
         ]
       ]
     },
+    "9. Send Telegram/Slack Alert": {
+      "main": [
+        []
+      ]
+    },
     "10. Log Reminder History": {
       "main": [
         [
           {
             "node": "11. Finalize Tracking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b. Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "3. Generate Magic Links",
             "type": "main",
             "index": 0
           }

@@ -13,7 +13,6 @@ import {
   Eye,
   EyeOff,
   X,
-  Sparkles,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -88,16 +87,9 @@ export default function LoginPage() {
           </div>
 
           <div className="pt-2">
-            <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-red-500" />
-              <span>XÁC THỰC TÀI KHOẢN</span>
-            </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Đăng nhập hệ thống
+              Đăng nhập
             </h1>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Nhập email và mật khẩu công việc của bạn để quản trị nhân sự và ATS.
-            </p>
           </div>
         </div>
 

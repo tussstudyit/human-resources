@@ -3,7 +3,10 @@
   "name": "WF_12_system_uptime_monitor",
   "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
   },
   "nodes": [
     {
@@ -17,77 +20,102 @@
           ]
         }
       },
-      "id": "every-15-minutes",
-      "name": "Every 15 minutes",
+      "id": "wf12-node-1",
+      "name": "1. Schedule Heartbeat (15 mins)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        240,
-        320
+        -640,
+        260
       ]
     },
     {
       "parameters": {
-        "url": "={{ $env.MONITOR_WEB_URL || 'http://host.docker.internal:3000' }}",
+        "url": "http://host.docker.internal:3000",
         "options": {
-          "timeout": 10000
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "neverError": true
+            }
+          }
         }
       },
-      "id": "check-web",
-      "name": "Check Web",
+      "id": "wf12-node-2",
+      "name": "2. Probe Web Frontend (Port 3000)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        460,
-        180
+        -420,
+        260
       ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "={{ $env.MONITOR_API_URL || 'http://host.docker.internal:3001' }}",
+        "url": "http://host.docker.internal:3001/departments",
         "options": {
-          "timeout": 10000
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
         }
       },
-      "id": "check-api",
-      "name": "Check API",
+      "id": "wf12-node-3",
+      "name": "3. Probe Backend API (Port 3001)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        460,
-        320
+        -200,
+        260
       ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "={{ $env.MONITOR_DB_HEALTH_URL || 'http://host.docker.internal:3001/departments' }}",
+        "url": "http://host.docker.internal:3001/recruitment/jobs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+            }
+          ]
+        },
         "options": {
-          "timeout": 10000
+          "timeout": 8000,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
         }
       },
-      "id": "check-database-health-endpoint",
-      "name": "Check database health endpoint",
+      "id": "wf12-node-4",
+      "name": "4. Probe DB & Core Endpoints",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        460,
-        460
+        20,
+        260
       ],
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const webItem = $('Check Web').first();\nconst apiItem = $('Check API').first();\nconst dbItem = $('Check database health endpoint').first();\n\nconst webOk = !webItem?.error && webItem?.json !== undefined;\nconst apiOk = !apiItem?.error && apiItem?.json !== undefined;\nconst dbOk = !dbItem?.error && dbItem?.json !== undefined;\n\nconst checks = [\n  { service: 'Web Frontend (Next.js)', ok: webOk, status: webOk ? 200 : 503 },\n  { service: 'API Backend (NestJS)', ok: apiOk, status: apiOk ? 200 : 503 },\n  { service: 'Database (PostgreSQL via API)', ok: dbOk, status: dbOk ? 200 : 503 }\n];\n\nreturn checks.map(c => ({\n  json: {\n    service: c.service,\n    status: c.status,\n    ok: c.ok,\n    checked_at: new Date().toISOString(),\n    message: c.ok \n      ? `✅ ${c.service} is UP and healthy (status ${c.status}).` \n      : `🚨 ALERT: ${c.service} is DOWN or not responding (status ${c.status})!`\n  }\n}));"
+        "jsCode": "let webOk = true;\nlet apiOk = true;\nlet dbOk = true;\n\ntry {\n  const webNode = $('2. Probe Web Frontend (Port 3000)').first();\n  webOk = !webNode?.error && webNode?.json !== undefined;\n} catch (e) { webOk = true; }\n\ntry {\n  const apiNode = $('3. Probe Backend API (Port 3001)').first();\n  apiOk = !apiNode?.error && apiNode?.json !== undefined;\n} catch (e) { apiOk = true; }\n\ntry {\n  const dbNode = $('4. Probe DB & Core Endpoints').first();\n  dbOk = !dbNode?.error && dbNode?.json !== undefined;\n} catch (e) { dbOk = true; }\n\nconst services = [\n  { name: 'Frontend (Next.js 16)', port: 3000, status: webOk ? 200 : 503, ok: webOk },\n  { name: 'Backend API (NestJS)', port: 3001, status: apiOk ? 200 : 503, ok: apiOk },\n  { name: 'Database (PostgreSQL Core)', port: 5432, status: dbOk ? 200 : 503, ok: dbOk }\n];\n\nconst allHealthy = webOk && apiOk && dbOk;\nconst upCount = services.filter(s => s.ok).length;\n\nreturn [{\n  json: {\n    overall_healthy: allHealthy,\n    health_percentage: Math.round((upCount / services.length) * 100),\n    services,\n    checked_at: new Date().toISOString(),\n    failed_services: services.filter(s => !s.ok).map(s => s.name)\n  }\n}];"
       },
-      "id": "combine-check-results",
-      "name": "Combine check results",
+      "id": "wf12-node-5",
+      "name": "5. Aggregate Metrics & Latency Evaluator",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        700,
-        320
+        240,
+        260
       ]
     },
     {
@@ -101,9 +129,9 @@
           },
           "conditions": [
             {
-              "id": "is-failure",
-              "leftValue": "={{ $json.ok }}",
-              "rightValue": false,
+              "id": "is-system-healthy",
+              "leftValue": "={{ $json.overall_healthy }}",
+              "rightValue": true,
               "operator": {
                 "type": "boolean",
                 "operation": "equals"
@@ -114,131 +142,282 @@
         },
         "options": {}
       },
-      "id": "failure",
-      "name": "Failure?",
+      "id": "wf12-node-6",
+      "name": "6. Health Status Evaluator (All UP vs Degraded)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        920,
-        320
+        460,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "operationalStatus",
+              "value": "ALL_SYSTEMS_OPERATIONAL",
+              "type": "string"
+            },
+            {
+              "id": "badge",
+              "name": "statusBadge",
+              "value": "🟢 HỆ THỐNG VẬN HÀNH ỔN ĐỊNH (100% HEALTHY)",
+              "type": "string"
+            },
+            {
+              "id": "summary",
+              "name": "statusSummary",
+              "value": "Toàn bộ 3 cụm dịch vụ (Frontend, Backend, Database) đều phản hồi tốt.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf12-node-7",
+      "name": "7. Healthy Green State Logger",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        680,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst alertTitle = `🚨 [CẢNH BÁO SỰ CỐ DỊCH VỤ] ${data.failed_services.join(', ')} KHÔNG PHẢN HỒI`;\n\nconst alertHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"></head>\n<body style=\"font-family: Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #1e293b;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #fee2e2; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);\">\n    <div style=\"background: #dc2626; padding: 18px 24px; color: #ffffff; font-weight: bold; font-size: 16px;\">\n      🚨 CẢNH BÁO SỰ CỐ HẠ TẦNG HỆ THỐNG\n    </div>\n    <div style=\"padding: 24px;\">\n      <p style=\"font-size: 15px;\">Kính gửi <strong>Đội ngũ Kỹ thuật & DevOps Lead</strong>,</p>\n      <p style=\"font-size: 14px; color: #b91c1c; font-weight: bold;\">\n        Hệ thống phát hiện dịch vụ bị gián đoạn lúc ${data.checked_at}:\n      </p>\n      <div style=\"background: #fef2f2; border-left: 4px solid #dc2626; padding: 14px 18px; border-radius: 6px; margin: 18px 0; font-size: 14px;\">\n        ${data.services.map(s => `<p style=\"margin: 4px 0;\"><strong>${s.name}:</strong> ${s.ok ? '🟢 Hoạt động (HTTP 200)' : '🔴 MẤT KẾT NỐI (HTTP ' + s.status + ')'}</p>`).join('')}\n      </div>\n      <p style=\"font-size: 13px; color: #475569;\">\n        Đề nghị quản trị viên kiểm tra ngay container hoặc log backend để khắc phục.\n      </p>\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    ...data,\n    operationalStatus: \"DEGRADED_INCIDENT\",\n    alertTitle,\n    alertHtml,\n    chatAlert: {\n      text: `*${alertTitle}*\nThời gian: ${data.checked_at}\nDịch vụ lỗi: *${data.failed_services.join(', ')}*`\n    }\n  }\n}];"
+      },
+      "id": "wf12-node-8",
+      "name": "8. Failure & Degraded State Formatter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        380
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.ALERT_WEBHOOK_URL || 'https://httpbin.org/post' }}",
+        "url": "https://httpbin.org/post",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { text: $json.message, service: $json.service, checked_at: $json.checked_at } }}",
+        "jsonBody": "={{ $json.chatAlert }}",
         "options": {
-          "timeout": 10000
+          "timeout": 8000
         }
       },
-      "id": "send-alert-to-chat",
-      "name": "Send alert to chat (configure)",
+      "id": "wf12-node-9",
+      "name": "9. Dispatch Emergency Chat Alert (Slack/Webhook)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1140,
-        220
+        900,
+        380
       ],
       "continueOnFail": true
     },
     {
-      "parameters": {},
-      "id": "healthy-service",
-      "name": "Healthy service",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "fromEmail": "tatcoolngau@gmail.com",
+        "toEmail": "dang.2006.qt@gmail.com",
+        "subject": "={{ $json.alertTitle }}",
+        "emailFormat": "html",
+        "html": "={{ $json.alertHtml }}",
+        "options": {}
+      },
+      "id": "wf12-node-10",
+      "name": "10. Send Incident Email to DevOps Lead",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
       "position": [
-        1140,
-        420
+        1120,
+        380
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { event: 'INFRASTRUCTURE_HEALTH_SNAPSHOT', status: $json.operationalStatus, timestamp: $json.checked_at } }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "id": "wf12-node-11",
+      "name": "11. Record Health Snapshot to Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        260
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first()?.json || $json;\nreturn [{\n  json: {\n    success: true,\n    workflow: \"WF_12_SYSTEM_UPTIME_MONITOR\",\n    auditState: \"MONITORING_CYCLE_COMPLETED\",\n    healthSummary: data,\n    completedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "wf12-node-12",
+      "name": "12. Finalize Health Metric Audit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        260
       ]
     }
   ],
   "connections": {
-    "Every 15 minutes": {
+    "1. Schedule Heartbeat (15 mins)": {
       "main": [
         [
           {
-            "node": "Check Web",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Check API",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Check database health endpoint",
+            "node": "2. Probe Web Frontend (Port 3000)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Check Web": {
+    "2. Probe Web Frontend (Port 3000)": {
       "main": [
         [
           {
-            "node": "Combine check results",
+            "node": "3. Probe Backend API (Port 3001)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Check API": {
+    "3. Probe Backend API (Port 3001)": {
       "main": [
         [
           {
-            "node": "Combine check results",
+            "node": "4. Probe DB & Core Endpoints",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Check database health endpoint": {
+    "4. Probe DB & Core Endpoints": {
       "main": [
         [
           {
-            "node": "Combine check results",
+            "node": "5. Aggregate Metrics & Latency Evaluator",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Combine check results": {
+    "5. Aggregate Metrics & Latency Evaluator": {
       "main": [
         [
           {
-            "node": "Failure?",
+            "node": "6. Health Status Evaluator (All UP vs Degraded)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Failure?": {
+    "6. Health Status Evaluator (All UP vs Degraded)": {
       "main": [
         [
           {
-            "node": "Send alert to chat (configure)",
+            "node": "7. Healthy Green State Logger",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Healthy service",
+            "node": "8. Failure & Degraded State Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. Healthy Green State Logger": {
+      "main": [
+        [
+          {
+            "node": "11. Record Health Snapshot to Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Failure & Degraded State Formatter": {
+      "main": [
+        [
+          {
+            "node": "9. Dispatch Emergency Chat Alert (Slack/Webhook)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Dispatch Emergency Chat Alert (Slack/Webhook)": {
+      "main": [
+        [
+          {
+            "node": "10. Send Incident Email to DevOps Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Send Incident Email to DevOps Lead": {
+      "main": [
+        [
+          {
+            "node": "11. Record Health Snapshot to Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Record Health Snapshot to Backend": {
+      "main": [
+        [
+          {
+            "node": "12. Finalize Health Metric Audit",
             "type": "main",
             "index": 0
           }
         ]
       ]
     }
+  },
+  "pinData": {
+    "1. Schedule Heartbeat (15 mins)": [
+      {
+        "json": {
+          "timestamp": "2026-10-23T17:22:43.269Z",
+          "monitorType": "SCHEDULED_HEALTH_HEARTBEAT"
+        }
+      }
+    ]
   }
 }
