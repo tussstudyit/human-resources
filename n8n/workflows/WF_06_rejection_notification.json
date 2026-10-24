@@ -2,7 +2,7 @@
   "updatedAt": "2026-10-09T14:23:10.000Z",
   "createdAt": "2026-10-09T12:04:22.336Z",
   "id": "Z8f06RejectNotif",
-  "name": "[HR] WF_06 - Gửi Thư Từ Chối Lịch Sự & Lưu Kho Nhân Tài (Điểm < 80%)",
+  "name": "[HR] WF_06 - G\u1eedi Th\u01b0 T\u1eeb Ch\u1ed1i L\u1ecbch S\u1ef1 & L\u01b0u Kho Nh\u00e2n T\u00e0i (\u0110i\u1ec3m < 80%)",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -17,25 +17,90 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        120,
+        100,
         300
       ],
       "id": "wf6-webhook-intake",
-      "name": "Webhook: Tiếp Nhận Hồ Sơ",
+      "name": "Webhook: Ti\u1ebfp Nh\u1eadn H\u1ed3 S\u01a1",
       "webhookId": "rejection-notification-webhook"
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_reject';\nconst candidateName = body.name || body.candidateName || 'Ứng viên';\nconst candidateEmail = body.email || body.candidateEmail || 'test.applicant@company.local';\nconst jobTitle = body.jobTitle || 'Chuyên viên Công nghệ';\nconst matchScore = Number(body.matchScore !== undefined ? body.matchScore : 45);\nconst requireHrApproval = body.requireHrApproval !== undefined ? Boolean(body.requireHrApproval) : false;\n\n// Extract rich skills & tech ATS metadata\nconst parsed = typeof body.parsedSkillsJson === 'object' && body.parsedSkillsJson !== null ? body.parsedSkillsJson : {};\nconst rawSkills = (Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0)\n  ? [...parsed.coreSkills, ...(Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : [])]\n  : (Array.isArray(parsed.skills) ? parsed.skills : (Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson : (Array.isArray(body.skills) ? body.skills : [])));\n\nconst coreSkills = Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0\n  ? parsed.coreSkills\n  : (rawSkills.length > 0 ? rawSkills.slice(0, 3) : ['Chuyên môn chung']);\nconst secondarySkills = Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : (rawSkills.length > 3 ? rawSkills.slice(3) : []);\nconst systemScaleScore = Number(parsed.systemScaleScore || body.systemScaleScore || 60);\nconst githubUrl = parsed.githubUrl || body.githubUrl || null;\n\nconst skills = rawSkills.length > 0 ? rawSkills : ['Kỹ năng chuyên môn'];\nconst skillsStr = Array.isArray(skills) ? skills.join(', ') : String(skills);\nconst companyName = body.companyName || 'Công ty Cổ phần Công nghệ HR Tech Hub';\n\nconst senderName = body.senderName || 'Bộ phận Thu hút & Phát triển Nhân tài';\nconst senderPhone = body.senderPhone || '0901 234 567';\nconst senderEmail = body.senderEmail || 'recruitment@company.com';\n\n// 1. Phân loại chuyên môn cho Talent Pool (Domain-Specific Categorization with Tie-breaking)\nconst techContext = (jobTitle + ' ' + skillsStr).toLowerCase();\n\nconst domainKeywords = {\n  TALENT_POOL_DEVOPS: ['devops', 'cloud', 'docker', 'kubernetes', 'k8s', 'ci/cd', 'aws', 'terraform', 'linux', 'helm', 'sre', 'ansible', 'prometheus', 'grafana'],\n  TALENT_POOL_DATA_AI: ['data', 'ai', 'machine learning', 'deep learning', 'nlp', 'spark', 'pandas', 'pytorch', 'tensorflow', 'llm', 'computer vision', 'mlops', 'data engineer'],\n  TALENT_POOL_FRONTEND: ['frontend', 'react', 'vue', 'angular', 'ui', 'ux', 'next.js', 'css', 'html', 'tailwind', 'redux', 'javascript', 'typescript frontend', 'flutter'],\n  TALENT_POOL_BACKEND: ['backend', 'node', 'nestjs', 'java', 'golang', 'python', 'postgres', 'postgresql', 'mysql', 'sql', 'redis', 'api', 'microservice', 'kafka', 'rabbitmq', 'c#', '.net', 'spring']\n};\n\nconst domainScores = {\n  TALENT_POOL_DEVOPS: 0,\n  TALENT_POOL_DATA_AI: 0,\n  TALENT_POOL_FRONTEND: 0,\n  TALENT_POOL_BACKEND: 0\n};\n\nfor (const [domain, keywords] of Object.entries(domainKeywords)) {\n  for (const kw of keywords) {\n    if (techContext.includes(kw)) {\n      domainScores[domain]++;\n    }\n  }\n}\n\nlet maxScore = 0;\nlet bestDomains = [];\nfor (const [domain, sc] of Object.entries(domainScores)) {\n  if (sc > maxScore) {\n    maxScore = sc;\n    bestDomains = [domain];\n  } else if (sc === maxScore && sc > 0) {\n    bestDomains.push(domain);\n  }\n}\n\nlet talentPoolTag = 'TALENT_POOL_GENERAL';\nlet tieBreakRuleApplied = null;\n\nif (maxScore === 0) {\n  // Không xác định được kỹ năng công nghệ chuyên sâu\n  talentPoolTag = 'TALENT_POOL_GENERAL';\n  tieBreakRuleApplied = 'NO_TECH_KEYWORDS_DETECTED';\n} else if (bestDomains.length === 1) {\n  talentPoolTag = bestDomains[0];\n  tieBreakRuleApplied = 'CLEAR_DOMAIN_WINNER';\n} else {\n  // TIE-BREAK RULE CHO ỨNG VIÊN ĐA NĂNG (FULLSTACK):\n  // 1. Kiểm tra ưu tiên trực tiếp trong Job Title\n  const jobLower = jobTitle.toLowerCase();\n  if (jobLower.includes('frontend') && bestDomains.includes('TALENT_POOL_FRONTEND')) {\n    talentPoolTag = 'TALENT_POOL_FRONTEND';\n    tieBreakRuleApplied = 'TIE_BREAK_JOB_TITLE_FRONTEND';\n  } else if (jobLower.includes('backend') && bestDomains.includes('TALENT_POOL_BACKEND')) {\n    talentPoolTag = 'TALENT_POOL_BACKEND';\n    tieBreakRuleApplied = 'TIE_BREAK_JOB_TITLE_BACKEND';\n  } else if (jobLower.includes('devops') && bestDomains.includes('TALENT_POOL_DEVOPS')) {\n    talentPoolTag = 'TALENT_POOL_DEVOPS';\n    tieBreakRuleApplied = 'TIE_BREAK_JOB_TITLE_DEVOPS';\n  } else if (jobLower.includes('data') && bestDomains.includes('TALENT_POOL_DATA_AI')) {\n    talentPoolTag = 'TALENT_POOL_DATA_AI';\n    tieBreakRuleApplied = 'TIE_BREAK_JOB_TITLE_DATA_AI';\n  } else {\n    // 2. Fullstack chuẩn doanh nghiệp: Backend là nền tảng xử lý logic và kiến trúc dữ liệu cốt lõi (Core System Scale)\n    if (bestDomains.includes('TALENT_POOL_BACKEND')) {\n      talentPoolTag = 'TALENT_POOL_BACKEND';\n      tieBreakRuleApplied = 'TIE_BREAK_FULLSTACK_DEFAULT_TO_BACKEND_CORE_ARCHITECTURE';\n    } else {\n      talentPoolTag = bestDomains[0];\n      tieBreakRuleApplied = 'TIE_BREAK_FIRST_MAX_DOMAIN';\n    }\n  }\n}\n\n// 2. Xây dựng Constructive Career Advice (Góp ý kỹ năng chuyên môn mang tính xây dựng)\nlet careerAdvice = '';\nlet suggestedSkills = [];\n\nif (talentPoolTag === 'TALENT_POOL_BACKEND') {\n  suggestedSkills = ['Thiết kế Microservices & Domain-Driven Design (DDD)', 'Tối ưu hóa Database (Indexing, Query Optimization)', 'Distributed Caching (Redis) & Message Queue (Kafka/RabbitMQ)'];\n  careerAdvice = 'Để nâng cao tính cạnh tranh cho các vị trí Backend quy mô lớn, chúng tôi khuyến khích bạn tiếp tục hoàn thiện kiến trúc hệ thống phân tán, xử lý tải cao (High Concurrency) và thực hành xây dựng các dự án mẫu có tích hợp Cache và Message Queue.';\n} else if (talentPoolTag === 'TALENT_POOL_FRONTEND') {\n  suggestedSkills = ['Tối ưu hóa Core Web Vitals & Web Performance', 'Kiến trúc State Management quy mô lớn', 'Automated Testing (Jest, Playwright) & CI/CD Frontend'];\n  careerAdvice = 'Đối với lộ trình phát triển Frontend chuyên sâu, bạn có thể tập trung nâng cao khả năng tối ưu hiệu năng hiển thị (LCP/FID), thiết kế component có tính tái sử dụng cao và bổ sung kiểm thử tự động (Unit/E2E test).';\n} else if (talentPoolTag === 'TALENT_POOL_DEVOPS') {\n  suggestedSkills = ['Kubernetes Orchestration & Helm', 'Infrastructure as Code (Terraform)', 'Observability & Monitoring (Prometheus/Grafana)'];\n  careerAdvice = 'Để tiến xa hơn trong mảng DevOps/SRE, việc làm chủ quy trình GitOps, tự động hóa hạ tầng bằng Terraform và thiết lập hệ thống giám sát thời gian thực sẽ là lợi thế cạnh tranh vượt trội.';\n} else if (talentPoolTag === 'TALENT_POOL_DATA_AI') {\n  suggestedSkills = ['Triển khai Model lên Production (MLOps)', 'Xử lý dữ liệu lớn (Spark/Kafka)', 'Fine-tuning & RAG với Large Language Models'];\n  careerAdvice = 'Với lĩnh vực Data/AI, các dự án triển khai thực tế trên môi trường Production (MLOps) và kỹ năng kết nối dữ liệu quy mô lớn sẽ giúp hồ sơ của bạn nổi bật hơn nữa trong các vòng tuyển dụng tới.';\n} else {\n  suggestedSkills = ['Xây dựng Portfolio dự án thực chiến trên GitHub', 'Làm quen với các công nghệ Cloud căn bản', 'Rèn luyện giải thuật & System Design cơ bản'];\n  careerAdvice = 'Chúng tôi khuyến khích bạn tiếp tục xây dựng các dự án mẫu hoàn chỉnh trên GitHub để minh chứng trực quan năng lực công nghệ và phương pháp giải quyết vấn đề.';\n}\n\n// Khối HTML góp ý chuyên môn\nconst adviceHtmlBlock = `\n  <div style=\"background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 6px; padding: 16px 18px; margin: 20px 0;\">\n    <h4 style=\"margin: 0 0 8px 0; font-size: 14px; color: #1e293b;\">💡 Góc nhìn chuyên môn từ Ban Tuyển dụng Kỹ thuật:</h4>\n    <p style=\"margin: 0 0 10px 0; font-size: 13px; color: #475569; line-height: 1.5;\">${careerAdvice}</p>\n    <p style=\"margin: 0 0 6px 0; font-size: 12px; font-weight: 600; color: #334155;\">Gợi ý công nghệ & kỹ năng trọng tâm:</p>\n    <ul style=\"margin: 0; padding-left: 18px; font-size: 12px; color: #64748b; line-height: 1.6;\">\n      ${suggestedSkills.map(s => `<li>${s}</li>`).join('')}\n    </ul>\n  </div>\n`;\n\n// 3. Phân loại kịch bản từ chối\nlet scenarioCode = (body.rejectionType || body.stage || '').toUpperCase();\nif (!scenarioCode) {\n  if (matchScore >= 70) {\n    scenarioCode = 'TOP_TALENT';\n  } else if (matchScore >= 50) {\n    scenarioCode = 'POST_INTERVIEW';\n  } else {\n    scenarioCode = 'CV_SCREENING';\n  }\n}\n\nlet emailSubject = '';\nlet emailHtml = '';\nlet scenarioTitle = '';\nlet talentPoolTier = '';\nlet summaryForBackend = '';\n\nconst archivedAt = new Date().toISOString();\n\nif (scenarioCode === 'CV_SCREENING') {\n  scenarioTitle = 'Từ chối vòng duyệt hồ sơ (Screening)';\n  talentPoolTier = 'GENERAL_TALENT_POOL';\n  emailSubject = `Thư phản hồi hồ sơ ứng tuyển vị trí ${jobTitle} – ${companyName}`;\n  \n  const paragraphs = `\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Chúng tôi thuộc bộ phận nhân sự thuộc công ty <strong>${companyName}</strong> nhận được hồ sơ ứng tuyển của bạn. Rất cám ơn vì sự quan tâm của bạn đối với vị trí việc làm <strong>${jobTitle}</strong>.\n    </p>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Tuy nhiên, sau khi xem xét các hồ sơ, chúng tôi nhận thấy định hướng hiện tại của vị trí cần ưu tiên ứng viên có kinh nghiệm chuyên sâu hơn ở một số mảng kỹ thuật cụ thể.\n    </p>\n    ${adviceHtmlBlock}\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 24px;\">\n      Hồ sơ của bạn đã được lưu trữ an toàn trong hệ thống <strong>${talentPoolTag}</strong> của chúng tôi. Chúc bạn may mắn trong quá trình tìm việc và hi vọng sẽ có cơ hội được hợp tác với bạn trong tương lai.\n    </p>\n  `;\n\n  emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #334155 0%, #475569 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">Thân gửi ${candidateName},</p>\n      ${paragraphs}\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${senderName}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${companyName}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  summaryForBackend = `[TỪ CHỐI VÒNG HỒ SƠ]: Đã gửi thư từ chối lịch thiệp & góp ý chuyên môn cho ứng viên ${candidateName}. Lưu vào Talent Pool (${talentPoolTag} - ${talentPoolTier}).`;\n\n} else if (scenarioCode === 'POST_INTERVIEW') {\n  scenarioTitle = 'Từ chối sau vòng phỏng vấn/bài test & Lưu hồ sơ';\n  talentPoolTier = 'RETAINED_TALENT_POOL';\n  emailSubject = `Thư phản hồi kết quả phỏng vấn vị trí ${jobTitle} – ${companyName}`;\n\n  const paragraphs = `\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Một lần nữa cám ơn bạn đã tham gia buổi phỏng vấn cho vị trí việc làm <strong>${jobTitle}</strong> tại <strong>${companyName}</strong>. Với sự cố gắng và nhiệt tình của bạn cùng với những sẻ chia và cam kết sẽ đóng góp của bạn đã được chúng tôi đánh giá rất cao trong buổi phỏng vấn này. Song, sau khi xem xét và bàn bạc lại, chúng tôi chỉ quyết định lựa chọn một số ứng viên có mức độ tương thích cao hơn về kiến trúc hệ thống để tiếp tục đồng hành.\n    </p>\n    ${adviceHtmlBlock}\n    <div style=\"background-color: #f8fafc; border-left: 4px solid #64748b; border-radius: 6px; padding: 16px 18px; margin: 20px 0; font-size: 14px; color: #334155;\">\n      Chúng tôi đã lưu trữ hồ sơ của bạn trong danh bạ nhân tài <strong>${talentPoolTag}</strong> để có thể chủ động liên hệ lại khi có đợt tuyển dụng mới.\n    </div>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 24px;\">\n      Trân trọng và chúc bạn luôn gặp nhiều may mắn và thành công trên con đường sự nghiệp.\n    </p>\n  `;\n\n  emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #1e293b 0%, #334155 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">Mến gửi ${candidateName},</p>\n      ${paragraphs}\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${senderName}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${companyName}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  summaryForBackend = `[TỪ CHỐI SAU PHỎNG VẤN]: Đã gửi thư cảm ơn & góp ý chuyên môn cho ứng viên ${candidateName}. Lưu vào Talent Pool (${talentPoolTag} - ${talentPoolTier}).`;\n\n} else { // TOP_TALENT\n  scenarioTitle = 'Ứng viên tiềm năng cao (hết chỉ tiêu) & Ưu tiên liên hệ';\n  talentPoolTier = 'PRIORITY_TALENT_POOL';\n  emailSubject = `Thư phản hồi & Cảm ơn ứng viên vị trí ${jobTitle} – ${companyName}`;\n\n  const paragraphs = `\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Chúng tôi rất cám ơn bạn đã dành nhiều thời gian để tham gia ứng tuyển vị trí <strong>${jobTitle}</strong> tại <strong>${companyName}</strong>. Chúng tôi thực sự rất ấn tượng với năng lực và những gì bạn đã thể hiện. Tuy nhiên, do số lượng chỉ tiêu đợt này đã đạt giới hạn tối đa, chúng tôi rất tiếc chưa thể đồng hành ngay cùng bạn lúc này.\n    </p>\n    ${adviceHtmlBlock}\n    <div style=\"background-color: #f1f5f9; border-left: 4px solid #2563eb; border-radius: 6px; padding: 16px 18px; margin: 20px 0; font-size: 14px; color: #1e293b;\">\n      Hồ sơ của bạn đã được đưa vào danh sách <strong>Ưu Tiên Hàng Đầu (${talentPoolTag})</strong>. Ngay khi có cơ hội mới, đội ngũ tuyển dụng sẽ chủ động kết nối lại trước tiên. Nếu cần hỗ trợ thêm, bạn có thể liên hệ trực tiếp qua số <strong>${senderPhone}</strong> hoặc email <strong>${senderEmail}</strong>.\n    </div>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 24px;\">\n      Chúc bạn luôn gặt hái nhiều thành công rực rỡ.\n    </p>\n  `;\n\n  emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">${candidateName} thân mến!</p>\n      ${paragraphs}\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${senderName}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${companyName}</p>\n        <p style=\"margin: 4px 0 0 0; font-size: 13px; color: #64748b;\">Hotline: ${senderPhone} | Email: ${senderEmail}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  summaryForBackend = `[PRIORITY TALENT POOL]: Ứng viên ấn tượng ${candidateName} (${matchScore}%). Đã gửi thư cảm ơn & lưu ưu tiên liên hệ (${talentPoolTag} - ${talentPoolTier}).`;\n}\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    companyName,\n    matchScore,\n    skills,\n    coreSkills,\n    secondarySkills,\n    systemScaleScore,\n    githubUrl,\n    scenarioCode,\n    scenarioTitle,\n    talentPoolTier,\n    talentPoolTag,\n    tieBreakRuleApplied,\n    careerAdvice,\n    suggestedSkills,\n    emailSubject,\n    emailHtml,\n    senderName,\n    senderPhone,\n    senderEmail,\n    summaryForBackend,\n    requireHrApproval,\n    archivedAt\n  }\n}];"
+        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_reject';\nconst candidateName = body.name || body.candidateName || '\u1ee8ng vi\u00ean';\nconst candidateEmail = body.email || body.candidateEmail || 'test.applicant@company.local';\nconst jobTitle = body.jobTitle || 'Chuy\u00ean vi\u00ean C\u00f4ng ngh\u1ec7';\nconst matchScore = Number(body.matchScore !== undefined ? body.matchScore : 45);\nconst requireHrApproval = body.requireHrApproval !== undefined ? Boolean(body.requireHrApproval) : false;\n\nconst parsed = typeof body.parsedSkillsJson === 'object' && body.parsedSkillsJson !== null ? body.parsedSkillsJson : {};\nconst rawSkills = (Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0)\n  ? [...parsed.coreSkills, ...(Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : [])]\n  : (Array.isArray(parsed.skills) ? parsed.skills : (Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson : (Array.isArray(body.skills) ? body.skills : [])));\n\nconst coreSkills = Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0\n  ? parsed.coreSkills\n  : (rawSkills.length > 0 ? rawSkills.slice(0, 3) : ['Chuy\u00ean m\u00f4n chung']);\nconst secondarySkills = Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : (rawSkills.length > 3 ? rawSkills.slice(3) : []);\nconst systemScaleScore = Number(parsed.systemScaleScore || body.systemScaleScore || 60);\nconst githubUrl = parsed.githubUrl || body.githubUrl || null;\nconst skills = rawSkills.length > 0 ? rawSkills : ['K\u1ef9 n\u0103ng chuy\u00ean m\u00f4n'];\nconst skillsStr = Array.isArray(skills) ? skills.join(', ') : String(skills);\nconst companyName = body.companyName || 'C\u00f4ng ty C\u1ed5 ph\u1ea7n C\u00f4ng ngh\u1ec7 HR Tech Hub';\n\nconst senderName = body.senderName || 'B\u1ed9 ph\u1eadn Thu h\u00fat & Ph\u00e1t tri\u1ec3n Nh\u00e2n t\u00e0i';\nconst senderPhone = body.senderPhone || '0901 234 567';\nconst senderEmail = body.senderEmail || 'recruitment@company.com';\n\n// Ph\u00e2n lo\u1ea1i k\u1ecbch b\u1ea3n (CV_SCREENING vs POST_INTERVIEW)\nconst stage = (body.stage || body.currentStage || 'CV_SCREENING').toUpperCase();\nconst isPostInterview = stage.includes('INTERVIEW') || stage.includes('PH\u1eceNG V\u1ea4N') || stage.includes('V\u00d2NG 2');\nconst scenarioCode = isPostInterview ? 'POST_INTERVIEW' : 'CV_SCREENING';\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    requireHrApproval,\n    skills,\n    coreSkills,\n    secondarySkills,\n    systemScaleScore,\n    githubUrl,\n    skillsStr,\n    companyName,\n    senderName,\n    senderPhone,\n    senderEmail,\n    scenarioCode,\n    isPostInterview\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        380,
+        350,
+        300
+      ],
+      "id": "wf6-scenario-classifier",
+      "name": "Ph\u00e2n T\u00edch K\u1ecbch B\u1ea3n Lo\u1ea1i H\u1ed3 S\u01a1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst jobTitle = data.jobTitle || '';\nconst skillsStr = data.skillsStr || '';\nconst techContext = (jobTitle + ' ' + skillsStr).toLowerCase();\n\nlet careerAdvice;\nlet suggestedSkills;\n\nif (techContext.includes('front') || techContext.includes('react') || techContext.includes('vue')) {\n  careerAdvice = '\u0110\u1ed1i v\u1edbi l\u1ed9 tr\u00ecnh ph\u00e1t tri\u1ec3n Frontend chuy\u00ean s\u00e2u, b\u1ea1n c\u00f3 th\u1ec3 t\u1eadp trung n\u00e2ng cao kh\u1ea3 n\u0103ng t\u1ed1i \u01b0u hi\u1ec7u n\u0103ng hi\u1ec3n th\u1ecb (LCP/FID), thi\u1ebft k\u1ebf component c\u00f3 t\u00ednh t\u00e1i s\u1eed d\u1ee5ng cao v\u00e0 b\u1ed5 sung ki\u1ec3m th\u1eed t\u1ef1 \u0111\u1ed9ng (Unit/E2E test).';\n  suggestedSkills = [\n    'T\u1ed1i \u01b0u h\u00f3a Core Web Vitals & Web Performance',\n    'Ki\u1ebfn tr\u00fac State Management quy m\u00f4 l\u1edbn',\n    'Automated Testing (Jest, Playwright) & CI/CD Frontend'\n  ];\n} else if (techContext.includes('devops') || techContext.includes('cloud') || techContext.includes('k8s')) {\n  careerAdvice = '\u0110\u1ec3 chu\u1ea9n b\u1ecb t\u1ed1t cho c\u00e1c v\u1ecb tr\u00ed Cloud/DevOps quy m\u00f4 l\u1edbn, ch\u00fang t\u00f4i \u0111\u1ec1 xu\u1ea5t b\u1ea1n c\u1ee7ng c\u1ed1 ki\u1ebfn th\u1ee9c v\u1ec1 Infrastructure as Code (Terraform), thi\u1ebft k\u1ebf h\u1ec7 th\u1ed1ng quan s\u00e1t (Observability/Prometheus/Grafana) v\u00e0 b\u1ea3o m\u1eadt container.';\n  suggestedSkills = [\n    'Infrastructure as Code (Terraform, Ansible)',\n    'Observability Stack (Prometheus, Grafana, OpenTelemetry)',\n    'Kubernetes Security & Service Mesh (Istio)'\n  ];\n} else {\n  careerAdvice = '\u0110\u1ec3 n\u00e2ng cao t\u00ednh c\u1ea1nh tranh cho c\u00e1c v\u1ecb tr\u00ed Backend quy m\u00f4 l\u1edbn, ch\u00fang t\u00f4i khuy\u1ebfn kh\u00edch b\u1ea1n ti\u1ebfp t\u1ee5c ho\u00e0n thi\u1ec7n ki\u1ebfn tr\u00fac h\u1ec7 th\u1ed1ng ph\u00e2n t\u00e1n, x\u1eed l\u00fd t\u1ea3i cao (High Concurrency) v\u00e0 th\u1ef1c h\u00e0nh x\u00e2y d\u1ef1ng c\u00e1c d\u1ef1 \u00e1n m\u1eabu c\u00f3 t\u00edch h\u1ee3p Cache v\u00e0 Message Queue.';\n  suggestedSkills = [\n    'Thi\u1ebft k\u1ebf Microservices & Domain-Driven Design (DDD)',\n    'T\u1ed1i \u01b0u h\u00f3a Database (Indexing, Query Optimization)',\n    'Distributed Caching (Redis) & Message Queue (Kafka/RabbitMQ)'\n  ];\n}\n\nreturn [{\n  json: {\n    ...data,\n    careerAdvice,\n    suggestedSkills\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ],
+      "id": "wf6-constructive-feedback",
+      "name": "Constructive Feedback & Career Advice Engine"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst matchScore = data.matchScore || 0;\nconst techContext = (data.jobTitle + ' ' + (data.skillsStr || '')).toLowerCase();\n\nlet talentPoolTag = 'TALENT_POOL_BACKEND';\nif (techContext.includes('devops') || techContext.includes('cloud')) talentPoolTag = 'TALENT_POOL_DEVOPS';\nelse if (techContext.includes('data') || techContext.includes('ai')) talentPoolTag = 'TALENT_POOL_DATA_AI';\nelse if (techContext.includes('frontend') || techContext.includes('react')) talentPoolTag = 'TALENT_POOL_FRONTEND';\n\nlet candidateLevel = 'Junior';\nif (data.systemScaleScore >= 80 || matchScore >= 75) candidateLevel = 'Senior';\nelse if (data.systemScaleScore >= 65 || matchScore >= 60) candidateLevel = 'Middle';\n\nconst detailedTalentTag = `${talentPoolTag}_${candidateLevel}_${matchScore >= 60 ? 'Priority' : 'General'}`;\nconst talentPoolTier = matchScore >= 70 ? 'PRIORITY_TALENT_POOL' : 'GENERAL_TALENT_POOL';\n\nreturn [{\n  json: {\n    ...data,\n    talentPoolTag,\n    candidateLevel,\n    detailedTalentTag,\n    talentPoolTier\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        850,
+        300
+      ],
+      "id": "wf6-talent-tagging",
+      "name": "Talent Pool Categorization & Level Tagging"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nconst reEngage = new Date();\nreEngage.setDate(reEngage.getDate() + 180);\nconst reEngagementDate = reEngage.toISOString().split('T')[0];\nconst reEngagementFormatted = reEngage.toLocaleDateString('vi-VN', {\n  year: 'numeric',\n  month: 'numeric',\n  day: 'numeric'\n});\n\nreturn [{\n  json: {\n    ...data,\n    reEngagementDate,\n    reEngagementFormatted,\n    reEngagementCycleDays: 180\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        300
+      ],
+      "id": "wf6-re-engagement-scheduler",
+      "name": "Re-engagement Scheduler (Chu K\u1ef3 180 Ng\u00e0y)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst candidateId = data.candidateId;\n\nconst cxSurveyUrl = `http://localhost:3001/recruitment/cx-feedback?candidateId=${candidateId}`;\nconst cxStars = [1, 2, 3, 4, 5].map(score => ({\n  score,\n  label: `${score} Sao`,\n  url: `http://localhost:3001/recruitment/cx-feedback?candidateId=${candidateId}&score=${score}`\n}));\n\nreturn [{\n  json: {\n    ...data,\n    cxSurveyUrl,\n    cxStars\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1350,
+        300
+      ],
+      "id": "wf6-cx-survey-generator",
+      "name": "Candidate Experience (CX) Survey Generator"
+    },
+    {
+      "parameters": {
+        "jsCode": "const intake = $('Candidate Experience (CX) Survey Generator').first()?.json || $json;\n\nconst candidateId = intake.candidateId;\nconst candidateName = intake.candidateName;\nconst candidateEmail = intake.candidateEmail;\nconst jobTitle = intake.jobTitle;\nconst matchScore = intake.matchScore;\nconst skills = intake.skills;\nconst coreSkills = intake.coreSkills;\nconst secondarySkills = intake.secondarySkills;\nconst systemScaleScore = intake.systemScaleScore;\nconst githubUrl = intake.githubUrl;\nconst companyName = intake.companyName;\nconst senderName = intake.senderName;\nconst senderPhone = intake.senderPhone;\nconst senderEmail = intake.senderEmail;\nconst scenarioCode = intake.scenarioCode;\nconst isPostInterview = intake.isPostInterview;\nconst careerAdvice = intake.careerAdvice;\nconst suggestedSkills = intake.suggestedSkills;\nconst talentPoolTag = intake.talentPoolTag;\nconst candidateLevel = intake.candidateLevel;\nconst detailedTalentTag = intake.detailedTalentTag;\nconst talentPoolTier = intake.talentPoolTier;\nconst reEngagementDate = intake.reEngagementDate;\nconst reEngagementFormatted = intake.reEngagementFormatted;\nconst cxSurveyUrl = intake.cxSurveyUrl;\nconst cxStars = intake.cxStars;\n\nconst archivedAt = new Date().toISOString();\n\nconst emailSubject = `Th\u01b0 ph\u1ea3n h\u1ed3i h\u1ed3 s\u01a1 \u1ee9ng tuy\u1ec3n v\u1ecb tr\u00ed ${jobTitle} \u2013 ${companyName}`;\n\nconst suggestedSkillsHtml = (suggestedSkills || []).map(s => `<li style=\"margin-bottom: 6px; color: #334155;\"><strong>${s}</strong></li>`).join('');\n\nconst cxSurveyBlock = `\n<div style=\"margin: 25px 0; padding: 20px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;\">\n  <div style=\"font-weight: 700; color: #166534; font-size: 14px; margin-bottom: 8px;\">\ud83c\udf1f \u0110\u00c1NH GI\u00c1 TR\u1ea2I NGHI\u1ec6M TUY\u1ec2N D\u1ee4NG C\u1ee6A B\u1ea0N</div>\n  <p style=\"font-size: 13px; color: #15803d; margin: 0 0 12px 0;\">\u00dd ki\u1ebfn c\u1ee7a b\u1ea1n gi\u00fap ch\u00fang t\u00f4i c\u1ea3i thi\u1ec7n quy tr\u00ecnh tuy\u1ec3n d\u1ee5ng t\u1ed1t h\u01a1n m\u1ed7i ng\u00e0y:</p>\n  <div style=\"display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;\">\n    <a href=\"${cxSurveyUrl}&score=5\" style=\"display: inline-block; padding: 8px 14px; background: #22c55e; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 12px;\">\u2b50\u2b50\u2b50\u2b50\u2b50 Xu\u1ea5t s\u1eafc</a>\n    <a href=\"${cxSurveyUrl}&score=4\" style=\"display: inline-block; padding: 8px 14px; background: #16a34a; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 12px;\">\u2b50\u2b50\u2b50\u2b50 T\u1ed1t</a>\n    <a href=\"${cxSurveyUrl}&score=3\" style=\"display: inline-block; padding: 8px 14px; background: #ca8a04; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 12px;\">\u2b50\u2b50\u2b50 B\u00ecnh th\u01b0\u1eddng</a>\n  </div>\n</div>`;\n\nconst emailHtml = `\n<!DOCTYPE html>\n<html>\n<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 650px; margin: 0 auto; padding: 20px;\">\n  <div style=\"border-bottom: 2px solid #0070f3; padding-bottom: 12px; margin-bottom: 20px;\">\n    <h2 style=\"color: #0f172a; margin: 0;\">${companyName}</h2>\n    <div style=\"color: #64748b; font-size: 13px;\">B\u1ed9 ph\u1eadn Thu h\u00fat & Ph\u00e1t tri\u1ec3n Nh\u00e2n t\u00e0i</div>\n  </div>\n\n  <p>Ch\u00e0o b\u1ea1n <strong>${candidateName}</strong>,</p>\n\n  <p>L\u1eddi \u0111\u1ea7u ti\u00ean, H\u1ed9i \u0111\u1ed3ng Tuy\u1ec3n d\u1ee5ng t\u1ea1i <strong>${companyName}</strong> xin ch\u00e2n th\u00e0nh c\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 d\u00e0nh th\u1eddi gian v\u00e0 s\u1ef1 quan t\u00e2m \u0111\u1ed1i v\u1edbi v\u1ecb tr\u00ed <strong>${jobTitle}</strong>.</p>\n\n  <p>Sau khi xem x\u00e9t k\u1ef9 l\u01b0\u1ee1ng h\u1ed3 s\u01a1, ch\u00fang t\u00f4i \u0111\u00e1nh gi\u00e1 cao kinh nghi\u1ec7m v\u00e0 ti\u1ec1m n\u0103ng c\u1ee7a b\u1ea1n. Tuy nhi\u00ean, \u1edf giai \u0111o\u1ea1n hi\u1ec7n t\u1ea1i, ti\u00eau ch\u00ed tuy\u1ec3n d\u1ee5ng c\u1ee7a v\u1ecb tr\u00ed n\u00e0y \u0111\u00f2i h\u1ecfi m\u1ee9c \u0111\u1ed9 ph\u00f9 h\u1ee3p cao h\u01a1n v\u1ec1 m\u1ed9t s\u1ed1 y\u00eau c\u1ea7u k\u1ef9 thu\u1eadt \u0111\u1eb7c th\u00f9, v\u00ec v\u1eady ch\u00fang t\u00f4i r\u1ea5t ti\u1ebfc ch\u01b0a th\u1ec3 \u0111\u1ed3ng h\u00e0nh c\u00f9ng b\u1ea1n v\u00e0o v\u00f2ng ti\u1ebfp theo.</p>\n\n  <div style=\"background: #f8fafc; border-left: 4px solid #0070f3; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;\">\n    <div style=\"font-weight: 700; color: #0f172a; margin-bottom: 8px;\">\ud83d\udca1 G\u1ee2I \u00dd PH\u00c1T TRI\u1ec2N NGH\u1ec0 NGHI\u1ec6P D\u00c0NH RI\u00caNG CHO B\u1ea0N:</div>\n    <p style=\"margin: 0 0 10px 0; color: #475569; font-size: 13px;\">${careerAdvice}</p>\n    <div style=\"font-weight: 600; color: #334155; font-size: 13px; margin-bottom: 6px;\">C\u00e1c k\u1ef9 n\u0103ng tr\u1ecdng t\u00e2m n\u00ean c\u1ee7ng c\u1ed1:</div>\n    <ul style=\"margin: 0; padding-left: 20px; font-size: 13px;\">\n      ${suggestedSkillsHtml}\n    </ul>\n  </div>\n\n  <div style=\"background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px; margin: 20px 0; font-size: 13px; color: #1e40af;\">\n    <strong>\ud83d\udce6 L\u01afU TR\u1eee M\u1ea0NG L\u01af\u1edaI NH\u00c2N T\u00c0I (TALENT POOL):</strong><br>\n    H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111\u00e3 \u0111\u01b0\u1ee3c \u0111\u01b0a v\u00e0o kho l\u01b0u tr\u1eef nh\u00e2n t\u00e0i \u01b0u ti\u00ean (M\u00e3: <code>${detailedTalentTag}</code>). Ch\u00fang t\u00f4i s\u1ebd ch\u1ee7 \u0111\u1ed9ng li\u00ean h\u1ec7 l\u1ea1i v\u1edbi b\u1ea1n v\u00e0o chu k\u1ef3 tuy\u1ec3n d\u1ee5ng ti\u1ebfp theo (d\u1ef1 ki\u1ebfn ng\u00e0y <strong>${reEngagementFormatted}</strong>) khi c\u00f3 c\u01a1 h\u1ed9i ph\u00f9 h\u1ee3p.\n  </div>\n\n  ${cxSurveyBlock}\n\n  <p>Ch\u00fac b\u1ea1n lu\u00f4n g\u1eb7t h\u00e1i nhi\u1ec1u th\u00e0nh c\u00f4ng r\u1ef1c r\u1ee1 tr\u00ean con \u0111\u01b0\u1eddng s\u1ef1 nghi\u1ec7p!</p>\n\n  <div style=\"margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 13px; color: #64748b;\">\n    <strong>${senderName}</strong><br>\n    ${companyName}<br>\n    Hotline: ${senderPhone} | Email: ${senderEmail}\n  </div>\n</body>\n</html>`;\n\nconst candidateEmailPacket = {\n  to: candidateEmail,\n  subject: emailSubject,\n  html: emailHtml\n};\n\nconst internalSquadBriefing = {\n  candidateId,\n  candidateName,\n  candidateEmail,\n  jobTitle,\n  matchScore,\n  scenarioCode,\n  talentPoolTag,\n  candidateLevel,\n  detailedTalentTag,\n  reEngagementDate,\n  archivedAt\n};\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    coreSkills,\n    secondarySkills,\n    systemScaleScore,\n    githubUrl,\n    careerAdvice,\n    scenarioCode,\n    talentPoolTier,\n    talentPoolTag,\n    detailedTalentTag,\n    reEngagementDate,\n    candidateLevel,\n    suggestedSkills,\n    archivedAt,\n    summaryForBackend: `[TALENT POOL ARCHIVED]: ${detailedTalentTag} - Chu k\u1ef3 t\u00e1i li\u00ean h\u1ec7: ${reEngagementFormatted}.`,\n    candidateEmailPacket,\n    internalSquadBriefing\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
         300
       ],
       "id": "wf6-classifier-engine",
-      "name": "Phân Loại Kịch Bản & Soạn Thư Từ Chối"
+      "name": "Ph\u00e2n Lo\u1ea1i K\u1ecbch B\u1ea3n & So\u1ea1n Th\u01b0 T\u1eeb Ch\u1ed1i"
     },
     {
       "parameters": {
@@ -49,11 +114,11 @@
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        680,
-        160
+        1900,
+        100
       ],
       "id": "wf6-send-rejection-email",
-      "name": "Stream 1: Gửi Email Thật Qua Gmail SMTP",
+      "name": "Stream 1: G\u1eedi Email Th\u1eadt Qua Gmail SMTP",
       "credentials": {
         "smtp": {
           "id": "GmailSmtpCred01",
@@ -64,16 +129,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('Phân Loại Kịch Bản & Soạn Thư Từ Chối').first().json;\n\nreturn [{\n  json: {\n    channel: 'HR_TALENT_POOL_REGISTRY',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    scenario: data.scenarioCode,\n    scenarioTitle: data.scenarioTitle,\n    talentPoolTier: data.talentPoolTier,\n    talentPoolTag: data.talentPoolTag,\n    careerAdvice: data.careerAdvice,\n    suggestedSkills: data.suggestedSkills,\n    archivedAt: data.archivedAt,\n    retentionPolicy: data.scenarioCode === 'TOP_TALENT' ? 'Ưu tiên liên hệ lại ngay khi có đợt tuyển dụng mới' : 'Lưu trữ hồ sơ dự phòng chuyên môn',\n    status: 'RECORDED_IN_TALENT_POOL'\n  }\n}];"
+        "jsCode": "const data = $('Ph\u00e2n Lo\u1ea1i K\u1ecbch B\u1ea3n & So\u1ea1n Th\u01b0 T\u1eeb Ch\u1ed1i').first().json;\n\nreturn [{\n  json: {\n    channel: 'HR_TALENT_POOL_REGISTRY',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    scenario: data.scenarioCode,\n    scenarioTitle: data.scenarioTitle,\n    talentPoolTier: data.talentPoolTier,\n    talentPoolTag: data.talentPoolTag,\n    careerAdvice: data.careerAdvice,\n    suggestedSkills: data.suggestedSkills,\n    archivedAt: data.archivedAt,\n    retentionPolicy: data.scenarioCode === 'TOP_TALENT' ? '\u01afu ti\u00ean li\u00ean h\u1ec7 l\u1ea1i ngay khi c\u00f3 \u0111\u1ee3t tuy\u1ec3n d\u1ee5ng m\u1edbi' : 'L\u01b0u tr\u1eef h\u1ed3 s\u01a1 d\u1ef1 ph\u00f2ng chuy\u00ean m\u00f4n',\n    status: 'RECORDED_IN_TALENT_POOL'\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        680,
-        440
+        1900,
+        250
       ],
       "id": "wf6-hr-briefing",
-      "name": "Stream 2: Gói Báo Cáo Phân Loại Cho HR Squad"
+      "name": "Stream 2: G\u00f3i B\u00e1o C\u00e1o Ph\u00e2n Lo\u1ea1i Cho HR Squad"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    success: true,\n    channel: '#talent-pool-archive',\n    alertType: 'TALENT_POOL_INGESTION',\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    talentTag: data.detailedTalentTag || data.talentPoolTag,\n    candidateLevel: data.candidateLevel,\n    reEngagementDate: data.reEngagementDate,\n    cxSurveyUrl: data.cxSurveyUrl,\n    timestamp: new Date().toISOString()\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        400
+      ],
+      "id": "wf6-slack-talent-alert",
+      "name": "Stream 3: B\u00e1o C\u00e1o L\u01b0u Kho Nh\u00e2n T\u00e0i T\u01b0\u01a1ng Lai (Slack Alert)"
     },
     {
       "parameters": {
@@ -94,31 +172,31 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"matchScore\": {{ $json.matchScore }},\n  \"summary\": {{ JSON.stringify($json.summaryForBackend) }},\n  \"parsedSkillsJson\": {\n    \"skills\": {{ JSON.stringify($json.skills) }},\n    \"coreSkills\": {{ JSON.stringify($json.coreSkills || []) }},\n    \"secondarySkills\": {{ JSON.stringify($json.secondarySkills || []) }},\n    \"systemScaleScore\": {{ $json.systemScaleScore || 60 }},\n    \"githubUrl\": {{ JSON.stringify($json.githubUrl || null) }},\n    \"careerAdvice\": {{ JSON.stringify($json.careerAdvice) }},\n    \"talentPool\": {\n      \"status\": \"ARCHIVED\",\n      \"scenario\": {{ JSON.stringify($json.scenarioCode) }},\n      \"tier\": {{ JSON.stringify($json.talentPoolTier) }},\n      \"tag\": {{ JSON.stringify($json.talentPoolTag) }},\n      \"suggestedSkills\": {{ JSON.stringify($json.suggestedSkills) }},\n      \"archivedAt\": {{ JSON.stringify($json.archivedAt) }},\n      \"emailSent\": true\n    }\n  }\n}",
+        "jsonBody": "={\n  \"matchScore\": {{ $json.matchScore }},\n  \"summary\": {{ JSON.stringify($json.summaryForBackend) }},\n  \"parsedSkillsJson\": {\n    \"skills\": {{ JSON.stringify($json.skills) }},\n    \"coreSkills\": {{ JSON.stringify($json.coreSkills || []) }},\n    \"secondarySkills\": {{ JSON.stringify($json.secondarySkills || []) }},\n    \"systemScaleScore\": {{ $json.systemScaleScore || 60 }},\n    \"githubUrl\": {{ JSON.stringify($json.githubUrl || null) }},\n    \"careerAdvice\": {{ JSON.stringify($json.careerAdvice) }},\n    \"talentPool\": {\n      \"status\": \"ARCHIVED\",\n      \"scenario\": {{ JSON.stringify($json.scenarioCode) }},\n      \"tier\": {{ JSON.stringify($json.talentPoolTier) }},\n      \"tag\": {{ JSON.stringify($json.talentPoolTag) }},\n      \"detailedTalentTag\": {{ JSON.stringify($json.detailedTalentTag) }},\n      \"reEngagementDate\": {{ JSON.stringify($json.reEngagementDate) }},\n      \"candidateLevel\": {{ JSON.stringify($json.candidateLevel) }},\n      \"cxSurveyUrl\": {{ JSON.stringify(\"http://localhost:3001/recruitment/cx-feedback?candidateId=\" + $json.candidateId) }},\n      \"suggestedSkills\": {{ JSON.stringify($json.suggestedSkills) }},\n      \"archivedAt\": {{ JSON.stringify($json.archivedAt) }},\n      \"emailSent\": true\n    }\n  }\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        980,
-        300
+        1900,
+        550
       ],
       "id": "wf6-backend-sync",
-      "name": "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend",
+      "name": "Stream 4: \u0110\u1ed3ng B\u1ed9 L\u1ecbch S\u1eed V\u00e0o NestJS Backend",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "const data = $('Phân Loại Kịch Bản & Soạn Thư Từ Chối').first().json;\nconst backendSyncResult = $json;\n\nreturn [{\n  json: {\n    success: true,\n    action: data.requireHrApproval ? \"TALENT_POOL_ARCHIVED_PENDING_HR_APPROVAL\" : \"CANDIDATE_REJECTION_AND_TALENT_POOL_ARCHIVED\",\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    scenario: {\n      code: data.scenarioCode,\n      title: data.scenarioTitle,\n      tier: data.talentPoolTier\n    },\n    talentPoolTag: data.talentPoolTag,\n    tieBreakRuleApplied: data.tieBreakRuleApplied,\n    careerAdvice: data.careerAdvice,\n    suggestedSkills: data.suggestedSkills,\n    emailDelivery: {\n      recipient: data.candidateEmail,\n      subject: data.emailSubject,\n      smtpStatus: data.requireHrApproval ? \"HELD_FOR_HR_REVIEW\" : \"DISPATCHED\"\n    },\n    backendSync: {\n      status: backendSyncResult?.id ? \"SYNCED_TO_DATABASE\" : \"STANDALONE_SIMULATED\",\n      updatedCandidateId: backendSyncResult?.id || data.candidateId\n    },\n    archivedAt: data.archivedAt\n  }\n}];"
+        "jsCode": "const data = $('Ph\u00e2n Lo\u1ea1i K\u1ecbch B\u1ea3n & So\u1ea1n Th\u01b0 T\u1eeb Ch\u1ed1i').first().json;\nconst backendSyncResult = $json;\n\nreturn [{\n  json: {\n    success: true,\n    action: data.requireHrApproval ? \"TALENT_POOL_ARCHIVED_PENDING_HR_APPROVAL\" : \"CANDIDATE_REJECTION_AND_TALENT_POOL_ARCHIVED\",\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    scenario: {\n      code: data.scenarioCode,\n      title: data.scenarioTitle,\n      tier: data.talentPoolTier\n    },\n    talentPoolTag: data.talentPoolTag,\n    tieBreakRuleApplied: data.tieBreakRuleApplied,\n    careerAdvice: data.careerAdvice,\n    suggestedSkills: data.suggestedSkills,\n    emailDelivery: {\n      recipient: data.candidateEmail,\n      subject: data.emailSubject,\n      smtpStatus: data.requireHrApproval ? \"HELD_FOR_HR_REVIEW\" : \"DISPATCHED\"\n    },\n    backendSync: {\n      status: backendSyncResult?.id ? \"SYNCED_TO_DATABASE\" : \"STANDALONE_SIMULATED\",\n      updatedCandidateId: backendSyncResult?.id || data.candidateId\n    },\n    archivedAt: data.archivedAt\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1260,
+        2200,
         300
       ],
       "id": "wf6-consolidator",
-      "name": "Tổng Hợp Kết Quả (Consolidator)"
+      "name": "T\u1ed5ng H\u1ee3p K\u1ebft Qu\u1ea3 (Consolidator)"
     },
     {
       "parameters": {
@@ -129,62 +207,170 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1520,
+        2450,
         300
       ],
       "id": "wf6-response",
-      "name": "Phản Hồi Webhook Kết Quả"
+      "name": "Ph\u1ea3n H\u1ed3i Webhook K\u1ebft Qu\u1ea3"
+    },
+    {
+      "parameters": {
+        "content": "## GIAI \u0110O\u1ea0N 1: PH\u00c2N LO\u1ea0I K\u1ecaCH B\u1ea2N & T\u01af V\u1ea4N H\u01af\u1edaNG NGHI\u1ec6P (CONSTRUCTIVE ADVICE)\n- Ti\u1ebfp nh\u1eadn h\u1ed3 s\u01a1 ch\u01b0a ph\u00f9 h\u1ee3p (V\u00f2ng CV ho\u1eb7c Ph\u1ecfng v\u1ea5n)\n- Ph\u00e2n t\u00edch \u0111i\u1ec3m s\u00e1ng v\u00e0 3 k\u1ef9 n\u0103ng c\u00f4ng ngh\u1ec7 c\u1ea7n c\u1ea3i thi\u1ec7n\n- So\u1ea1n l\u1eddi khuy\u00ean h\u01b0\u1edbng nghi\u1ec7p ch\u00e2n th\u00e0nh, x\u00e2y d\u1ef1ng th\u01b0\u01a1ng hi\u1ec7u nh\u00e0 tuy\u1ec3n d\u1ee5ng",
+        "height": 450,
+        "width": 700,
+        "color": 2
+      },
+      "id": "sticky-wf6-p1",
+      "name": "Sticky Note Phase 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        50,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## GIAI \u0110O\u1ea0N 2: PH\u00c2N H\u1ea0NG NH\u00c2N T\u00c0I & THI\u1ebeT L\u1eacP CHU K\u1ef2 (TALENT POOL & RE-ENGAGE)\n- Ph\u00e2n lo\u1ea1i Domain & g\u00e1n Tag nh\u00e2n t\u00e0i chi ti\u1ebft (Level, YoE, Tech Stack)\n- T\u1ef1 \u0111\u1ed9ng l\u1eadp l\u1ecbch t\u00e1i li\u00ean h\u1ec7 sau 180 ng\u00e0y (6 th\u00e1ng)\n- T\u1ea1o link kh\u1ea3o s\u00e1t tr\u1ea3i nghi\u1ec7m \u1ee9ng vi\u00ean (CX Survey 1-5 sao)",
+        "height": 450,
+        "width": 750,
+        "color": 4
+      },
+      "id": "sticky-wf6-p2",
+      "name": "Sticky Note Phase 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        800,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## GIAI \u0110O\u1ea0N 3: CH\u0102M S\u00d3C \u1ee8NG VI\u00caN & \u0110\u1ed2NG B\u1ed8 N\u1ed8I B\u1ed8 (MULTI-CHANNEL DISPATCH)\n- G\u1eedi email t\u1eeb ch\u1ed1i mang t\u00ednh x\u00e2y d\u1ef1ng k\u00e8m kh\u1ea3o s\u00e1t tr\u1ea3i nghi\u1ec7m\n- B\u00e1o c\u00e1o ph\u00e2n lo\u1ea1i h\u1ed3 s\u01a1 cho HR Squad ph\u1ee5 tr\u00e1ch sourcing t\u01b0\u01a1ng lai\n- B\u1eafn Alert l\u01b0u kho nh\u00e2n t\u00e0i ti\u1ec1m n\u0103ng v\u00e0o k\u00eanh Slack HR\n- \u0110\u1ed3ng b\u1ed9 l\u1ecbch s\u1eed & chu k\u1ef3 6 th\u00e1ng v\u00e0o PostgreSQL qua NestJS",
+        "height": 680,
+        "width": 1150,
+        "color": 3
+      },
+      "id": "sticky-wf6-p3",
+      "name": "Sticky Note Phase 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1550,
+        20
+      ]
     }
   ],
   "connections": {
-    "Webhook: Tiếp Nhận Hồ Sơ": {
+    "Webhook: Ti\u1ebfp Nh\u1eadn H\u1ed3 S\u01a1": {
       "main": [
         [
           {
-            "node": "Phân Loại Kịch Bản & Soạn Thư Từ Chối",
+            "node": "Ph\u00e2n T\u00edch K\u1ecbch B\u1ea3n Lo\u1ea1i H\u1ed3 S\u01a1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Phân Loại Kịch Bản & Soạn Thư Từ Chối": {
+    "Ph\u00e2n T\u00edch K\u1ecbch B\u1ea3n Lo\u1ea1i H\u1ed3 S\u01a1": {
       "main": [
         [
           {
-            "node": "Stream 1: Gửi Email Thật Qua Gmail SMTP",
+            "node": "Constructive Feedback & Career Advice Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Constructive Feedback & Career Advice Engine": {
+      "main": [
+        [
+          {
+            "node": "Talent Pool Categorization & Level Tagging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Talent Pool Categorization & Level Tagging": {
+      "main": [
+        [
+          {
+            "node": "Re-engagement Scheduler (Chu K\u1ef3 180 Ng\u00e0y)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Re-engagement Scheduler (Chu K\u1ef3 180 Ng\u00e0y)": {
+      "main": [
+        [
+          {
+            "node": "Candidate Experience (CX) Survey Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate Experience (CX) Survey Generator": {
+      "main": [
+        [
+          {
+            "node": "Ph\u00e2n Lo\u1ea1i K\u1ecbch B\u1ea3n & So\u1ea1n Th\u01b0 T\u1eeb Ch\u1ed1i",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ph\u00e2n Lo\u1ea1i K\u1ecbch B\u1ea3n & So\u1ea1n Th\u01b0 T\u1eeb Ch\u1ed1i": {
+      "main": [
+        [
+          {
+            "node": "Stream 1: G\u1eedi Email Th\u1eadt Qua Gmail SMTP",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Stream 2: Gói Báo Cáo Phân Loại Cho HR Squad",
+            "node": "Stream 2: G\u00f3i B\u00e1o C\u00e1o Ph\u00e2n Lo\u1ea1i Cho HR Squad",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend",
+            "node": "Stream 3: B\u00e1o C\u00e1o L\u01b0u Kho Nh\u00e2n T\u00e0i T\u01b0\u01a1ng Lai (Slack Alert)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Stream 4: \u0110\u1ed3ng B\u1ed9 L\u1ecbch S\u1eed V\u00e0o NestJS Backend",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend": {
+    "Stream 4: \u0110\u1ed3ng B\u1ed9 L\u1ecbch S\u1eed V\u00e0o NestJS Backend": {
       "main": [
         [
           {
-            "node": "Tổng Hợp Kết Quả (Consolidator)",
+            "node": "T\u1ed5ng H\u1ee3p K\u1ebft Qu\u1ea3 (Consolidator)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Tổng Hợp Kết Quả (Consolidator)": {
+    "T\u1ed5ng H\u1ee3p K\u1ebft Qu\u1ea3 (Consolidator)": {
       "main": [
         [
           {
-            "node": "Phản Hồi Webhook Kết Quả",
+            "node": "Ph\u1ea3n H\u1ed3i Webhook K\u1ebft Qu\u1ea3",
             "type": "main",
             "index": 0
           }
@@ -216,7 +402,7 @@
         "updatedAt": "2026-09-30T14:32:33.272Z",
         "createdAt": "2026-09-30T13:39:28.905Z",
         "id": "6fLB1uBc0gD1ogBQ",
-        "name": "Đoàn Huy <doanthanhhuy1309@gmail.com>",
+        "name": "\u0110o\u00e0n Huy <doanthanhhuy1309@gmail.com>",
         "type": "personal",
         "icon": null,
         "description": null,
