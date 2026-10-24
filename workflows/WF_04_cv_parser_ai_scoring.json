@@ -2,7 +2,7 @@
   "updatedAt": "2026-10-09T13:08:28.000Z",
   "createdAt": "2026-09-30T14:47:45.726Z",
   "id": "SPbqZlQMSoHpoqRx",
-  "name": "[HR] WF_04 - Tiếp Nhận, Phân Tích & Chấm Điểm CV Bằng AI",
+  "name": "[HR] WF_04 - Ti\u1ebfp Nh\u1eadn, Ph\u00e2n T\u00edch & Ch\u1ea5m \u0110i\u1ec3m CV B\u1eb1ng AI",
   "description": null,
   "active": true,
   "isArchived": false,
@@ -16,7 +16,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -1400,
+        -1600,
         0
       ],
       "id": "60848a88-ad3f-45b8-95c3-a078c6a15523",
@@ -46,7 +46,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1150,
+        -1350,
         0
       ],
       "id": "49501ac2-ee66-4298-b7db-7849c6d019b3",
@@ -63,7 +63,7 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        -900,
+        -1100,
         0
       ],
       "id": "274c2852-4308-434b-9362-8e3581816382",
@@ -96,7 +96,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -650,
+        -850,
         0
       ],
       "id": "976fb667-f639-42d2-b6f7-5bf51da6b640",
@@ -104,12 +104,56 @@
     },
     {
       "parameters": {
-        "jsCode": "const webhookData = $('Webhook: Receive CV Application').first().json.body || $('Webhook: Receive CV Application').first().json;\nconst candidateId = webhookData.candidateId;\nconst candidateName = webhookData.candidateName || webhookData.name || 'Ứng viên';\nconst candidateEmail = webhookData.candidateEmail || webhookData.email || 'candidate@example.com';\nconst jobTitle = webhookData.jobTitle || 'Kỹ sư phần mềm';\nconst jobDescription = webhookData.jobDescription || '';\nconst jobRequirements = webhookData.jobRequirements || '';\nconst cvText = ($json.text || '').trim();\n\nconst promptText = `Bạn là Trưởng ban Tuyển dụng Công nghệ (Lead Technical Recruiter) và Chuyên gia Đánh giá Kỹ thuật (Technical Screener) cấp cao của một tập đoàn công nghệ lớn.\nNhiệm vụ của bạn là thẩm định sâu hồ sơ ứng viên công nghệ thông tin so với bản mô tả công việc (JD) dưới đây theo tiêu chuẩn ATS doanh nghiệp thực chiến.\n\n=== BẢN MÔ TẢ CÔNG VIỆC (JD) ===\n- Vị trí: ${jobTitle}\n- Mô tả công việc:\n${jobDescription}\n- Yêu cầu ứng viên:\n${jobRequirements}\n\n=== NỘI DUNG CV CỦA ỨNG VIÊN ===\n${cvText}\n\n=== HƯỚNG DẪN THẨM ĐỊNH KỸ THUẬT CHUYÊN SÂU (ENTERPRISE TECH ATS RUBRICS) ===\n1. coreSkills: Mảng chuỗi các công nghệ ứng viên có kinh nghiệm thực chiến chuyên sâu (đã làm dự án >= 2 năm hoặc là trọng tâm dự án).\n2. secondarySkills: Mảng chuỗi các công nghệ phụ trợ, công cụ bổ trợ hoặc mới học/tiếp cận cơ bản.\n3. systemScaleScore: Điểm từ 0 đến 100 đo lường tư duy kiến trúc, năng lực chịu tải cao, microservices, tối ưu CSDL, caching, message queue hoặc CI/CD dựa trên mô tả dự án trong CV.\n4. practicalProjectScore: Điểm từ 0 đến 100 đo lường chiều sâu và độ thực chiến của các dự án đã triển khai (đã xử lý production, tối ưu hiệu năng, caching, high traffic, CI/CD, database design vs chỉ làm pet project/đồ án).\n5. practicalProjectHighlights: Mảng gồm 2 đến 3 gạch đầu dòng tóm tắt các điểm sáng kỹ thuật thực tế nhất của ứng viên trong các dự án đã làm.\n6. salaryBenchmark: Ước tính khoảng lương thị trường tại Việt Nam cho ứng viên dựa trên tech stack, số năm kinh nghiệm và vị trí. Trả về object:\n   - \"minSalary\": số nguyên VNĐ (ví dụ: 25000000)\n   - \"maxSalary\": số nguyên VNĐ (ví dụ: 35000000)\n   - \"currency\": \"VND\"\n   - \"level\": \"Fresher\" | \"Junior\" | \"Middle\" | \"Senior\" | \"Lead\"\n   - \"rationale\": \"Căn cứ định giá mức lương dựa trên kinh nghiệm và kỹ năng thực tế.\"\n7. githubUrl: Tìm và trích xuất link GitHub của ứng viên (ví dụ: \"https://github.com/abc\"). Nếu không có trong CV, trả về null.\n8. githubAnalysis: Nếu có link GitHub hoặc đề cập đến open-source/repo trong CV, phân tích ngắn gọn 1 câu về tiềm năng code thực chiến; nếu không có trả về null.\n9. portfolioUrl: Link Portfolio, Website cá nhân, Tech blog hoặc LinkedIn. Nếu không có trả về null.\n10. cultureFit: Object gồm:\n   - \"agileScrum\": true/false (có kinh nghiệm làm việc theo mô hình Agile/Scrum hay không)\n   - \"problemSolving\": 1 câu đánh giá tư duy giải quyết vấn đề\n   - \"ownershipMindset\": 1 câu đánh giá tinh thần trách nhiệm với sản phẩm\n11. keywordStuffingFlag: Boolean (true nếu phát hiện ứng viên nhồi nhét từ khóa nhưng thiếu mô tả dự án thực tế, ngược lại false).\n12. keywordStuffingReason: Chuỗi giải thích nếu keywordStuffingFlag = true, ngược lại null.\n13. interviewFocusPoints: Mảng gồm 3 đến 5 câu hỏi/chủ đề kỹ thuật nghi vấn hoặc điểm cần Tech Lead phỏng vấn sâu.\n14. matchScore: Điểm phù hợp tổng thể từ 0 đến 100.\n15. techScore: Điểm chuyên môn kỹ thuật từ 0 đến 100.\n16. experienceYears: Số năm kinh nghiệm làm việc thực tế liên quan (số nguyên >= 0).\n17. summary: Nhận xét đánh giá chuyên môn sắc bén bằng tiếng Việt (3-5 câu), nêu rõ điểm mạnh kỹ thuật và điểm cần thẩm định thêm.\n18. softSkills: Mảng kỹ năng mềm, làm việc nhóm, giao tiếp kỹ thuật.\n19. recommendation: \"FAST_TRACK_INTERVIEW\" (nếu matchScore >= 80), \"MANUAL_REVIEW\" (nếu 50 <= matchScore < 80), \"TALENT_POOL_ARCHIVE\" (nếu matchScore < 50).\n\nBẮT BUỘC: Bạn CHỈ ĐƯỢC PHÉP trả về DUY NHẤT một chuỗi JSON thuần (STRICT JSON), KHÔNG kèm bất kỳ định dạng markdown nào khác ngoài cấu trúc JSON:\n{\n  \"coreSkills\": [\"NestJS\", \"TypeScript\", \"PostgreSQL\"],\n  \"secondarySkills\": [\"Docker\", \"Redis\", \"AWS\"],\n  \"systemScaleScore\": 85,\n  \"practicalProjectScore\": 82,\n  \"practicalProjectHighlights\": [\"Tối ưu truy vấn PostgreSQL và thiết kế kiến trúc caching Redis\", \"Triển khai CI/CD với Docker trên hạ tầng AWS\"],\n  \"salaryBenchmark\": {\n    \"minSalary\": 28000000,\n    \"maxSalary\": 38000000,\n    \"currency\": \"VND\",\n    \"level\": \"Middle\",\n    \"rationale\": \"Mức lương thị trường cho 3-4 năm kinh nghiệm với NestJS/TypeScript/AWS tại TP.HCM/Hà Nội\"\n  },\n  \"githubUrl\": \"https://github.com/username\",\n  \"githubAnalysis\": \"Profile có dự án thực tế về backend microservices và code sạch\",\n  \"portfolioUrl\": null,\n  \"cultureFit\": {\n    \"agileScrum\": true,\n    \"problemSolving\": \"Chủ động đào sâu giải quyết vấn đề hiệu năng\",\n    \"ownershipMindset\": \"Có tinh thần chịu trách nhiệm cao về độ tin cậy của dịch vụ\"\n  },\n  \"keywordStuffingFlag\": false,\n  \"keywordStuffingReason\": null,\n  \"interviewFocusPoints\": [\"Hỏi sâu về kinh nghiệm tối ưu truy vấn PostgreSQL\", \"Kiến trúc microservices\"],\n  \"matchScore\": 88,\n  \"techScore\": 90,\n  \"experienceYears\": 4,\n  \"summary\": \"Ứng viên có nền tảng vững vàng về Backend...\",\n  \"softSkills\": [\"Làm việc nhóm Agile\", \"Giao tiếp kỹ thuật tốt\"],\n  \"recommendation\": \"FAST_TRACK_INTERVIEW\"\n}`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    cvText,\n    promptText\n  }\n}];"
+        "jsCode": "const webhookData = $('Webhook: Receive CV Application').first().json.body || $('Webhook: Receive CV Application').first().json;\nconst candidateId = webhookData.candidateId;\n\nreturn [{\n  json: {\n    candidateId,\n    matchScore: 0,\n    experienceYears: 0,\n    summary: \"CV tr\u1ed1ng ho\u1eb7c kh\u00f4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c n\u1ed9i dung v\u0103n b\u1ea3n (file PDF d\u1ea1ng \u1ea3nh scan ho\u1eb7c kh\u00f4ng c\u00f3 ch\u1eef).\",\n    parsedSkillsJson: [],\n    errorFlag: 'EMPTY_OR_SCANNED_PDF'\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -400,
+        -600,
+        250
+      ],
+      "id": "6f3d2492-bb16-4672-aac4-0322de17f632",
+      "name": "Nh\u00e1nh CV L\u1ed7i: B\u00e1o C\u00e1o Kh\u00f4ng C\u00f3 D\u1eef Li\u1ec7u"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:3001/recruitment/candidates/{{ $json.candidateId }}/ai-evaluation",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"matchScore\": 0,\n  \"experienceYears\": 0,\n  \"summary\": {{ JSON.stringify($json.summary) }},\n  \"parsedSkillsJson\": []\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -350,
+        250
+      ],
+      "id": "err-update-backend",
+      "name": "Update Backend (CV L\u1ed7i)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $('Webhook: Receive CV Application').first().json.body || $('Webhook: Receive CV Application').first().json;\nconst candidateId = webhookData.candidateId;\nconst candidateName = webhookData.candidateName || webhookData.name || '\u1ee8ng vi\u00ean';\nconst candidateEmail = webhookData.candidateEmail || webhookData.email || 'candidate@example.com';\nconst jobTitle = webhookData.jobTitle || 'K\u1ef9 s\u01b0 ph\u1ea7n m\u1ec1m';\nconst jobDescription = webhookData.jobDescription || '';\nconst jobRequirements = webhookData.jobRequirements || '';\nconst cvText = ($json.text || '').trim();\n\nconst promptText = `B\u1ea1n l\u00e0 Tr\u01b0\u1edfng ban Tuy\u1ec3n d\u1ee5ng C\u00f4ng ngh\u1ec7 (Lead Technical Recruiter) v\u00e0 Chuy\u00ean gia \u0110\u00e1nh gi\u00e1 K\u1ef9 thu\u1eadt (Technical Screener) c\u1ea5p cao c\u1ee7a m\u1ed9t t\u1eadp \u0111o\u00e0n c\u00f4ng ngh\u1ec7 l\u1edbn.\nNhi\u1ec7m v\u1ee5 c\u1ee7a b\u1ea1n l\u00e0 th\u1ea9m \u0111\u1ecbnh s\u00e2u h\u1ed3 s\u01a1 \u1ee9ng vi\u00ean c\u00f4ng ngh\u1ec7 th\u00f4ng tin so v\u1edbi b\u1ea3n m\u00f4 t\u1ea3 c\u00f4ng vi\u1ec7c (JD) d\u01b0\u1edbi \u0111\u00e2y theo ti\u00eau chu\u1ea9n ATS doanh nghi\u1ec7p th\u1ef1c chi\u1ebfn.\n\n=== B\u1ea2N M\u00d4 T\u1ea2 C\u00d4NG VI\u1ec6C (JD) ===\n- V\u1ecb tr\u00ed: ${jobTitle}\n- M\u00f4 t\u1ea3 c\u00f4ng vi\u1ec7c:\n${jobDescription}\n- Y\u00eau c\u1ea7u \u1ee9ng vi\u00ean:\n${jobRequirements}\n\n=== N\u1ed8I DUNG CV C\u1ee6A \u1ee8NG VI\u00caN ===\n${cvText}\n\n=== H\u01af\u1edaNG D\u1eaaN TH\u1ea8M \u0110\u1ecaNH K\u1ef8 THU\u1eacT CHUY\u00caN S\u00c2U (ENTERPRISE TECH ATS RUBRICS) ===\n1. coreSkills: M\u1ea3ng chu\u1ed7i c\u00e1c c\u00f4ng ngh\u1ec7 \u1ee9ng vi\u00ean c\u00f3 kinh nghi\u1ec7m th\u1ef1c chi\u1ebfn chuy\u00ean s\u00e2u (\u0111\u00e3 l\u00e0m d\u1ef1 \u00e1n >= 2 n\u0103m ho\u1eb7c l\u00e0 tr\u1ecdng t\u00e2m d\u1ef1 \u00e1n).\n2. secondarySkills: M\u1ea3ng chu\u1ed7i c\u00e1c c\u00f4ng ngh\u1ec7 ph\u1ee5 tr\u1ee3, c\u00f4ng c\u1ee5 b\u1ed5 tr\u1ee3 ho\u1eb7c m\u1edbi h\u1ecdc/ti\u1ebfp c\u1eadn c\u01a1 b\u1ea3n.\n3. systemScaleScore: \u0110i\u1ec3m t\u1eeb 0 \u0111\u1ebfn 100 \u0111o l\u01b0\u1eddng t\u01b0 duy ki\u1ebfn tr\u00fac, n\u0103ng l\u1ef1c ch\u1ecbu t\u1ea3i cao, microservices, t\u1ed1i \u01b0u CSDL, caching, message queue ho\u1eb7c CI/CD d\u1ef1a tr\u00ean m\u00f4 t\u1ea3 d\u1ef1 \u00e1n trong CV.\n4. practicalProjectScore: \u0110i\u1ec3m t\u1eeb 0 \u0111\u1ebfn 100 \u0111o l\u01b0\u1eddng chi\u1ec1u s\u00e2u v\u00e0 \u0111\u1ed9 th\u1ef1c chi\u1ebfn c\u1ee7a c\u00e1c d\u1ef1 \u00e1n \u0111\u00e3 tri\u1ec3n khai (\u0111\u00e3 x\u1eed l\u00fd production, t\u1ed1i \u01b0u hi\u1ec7u n\u0103ng, caching, high traffic, CI/CD, database design vs ch\u1ec9 l\u00e0m pet project/\u0111\u1ed3 \u00e1n).\n5. practicalProjectHighlights: M\u1ea3ng g\u1ed3m 2 \u0111\u1ebfn 3 g\u1ea1ch \u0111\u1ea7u d\u00f2ng t\u00f3m t\u1eaft c\u00e1c \u0111i\u1ec3m s\u00e1ng k\u1ef9 thu\u1eadt th\u1ef1c t\u1ebf nh\u1ea5t c\u1ee7a \u1ee9ng vi\u00ean trong c\u00e1c d\u1ef1 \u00e1n \u0111\u00e3 l\u00e0m.\n6. salaryBenchmark: \u01af\u1edbc t\u00ednh kho\u1ea3ng l\u01b0\u01a1ng th\u1ecb tr\u01b0\u1eddng t\u1ea1i Vi\u1ec7t Nam cho \u1ee9ng vi\u00ean d\u1ef1a tr\u00ean tech stack, s\u1ed1 n\u0103m kinh nghi\u1ec7m v\u00e0 v\u1ecb tr\u00ed. Tr\u1ea3 v\u1ec1 object:\n   - \"minSalary\": s\u1ed1 nguy\u00ean VN\u0110 (v\u00ed d\u1ee5: 25000000)\n   - \"maxSalary\": s\u1ed1 nguy\u00ean VN\u0110 (v\u00ed d\u1ee5: 35000000)\n   - \"currency\": \"VND\"\n   - \"level\": \"Fresher\" | \"Junior\" | \"Middle\" | \"Senior\" | \"Lead\"\n   - \"rationale\": \"C\u0103n c\u1ee9 \u0111\u1ecbnh gi\u00e1 m\u1ee9c l\u01b0\u01a1ng d\u1ef1a tr\u00ean kinh nghi\u1ec7m v\u00e0 k\u1ef9 n\u0103ng th\u1ef1c t\u1ebf.\"\n7. githubUrl: T\u00ecm v\u00e0 tr\u00edch xu\u1ea5t link GitHub c\u1ee7a \u1ee9ng vi\u00ean (v\u00ed d\u1ee5: \"https://github.com/abc\"). N\u1ebfu kh\u00f4ng c\u00f3 trong CV, tr\u1ea3 v\u1ec1 null.\n8. githubAnalysis: N\u1ebfu c\u00f3 link GitHub ho\u1eb7c \u0111\u1ec1 c\u1eadp \u0111\u1ebfn open-source/repo trong CV, ph\u00e2n t\u00edch ng\u1eafn g\u1ecdn 1 c\u00e2u v\u1ec1 ti\u1ec1m n\u0103ng code th\u1ef1c chi\u1ebfn; n\u1ebfu kh\u00f4ng c\u00f3 tr\u1ea3 v\u1ec1 null.\n9. portfolioUrl: Link Portfolio, Website c\u00e1 nh\u00e2n, Tech blog ho\u1eb7c LinkedIn. N\u1ebfu kh\u00f4ng c\u00f3 tr\u1ea3 v\u1ec1 null.\n10. cultureFit: Object g\u1ed3m:\n   - \"agileScrum\": true/false (c\u00f3 kinh nghi\u1ec7m l\u00e0m vi\u1ec7c theo m\u00f4 h\u00ecnh Agile/Scrum hay kh\u00f4ng)\n   - \"problemSolving\": 1 c\u00e2u \u0111\u00e1nh gi\u00e1 t\u01b0 duy gi\u1ea3i quy\u1ebft v\u1ea5n \u0111\u1ec1\n   - \"ownershipMindset\": 1 c\u00e2u \u0111\u00e1nh gi\u00e1 tinh th\u1ea7n tr\u00e1ch nhi\u1ec7m v\u1edbi s\u1ea3n ph\u1ea9m\n11. keywordStuffingFlag: Boolean (true n\u1ebfu ph\u00e1t hi\u1ec7n \u1ee9ng vi\u00ean nh\u1ed3i nh\u00e9t t\u1eeb kh\u00f3a nh\u01b0ng thi\u1ebfu m\u00f4 t\u1ea3 d\u1ef1 \u00e1n th\u1ef1c t\u1ebf, ng\u01b0\u1ee3c l\u1ea1i false).\n12. keywordStuffingReason: Chu\u1ed7i gi\u1ea3i th\u00edch n\u1ebfu keywordStuffingFlag = true, ng\u01b0\u1ee3c l\u1ea1i null.\n13. interviewFocusPoints: M\u1ea3ng g\u1ed3m 3 \u0111\u1ebfn 5 c\u00e2u h\u1ecfi/ch\u1ee7 \u0111\u1ec1 k\u1ef9 thu\u1eadt nghi v\u1ea5n ho\u1eb7c \u0111i\u1ec3m c\u1ea7n Tech Lead ph\u1ecfng v\u1ea5n s\u00e2u.\n14. matchScore: \u0110i\u1ec3m ph\u00f9 h\u1ee3p t\u1ed5ng th\u1ec3 t\u1eeb 0 \u0111\u1ebfn 100.\n15. techScore: \u0110i\u1ec3m chuy\u00ean m\u00f4n k\u1ef9 thu\u1eadt t\u1eeb 0 \u0111\u1ebfn 100.\n16. experienceYears: S\u1ed1 n\u0103m kinh nghi\u1ec7m l\u00e0m vi\u1ec7c th\u1ef1c t\u1ebf li\u00ean quan (s\u1ed1 nguy\u00ean >= 0).\n17. summary: Nh\u1eadn x\u00e9t \u0111\u00e1nh gi\u00e1 chuy\u00ean m\u00f4n s\u1eafc b\u00e9n b\u1eb1ng ti\u1ebfng Vi\u1ec7t (3-5 c\u00e2u), n\u00eau r\u00f5 \u0111i\u1ec3m m\u1ea1nh k\u1ef9 thu\u1eadt v\u00e0 \u0111i\u1ec3m c\u1ea7n th\u1ea9m \u0111\u1ecbnh th\u00eam.\n18. softSkills: M\u1ea3ng k\u1ef9 n\u0103ng m\u1ec1m, l\u00e0m vi\u1ec7c nh\u00f3m, giao ti\u1ebfp k\u1ef9 thu\u1eadt.\n19. recommendation: \"FAST_TRACK_INTERVIEW\" (n\u1ebfu matchScore >= 80), \"MANUAL_REVIEW\" (n\u1ebfu 50 <= matchScore < 80), \"TALENT_POOL_ARCHIVE\" (n\u1ebfu matchScore < 50).\n\nB\u1eaeT BU\u1ed8C: B\u1ea1n CH\u1ec8 \u0110\u01af\u1ee2C PH\u00c9P tr\u1ea3 v\u1ec1 DUY NH\u1ea4T m\u1ed9t chu\u1ed7i JSON thu\u1ea7n (STRICT JSON), KH\u00d4NG k\u00e8m b\u1ea5t k\u1ef3 \u0111\u1ecbnh d\u1ea1ng markdown n\u00e0o kh\u00e1c ngo\u00e0i c\u1ea5u tr\u00fac JSON:\n{\n  \"coreSkills\": [\"NestJS\", \"TypeScript\", \"PostgreSQL\"],\n  \"secondarySkills\": [\"Docker\", \"Redis\", \"AWS\"],\n  \"systemScaleScore\": 85,\n  \"practicalProjectScore\": 82,\n  \"practicalProjectHighlights\": [\"T\u1ed1i \u01b0u truy v\u1ea5n PostgreSQL v\u00e0 thi\u1ebft k\u1ebf ki\u1ebfn tr\u00fac caching Redis\", \"Tri\u1ec3n khai CI/CD v\u1edbi Docker tr\u00ean h\u1ea1 t\u1ea7ng AWS\"],\n  \"salaryBenchmark\": {\n    \"minSalary\": 28000000,\n    \"maxSalary\": 38000000,\n    \"currency\": \"VND\",\n    \"level\": \"Middle\",\n    \"rationale\": \"M\u1ee9c l\u01b0\u01a1ng th\u1ecb tr\u01b0\u1eddng cho 3-4 n\u0103m kinh nghi\u1ec7m v\u1edbi NestJS/TypeScript/AWS t\u1ea1i TP.HCM/H\u00e0 N\u1ed9i\"\n  },\n  \"githubUrl\": \"https://github.com/username\",\n  \"githubAnalysis\": \"Profile c\u00f3 d\u1ef1 \u00e1n th\u1ef1c t\u1ebf v\u1ec1 backend microservices v\u00e0 code s\u1ea1ch\",\n  \"portfolioUrl\": null,\n  \"cultureFit\": {\n    \"agileScrum\": true,\n    \"problemSolving\": \"Ch\u1ee7 \u0111\u1ed9ng \u0111\u00e0o s\u00e2u gi\u1ea3i quy\u1ebft v\u1ea5n \u0111\u1ec1 hi\u1ec7u n\u0103ng\",\n    \"ownershipMindset\": \"C\u00f3 tinh th\u1ea7n ch\u1ecbu tr\u00e1ch nhi\u1ec7m cao v\u1ec1 \u0111\u1ed9 tin c\u1eady c\u1ee7a d\u1ecbch v\u1ee5\"\n  },\n  \"keywordStuffingFlag\": false,\n  \"keywordStuffingReason\": null,\n  \"interviewFocusPoints\": [\"H\u1ecfi s\u00e2u v\u1ec1 kinh nghi\u1ec7m t\u1ed1i \u01b0u truy v\u1ea5n PostgreSQL\", \"Ki\u1ebfn tr\u00fac microservices\"],\n  \"matchScore\": 88,\n  \"techScore\": 90,\n  \"experienceYears\": 4,\n  \"summary\": \"\u1ee8ng vi\u00ean c\u00f3 n\u1ec1n t\u1ea3ng v\u1eefng v\u00e0ng v\u1ec1 Backend...\",\n  \"softSkills\": [\"L\u00e0m vi\u1ec7c nh\u00f3m Agile\", \"Giao ti\u1ebfp k\u1ef9 thu\u1eadt t\u1ed1t\"],\n  \"recommendation\": \"FAST_TRACK_INTERVIEW\"\n}`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    cvText,\n    promptText\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
         -100
       ],
       "id": "d3a6a912-c9b6-48aa-b104-b0f14db1096b",
@@ -129,7 +173,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -150,
+        -350,
         -100
       ],
       "id": "13612b05-e76a-4a73-aa9e-df0307c4a236",
@@ -146,16 +190,42 @@
     },
     {
       "parameters": {
-        "jsCode": "const promptNodeData = $('Build Detailed Gemini Prompt').first().json;\nconst candidateId = promptNodeData.candidateId;\nconst candidateName = promptNodeData.candidateName;\nconst candidateEmail = promptNodeData.candidateEmail;\nconst jobTitle = promptNodeData.jobTitle;\nconst cvText = promptNodeData.cvText || '';\nconst responseJson = $json;\n\nlet parsed = null;\nconst rawText = responseJson.candidates?.[0]?.content?.parts?.[0]?.text;\n\nif (rawText) {\n  let cleanedText = rawText.trim();\n  if (cleanedText.startsWith('```json')) {\n    cleanedText = cleanedText.replace(/^```json\\s*/, '').replace(/\\s*```$/, '');\n  } else if (cleanedText.startsWith('```')) {\n    cleanedText = cleanedText.replace(/^```\\s*/, '').replace(/\\s*```$/, '');\n  }\n  try {\n    parsed = JSON.parse(cleanedText);\n  } catch (e) {\n    parsed = null;\n  }\n}\n\n// Extract GitHub link cleanly\nconst ghMatch = cvText.match(/(?:https?:\\/\\/)?(?:www\\.)?github\\.com\\/([a-zA-Z0-9_-]+)\\b/i);\nconst extractedGithubUrl = ghMatch ? (ghMatch[0].startsWith('http') ? ghMatch[0] : 'https://' + ghMatch[0]) : null;\n\nconst commonTech = [\n  'React', 'NodeJS', 'TypeScript', 'JavaScript', 'NestJS', 'PostgreSQL', 'Docker', 'AWS',\n  'Python', 'Git', 'Next.js', 'REST API', 'GraphQL', 'Tailwind', 'HTML/CSS', 'CI/CD',\n  'Redis', 'Kubernetes', 'Golang', 'Java', 'Spring Boot', 'Vue', 'Angular', 'Express',\n  'MongoDB', 'PHP', 'Laravel', 'MySQL'\n];\nconst matched = commonTech.filter(tech => {\n  const escaped = tech.replace(/[-\\/\\\\^$*+?.()|[\\]]/g, '\\\\$&');\n  return new RegExp('\\\\b' + escaped + '\\\\b', 'i').test(cvText);\n});\n\n// Thuật toán kiểm tra bối cảnh dự án để tránh False Positive cho Senior nhiều kỹ năng:\nconst projectActionVerbs = ['phát triển', 'thiết kế', 'xây dựng', 'tối ưu', 'dự án', 'kinh nghiệm', 'trách nhiệm', 'vận hành', 'triển khai', 'kiến trúc', 'developed', 'architected', 'optimized', 'project', 'experience'];\nconst actionVerbMatches = projectActionVerbs.filter(v => cvText.toLowerCase().includes(v));\n\nconst hasLittleContext = actionVerbMatches.length <= 1 && cvText.length < 800;\nconst pureBuzzwordDump = (matched.length >= 5 && actionVerbMatches.length === 0 && cvText.length < 500) || (matched.length >= 7 && hasLittleContext);\nconst extremeDensity = matched.length >= 13 && cvText.length < 1200 && actionVerbMatches.length <= 2;\nconst isAlgorithmicStuffing = pureBuzzwordDump || extremeDensity;\n\n// Cờ cảnh báo nhồi từ khóa\nlet keywordStuffingFlag = false;\nlet keywordStuffingReason = null;\n\nif (parsed && typeof parsed.keywordStuffingFlag === 'boolean') {\n  keywordStuffingFlag = parsed.keywordStuffingFlag;\n  keywordStuffingReason = parsed.keywordStuffingReason || (keywordStuffingFlag ? 'AI phát hiện mật độ từ khóa công nghệ bất thường so với nội dung dự án thực tế' : null);\n} else {\n  keywordStuffingFlag = isAlgorithmicStuffing;\n  keywordStuffingReason = keywordStuffingFlag ? 'Mật độ từ khóa công nghệ quá dày đặc nhưng thiếu mô tả bối cảnh dự án thực tế' : null;\n}\n\nconst yearsMatch = cvText.match(/(\\d+)\\+?\\s*(?:năm|years?)/i);\nconst expYears = yearsMatch ? parseInt(yearsMatch[1], 10) : (matched.length >= 3 ? 3 : 1);\n\nif (!parsed || typeof parsed !== 'object') {\n  const coreSkills = matched.slice(0, 4);\n  const secondarySkills = matched.slice(4);\n  const baseScore = keywordStuffingFlag ? 55 : Math.min(65 + coreSkills.length * 6, 92);\n\n  parsed = {\n    coreSkills: coreSkills.length > 0 ? coreSkills : ['JavaScript', 'HTML/CSS'],\n    secondarySkills: secondarySkills,\n    systemScaleScore: keywordStuffingFlag ? 35 : (coreSkills.some(s => ['Docker', 'AWS', 'PostgreSQL', 'Kubernetes', 'Redis'].includes(s)) ? 75 : 55),\n    practicalProjectScore: keywordStuffingFlag ? 40 : Math.min(60 + actionVerbMatches.length * 5, 88),\n    practicalProjectHighlights: [\n      `Kinh nghiệm làm việc thực tế với ${coreSkills.slice(0, 2).join(' và ') || 'công nghệ chính'}`,\n      'Tham gia phát triển và tối ưu tính năng dự án'\n    ],\n    githubUrl: extractedGithubUrl,\n    portfolioUrl: null,\n    keywordStuffingFlag,\n    keywordStuffingReason,\n    interviewFocusPoints: keywordStuffingFlag\n      ? ['Kiểm tra xem ứng viên có thực sự nắm chắc các công nghệ đã liệt kê', 'Yêu cầu ứng viên giải thích chi tiết 1 dự án cụ thể']\n      : [\n          `Kiểm tra kỹ năng lập trình thực tế với ${coreSkills[0] || 'ngôn ngữ cốt lõi'}`,\n          'Thẩm định các dự án thực tế đã trực tiếp triển khai',\n          'Đánh giá khả năng tối ưu hiệu năng và xử lý lỗi hệ thống'\n        ],\n    matchScore: baseScore,\n    techScore: baseScore,\n    experienceYears: expYears,\n    summary: keywordStuffingFlag\n      ? `Hồ sơ ứng viên ${candidateName} có dấu hiệu liệt kê dày đặc từ khóa công nghệ (${matched.length} công nghệ) nhưng thiếu mô tả dự án thực tế. Cần phỏng vấn kỹ.`\n      : `Hồ sơ ứng viên ${candidateName} có thế mạnh chuyên môn cho vị trí ${jobTitle}. Nắm vững các công nghệ trọng tâm (${coreSkills.join(', ') || 'Công nghệ phần mềm'}).`,\n    softSkills: ['Giao tiếp tốt', 'Làm việc nhóm Agile'],\n    recommendation: baseScore >= 80 ? 'FAST_TRACK_INTERVIEW' : (baseScore >= 50 ? 'MANUAL_REVIEW' : 'TALENT_POOL_ARCHIVE')\n  };\n}\n\n// Sanitize & Clamp fields\nlet matchScore = typeof parsed.matchScore === 'number' ? parsed.matchScore : (parseFloat(parsed.matchScore) || 75);\nif (matchScore > 100) matchScore = 100;\nif (matchScore < 0) matchScore = 0;\n\nlet techScore = typeof parsed.techScore === 'number' ? parsed.techScore : (parseFloat(parsed.techScore) || matchScore);\nlet systemScaleScore = typeof parsed.systemScaleScore === 'number' ? parsed.systemScaleScore : (parseInt(parsed.systemScaleScore, 10) || 60);\nif (systemScaleScore > 100) systemScaleScore = 100;\nif (systemScaleScore < 0) systemScaleScore = 0;\n\nlet practicalProjectScore = typeof parsed.practicalProjectScore === 'number' ? parsed.practicalProjectScore : (parseInt(parsed.practicalProjectScore, 10) || Math.min(matchScore, 85));\nif (practicalProjectScore > 100) practicalProjectScore = 100;\nif (practicalProjectScore < 0) practicalProjectScore = 0;\n\nlet experienceYears = typeof parsed.experienceYears === 'number' ? Math.round(parsed.experienceYears) : (parseInt(parsed.experienceYears, 10) || expYears);\n\nconst coreSkills = Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0 ? parsed.coreSkills : matched.slice(0, 4);\nconst secondarySkills = Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : matched.slice(4);\nconst combinedSkills = [...coreSkills, ...secondarySkills];\n\nlet practicalProjectHighlights = Array.isArray(parsed.practicalProjectHighlights) && parsed.practicalProjectHighlights.length > 0\n  ? parsed.practicalProjectHighlights\n  : [\n      `Kinh nghiệm phát triển ứng dụng với các công nghệ ${coreSkills.slice(0, 3).join(', ')}`,\n      `Tham gia vận hành và xử lý bài toán hiệu năng hệ thống`\n    ];\n\n// Tính toán AI Salary Benchmark (Chuẩn thị trường IT Việt Nam 2026)\nlet salaryBenchmark = parsed.salaryBenchmark;\nif (!salaryBenchmark || typeof salaryBenchmark !== 'object' || !salaryBenchmark.minSalary) {\n  let minSal = 15000000;\n  let maxSal = 22000000;\n  let level = 'Junior';\n\n  if (experienceYears >= 6 || (experienceYears >= 5 && systemScaleScore >= 80)) {\n    minSal = 40000000;\n    maxSal = 60000000;\n    level = 'Lead / Principal';\n  } else if (experienceYears >= 4 || (experienceYears >= 3 && systemScaleScore >= 75)) {\n    minSal = 30000000;\n    maxSal = 45000000;\n    level = 'Senior';\n  } else if (experienceYears >= 2) {\n    minSal = 20000000;\n    maxSal = 30000000;\n    level = 'Middle';\n  } else if (experienceYears >= 1) {\n    minSal = 12000000;\n    maxSal = 18000000;\n    level = 'Junior';\n  } else {\n    minSal = 8000000;\n    maxSal = 12000000;\n    level = 'Fresher / Intern';\n  }\n\n  if (techScore >= 85) {\n    minSal = Math.round(minSal * 1.1 / 1000000) * 1000000;\n    maxSal = Math.round(maxSal * 1.15 / 1000000) * 1000000;\n  }\n\n  salaryBenchmark = {\n    minSalary: minSal,\n    maxSalary: maxSal,\n    currency: 'VND',\n    formatted: `${(minSal).toLocaleString('vi-VN')} - ${(maxSal).toLocaleString('vi-VN')} VNĐ`,\n    level,\n    rationale: `Ước tính mức lương theo kinh nghiệm (${experienceYears} năm) và năng lực kỹ thuật (${coreSkills.slice(0, 3).join(', ')}) trên thị trường IT Việt Nam.`\n  };\n} else {\n  if (!salaryBenchmark.formatted && salaryBenchmark.minSalary && salaryBenchmark.maxSalary) {\n    salaryBenchmark.formatted = `${Number(salaryBenchmark.minSalary).toLocaleString('vi-VN')} - ${Number(salaryBenchmark.maxSalary).toLocaleString('vi-VN')} ${salaryBenchmark.currency || 'VNĐ'}`;\n  }\n}\n\nlet githubUrl = (typeof parsed.githubUrl === 'string' && parsed.githubUrl.trim().length > 0 && parsed.githubUrl.toLowerCase() !== 'null') ? parsed.githubUrl.trim() : extractedGithubUrl;\nlet githubAnalysis = parsed.githubAnalysis || (githubUrl ? `Profile GitHub đã được trích xuất (${githubUrl}) phục vụ thẩm định code review.` : null);\nlet portfolioUrl = (typeof parsed.portfolioUrl === 'string' && parsed.portfolioUrl.trim().length > 0 && parsed.portfolioUrl.toLowerCase() !== 'null') ? parsed.portfolioUrl.trim() : null;\n\nlet cultureFit = parsed.cultureFit && typeof parsed.cultureFit === 'object' ? parsed.cultureFit : {\n  agileScrum: true,\n  problemSolving: 'Tư duy logic tốt, có khả năng phân tích và bẻ nhỏ bài toán',\n  ownershipMindset: 'Chủ động theo dõi chất lượng sản phẩm từ khâu code đến deploy'\n};\n\nconst interviewFocusPoints = Array.isArray(parsed.interviewFocusPoints) && parsed.interviewFocusPoints.length > 0 \n  ? parsed.interviewFocusPoints \n  : [\n      `Kiểm tra kỹ năng lập trình thực chiến với ${coreSkills[0] || 'công nghệ chính'}`,\n      'Đánh giá kinh nghiệm xử lý bài toán chịu tải và tối ưu cơ sở dữ liệu'\n    ];\n\nconst summary = typeof parsed.summary === 'string' && parsed.summary.trim().length > 0\n  ? parsed.summary.trim()\n  : \"Đã hoàn thành đánh giá hồ sơ ứng viên theo tiêu chuẩn Tech ATS.\";\n\nconst softSkills = Array.isArray(parsed.softSkills) ? parsed.softSkills : ['Làm việc nhóm Agile', 'Giao tiếp kỹ thuật tốt'];\nlet recommendation = parsed.recommendation || (matchScore >= 80 ? 'FAST_TRACK_INTERVIEW' : (matchScore >= 50 ? 'MANUAL_REVIEW' : 'TALENT_POOL_ARCHIVE'));\n\n// Build rich parsedSkillsJson object that is 100% backward compatible for frontend\nconst parsedSkillsJson = {\n  skills: combinedSkills,\n  coreSkills,\n  secondarySkills,\n  systemScaleScore,\n  practicalProjectScore,\n  practicalProjectHighlights,\n  salaryBenchmark,\n  githubUrl,\n  githubAnalysis,\n  portfolioUrl,\n  cultureFit,\n  keywordStuffingFlag,\n  keywordStuffingReason,\n  interviewFocusPoints,\n  techScore,\n  softSkills,\n  recommendation\n};\n\nreturn [{\n  json: {\n    candidateId,\n    name: candidateName,\n    email: candidateEmail,\n    jobTitle,\n    matchScore,\n    techScore,\n    systemScaleScore,\n    practicalProjectScore,\n    practicalProjectHighlights,\n    salaryBenchmark,\n    experienceYears,\n    summary,\n    githubUrl,\n    githubAnalysis,\n    portfolioUrl,\n    cultureFit,\n    keywordStuffingFlag,\n    keywordStuffingReason,\n    interviewFocusPoints,\n    coreSkills,\n    secondarySkills,\n    parsedSkillsJson,\n    softSkills,\n    recommendation\n  }\n}];"
+        "jsCode": "const promptNodeData = $('Build Detailed Gemini Prompt').first().json;\nconst candidateId = promptNodeData.candidateId;\nconst candidateName = promptNodeData.candidateName;\nconst candidateEmail = promptNodeData.candidateEmail;\nconst jobTitle = promptNodeData.jobTitle;\nconst cvText = promptNodeData.cvText || '';\nconst responseJson = $json;\n\nlet parsed = null;\nconst rawText = responseJson.candidates?.[0]?.content?.parts?.[0]?.text;\n\nif (rawText) {\n  let cleanedText = rawText.trim();\n  if (cleanedText.startsWith('```json')) {\n    cleanedText = cleanedText.replace(/^```json\\s*/, '').replace(/\\s*```$/, '');\n  } else if (cleanedText.startsWith('```')) {\n    cleanedText = cleanedText.replace(/^```\\s*/, '').replace(/\\s*```$/, '');\n  }\n  try {\n    parsed = JSON.parse(cleanedText);\n  } catch (e) {\n    parsed = null;\n  }\n}\n\n// Extract GitHub link cleanly\nconst ghMatch = cvText.match(/(?:https?:\\/\\/)?(?:www\\.)?github\\.com\\/([a-zA-Z0-9_-]+)\\b/i);\nconst extractedGithubUrl = ghMatch ? (ghMatch[0].startsWith('http') ? ghMatch[0] : 'https://' + ghMatch[0]) : null;\n\nconst commonTech = [\n  'React', 'NodeJS', 'TypeScript', 'JavaScript', 'NestJS', 'PostgreSQL', 'Docker', 'AWS',\n  'Python', 'Git', 'Next.js', 'REST API', 'GraphQL', 'Tailwind', 'HTML/CSS', 'CI/CD',\n  'Redis', 'Kubernetes', 'Golang', 'Java', 'Spring Boot', 'Vue', 'Angular', 'Express',\n  'MongoDB', 'PHP', 'Laravel', 'MySQL'\n];\nconst matched = commonTech.filter(tech => {\n  const escaped = tech.replace(/[-\\/\\\\^$*+?.()|[\\]]/g, '\\\\$&');\n  return new RegExp('\\\\b' + escaped + '\\\\b', 'i').test(cvText);\n});\n\nconst yearsMatch = cvText.match(/(\\d+)\\+?\\s*(?:n\u0103m|years?)/i);\nconst expYears = yearsMatch ? parseInt(yearsMatch[1], 10) : (matched.length >= 3 ? 3 : 1);\n\nlet matchScore = 75;\nlet techScore = 75;\nlet systemScaleScore = 60;\nlet coreSkills = matched.slice(0, 4);\nlet secondarySkills = matched.slice(4);\nlet summary = `\u0110\u00e3 ph\u00e2n t\u00edch h\u1ed3 s\u01a1 \u1ee9ng vi\u00ean ${candidateName} cho v\u1ecb tr\u00ed ${jobTitle}.`;\nlet recommendation = 'MANUAL_REVIEW';\n\nif (parsed && typeof parsed === 'object') {\n  matchScore = typeof parsed.matchScore === 'number' ? parsed.matchScore : (parseFloat(parsed.matchScore) || 75);\n  techScore = typeof parsed.techScore === 'number' ? parsed.techScore : (parseFloat(parsed.techScore) || matchScore);\n  systemScaleScore = typeof parsed.systemScaleScore === 'number' ? parsed.systemScaleScore : (parseInt(parsed.systemScaleScore, 10) || 60);\n  if (Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0) coreSkills = parsed.coreSkills;\n  if (Array.isArray(parsed.secondarySkills)) secondarySkills = parsed.secondarySkills;\n  if (parsed.summary && typeof parsed.summary === 'string') summary = parsed.summary.trim();\n  if (parsed.recommendation) recommendation = parsed.recommendation;\n}\n\nif (matchScore > 100) matchScore = 100;\nif (matchScore < 0) matchScore = 0;\nif (systemScaleScore > 100) systemScaleScore = 100;\nif (systemScaleScore < 0) systemScaleScore = 0;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    cvText,\n    matchScore,\n    techScore,\n    systemScaleScore,\n    experienceYears: expYears,\n    coreSkills,\n    secondarySkills,\n    extractedGithubUrl,\n    summary,\n    recommendation,\n    matched,\n    rawParsed: parsed\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        100,
+        -100,
         -100
       ],
-      "id": "6a7176c0-7c0c-41fd-89bd-b9dfb0857103",
-      "name": "Parse & Validate AI Evaluation"
+      "id": "wf4-parse-core-ai",
+      "name": "Parse & Validate Core AI Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst expYears = data.experienceYears || 2;\nconst systemScaleScore = data.systemScaleScore || 60;\nconst techScore = data.techScore || 70;\nconst coreSkills = data.coreSkills || ['Software Engineering'];\n\n// T\u00ednh to\u00e1n AI Salary Benchmark (Chu\u1ea9n th\u1ecb tr\u01b0\u1eddng IT Vi\u1ec7t Nam 2026)\nlet minSal = 15000000;\nlet maxSal = 22000000;\nlet level = 'Junior';\n\nif (expYears >= 6 || (expYears >= 5 && systemScaleScore >= 80)) {\n  minSal = 40000000;\n  maxSal = 60000000;\n  level = 'Lead / Principal';\n} else if (expYears >= 4 || (expYears >= 3 && systemScaleScore >= 75)) {\n  minSal = 30000000;\n  maxSal = 45000000;\n  level = 'Senior';\n} else if (expYears >= 2) {\n  minSal = 20000000;\n  maxSal = 30000000;\n  level = 'Middle';\n} else if (expYears >= 1) {\n  minSal = 12000000;\n  maxSal = 18000000;\n  level = 'Junior';\n} else {\n  minSal = 8000000;\n  maxSal = 12000000;\n  level = 'Fresher / Intern';\n}\n\nif (techScore >= 85) {\n  minSal = Math.round(minSal * 1.1 / 1000000) * 1000000;\n  maxSal = Math.round(maxSal * 1.15 / 1000000) * 1000000;\n}\n\nconst salaryBenchmark = {\n  minSalary: minSal,\n  maxSalary: maxSal,\n  currency: 'VND',\n  formatted: `${(minSal).toLocaleString('vi-VN')} - ${(maxSal).toLocaleString('vi-VN')} VND`,\n  level,\n  rationale: `\u0110\u1ecbnh gi\u00e1 l\u01b0\u01a1ng AI th\u1ecb tr\u01b0\u1eddng IT Vi\u1ec7t Nam 2026 d\u1ef1a tr\u00ean ${expYears} n\u0103m kinh nghi\u1ec7m v\u00e0 th\u1ebf m\u1ea1nh c\u00f4ng ngh\u1ec7 ${coreSkills.slice(0, 3).join(', ')}.`\n};\n\nreturn [{\n  json: {\n    ...data,\n    salaryBenchmark\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        150,
+        -100
+      ],
+      "id": "wf4-salary-benchmark-engine",
+      "name": "AI Salary Benchmark Engine"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst cvText = data.cvText || '';\nconst matched = data.matched || [];\nconst rawParsed = data.rawParsed || {};\nconst coreSkills = data.coreSkills || [];\nconst secondarySkills = data.secondarySkills || [];\nconst combinedSkills = [...coreSkills, ...secondarySkills];\n\n// Anti-Cheat: Qu\u00e9t t\u1eeb kh\u00f3a nh\u1ed3i nh\u00e9t\nconst projectActionVerbs = ['ph\u00e1t tri\u1ec3n', 'thi\u1ebft k\u1ebf', 'x\u00e2y d\u1ef1ng', 't\u1ed1i \u01b0u', 'd\u1ef1 \u00e1n', 'kinh nghi\u1ec7m', 'tr\u00e1ch nhi\u1ec7m', 'v\u1eadn h\u00e0nh', 'tri\u1ec3n khai', 'ki\u1ebfn tr\u00fac', 'developed', 'architected', 'optimized', 'project', 'experience'];\nconst actionVerbMatches = projectActionVerbs.filter(v => cvText.toLowerCase().includes(v));\n\nconst hasLittleContext = actionVerbMatches.length <= 1 && cvText.length < 800;\nconst pureBuzzwordDump = (matched.length >= 5 && actionVerbMatches.length === 0 && cvText.length < 500) || (matched.length >= 7 && hasLittleContext);\nconst extremeDensity = matched.length >= 13 && cvText.length < 1200 && actionVerbMatches.length <= 2;\nconst isAlgorithmicStuffing = pureBuzzwordDump || extremeDensity;\n\nlet keywordStuffingFlag = false;\nlet keywordStuffingReason = null;\n\nif (rawParsed && typeof rawParsed.keywordStuffingFlag === 'boolean') {\n  keywordStuffingFlag = rawParsed.keywordStuffingFlag;\n  keywordStuffingReason = rawParsed.keywordStuffingReason || (keywordStuffingFlag ? 'AI ph\u00e1t hi\u1ec7n m\u1eadt \u0111\u1ed9 t\u1eeb kh\u00f3a c\u00f4ng ngh\u1ec7 b\u1ea5t th\u01b0\u1eddng so v\u1edbi n\u1ed9i dung d\u1ef1 \u00e1n th\u1ef1c t\u1ebf' : null);\n} else {\n  keywordStuffingFlag = isAlgorithmicStuffing;\n  keywordStuffingReason = keywordStuffingFlag ? 'M\u1eadt \u0111\u1ed9 t\u1eeb kh\u00f3a c\u00f4ng ngh\u1ec7 qu\u00e1 d\u00e0y \u0111\u1eb7c nh\u01b0ng thi\u1ebfu m\u00f4 t\u1ea3 b\u1ed1i c\u1ea3nh d\u1ef1 \u00e1n th\u1ef1c t\u1ebf' : null;\n}\n\n// Ch\u1ea5m \u0111i\u1ec3m th\u1ef1c chi\u1ebfn d\u1ef1 \u00e1n (0-100)\nlet practicalProjectScore = typeof rawParsed.practicalProjectScore === 'number' \n  ? rawParsed.practicalProjectScore \n  : (keywordStuffingFlag ? 40 : Math.min(60 + actionVerbMatches.length * 5, 88));\nif (practicalProjectScore > 100) practicalProjectScore = 100;\nif (practicalProjectScore < 0) practicalProjectScore = 0;\n\nlet practicalProjectHighlights = Array.isArray(rawParsed.practicalProjectHighlights) && rawParsed.practicalProjectHighlights.length > 0\n  ? rawParsed.practicalProjectHighlights\n  : [\n      `Kinh nghi\u1ec7m ph\u00e1t tri\u1ec3n th\u1ef1c t\u1ebf v\u1edbi ${coreSkills.slice(0, 3).join(', ') || 'c\u00f4ng ngh\u1ec7 ch\u00ednh'}`,\n      'Tr\u1ef1c ti\u1ebfp tham gia thi\u1ebft k\u1ebf module v\u00e0 t\u1ed1i \u01b0u h\u00f3a hi\u1ec7u n\u0103ng s\u1ea3n ph\u1ea9m',\n      'Tu\u00e2n th\u1ee7 quy tr\u00ecnh ph\u00e1t tri\u1ec3n ph\u1ea7n m\u1ec1m chu\u1ea9n doanh nghi\u1ec7p (Agile/CI-CD)'\n    ];\n\nconst githubUrl = data.extractedGithubUrl || rawParsed.githubUrl || null;\nconst githubAnalysis = githubUrl ? `Profile GitHub \u0111\u00e3 \u0111\u01b0\u1ee3c tr\u00edch xu\u1ea5t (${githubUrl}) ph\u1ee5c v\u1ee5 th\u1ea9m \u0111\u1ecbnh code review.` : null;\n\nconst interviewFocusPoints = Array.isArray(rawParsed.interviewFocusPoints) && rawParsed.interviewFocusPoints.length > 0\n  ? rawParsed.interviewFocusPoints\n  : [\n      `Ki\u1ec3m tra k\u1ef9 n\u0103ng l\u1eadp tr\u00ecnh th\u1ef1c t\u1ebf v\u1edbi ${coreSkills[0] || 'ng\u00f4n ng\u1eef c\u1ed1t l\u00f5i'}`,\n      'Th\u1ea9m \u0111\u1ecbnh c\u00e1c d\u1ef1 \u00e1n th\u1ef1c t\u1ebf \u0111\u00e3 tr\u1ef1c ti\u1ebfp tri\u1ec3n khai',\n      '\u0110\u00e1nh gi\u00e1 kh\u1ea3 n\u0103ng t\u1ed1i \u01b0u hi\u1ec7u n\u0103ng v\u00e0 x\u1eed l\u00fd l\u1ed7i h\u1ec7 th\u1ed1ng'\n    ];\n\n// \u0110\u00f3ng g\u00f3i parsedSkillsJson chu\u1ea9n 100% Backward Compatible\nconst parsedSkillsJson = {\n  skills: combinedSkills,\n  coreSkills: coreSkills,\n  secondarySkills: secondarySkills,\n  systemScaleScore: data.systemScaleScore,\n  practicalProjectScore,\n  practicalProjectHighlights,\n  salaryBenchmark: data.salaryBenchmark,\n  githubUrl,\n  githubAnalysis,\n  portfolioUrl: rawParsed.portfolioUrl || null,\n  keywordStuffingFlag,\n  keywordStuffingReason,\n  interviewFocusPoints,\n  cultureFit: rawParsed.cultureFit || {\n    agileScrum: true,\n    problemSolving: 'T\u01b0 duy logic t\u1ed1t, c\u00f3 kh\u1ea3 n\u0103ng ph\u00e2n t\u00edch v\u00e0 b\u1ebb nh\u1ecf b\u00e0i to\u00e1n',\n    ownershipMindset: 'Ch\u1ee7 \u0111\u1ed9ng theo d\u00f5i ch\u1ea5t l\u01b0\u1ee3ng s\u1ea3n ph\u1ea9m t\u1eeb kh\u00e2u code \u0111\u1ebfn deploy'\n  },\n  recommendation: data.recommendation,\n  softSkills: rawParsed.softSkills || ['L\u00e0m vi\u1ec7c nh\u00f3m Agile', 'Giao ti\u1ebfp k\u1ef9 thu\u1eadt t\u1ed1t'],\n  verificationTest: true\n};\n\nreturn [{\n  json: {\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    experienceYears: data.experienceYears,\n    summary: data.summary,\n    salaryBenchmark: data.salaryBenchmark,\n    practicalProjectScore,\n    practicalProjectHighlights,\n    keywordStuffingFlag,\n    keywordStuffingReason,\n    parsedSkillsJson\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        -100
+      ],
+      "id": "wf4-practical-project-screener",
+      "name": "Practical Project & Anti-Cheat Screener"
     },
     {
       "parameters": {
@@ -182,7 +252,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        350,
+        650,
         -100
       ],
       "id": "944730cc-ab21-4d5a-b0d0-c68f91a28821",
@@ -194,7 +264,7 @@
         "rules": {
           "values": [
             {
-              "outputKey": "Tier 1: Xuất sắc (>= 80%)",
+              "outputKey": "Tier 1: Xu\u1ea5t s\u1eafc (>= 80%)",
               "conditions": {
                 "options": {
                   "caseSensitive": false,
@@ -215,7 +285,7 @@
               }
             },
             {
-              "outputKey": "Tier 2: Tiềm năng (50% - 79%)",
+              "outputKey": "Tier 2: Ti\u1ec1m n\u0103ng (50% - 79%)",
               "conditions": {
                 "options": {
                   "caseSensitive": false,
@@ -247,13 +317,13 @@
         },
         "options": {
           "fallbackOutput": "extra",
-          "renameFallbackOutput": "Tier 3: Dưới chuẩn (< 50%)"
+          "renameFallbackOutput": "Tier 3: D\u01b0\u1edbi chu\u1ea9n (< 50%)"
         }
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        650,
+        950,
         -100
       ],
       "id": "router-3tiers-switch",
@@ -261,125 +331,211 @@
     },
     {
       "parameters": {
-        "jsCode": "const candidate = $('Parse & Validate AI Evaluation').first().json;\nconst candidateId = candidate.candidateId;\nconst candidateName = candidate.name || 'Ứng viên tiềm năng';\nconst candidateEmail = candidate.email || 'candidate@example.com';\nconst jobTitle = candidate.jobTitle || 'Vị trí ứng tuyển';\nconst matchScore = candidate.matchScore;\nconst techScore = candidate.techScore;\nconst skills = Array.isArray(candidate.parsedSkillsJson) ? candidate.parsedSkillsJson.join(', ') : '';\nconst summary = candidate.summary || '';\n\n// Đề xuất ngày phỏng vấn sau 3 ngày làm việc lúc 09:30 AM\nconst interviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);\ninterviewDate.setHours(9, 30, 0, 0);\nconst formattedDate = interviewDate.toLocaleDateString('vi-VN', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\nconst formattedTime = '09:30 - 10:30 (Giờ Việt Nam)';\n\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst googleMeetUrl = `https://meet.google.com/${randomRoomId}`;\n\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 24px; font-weight: 800;\">THƯ MỜI PHỎNG VẤN TRỰC TUYẾN</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;\">AI Recruitment Agent • Fast-Track Interview</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6;\">Kính gửi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Chúc mừng bạn! Hồ sơ ứng tuyển của bạn cho vị trí <strong>${jobTitle}</strong> đã được hệ thống AI đánh giá rất cao với điểm tương thích ấn tượng <strong style=\"color: #10b981; font-size: 16px;\">${matchScore}%</strong> (Điểm kỹ thuật: ${techScore}%).\n    </p>\n    <div style=\"background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 20px 0;\">\n      <h3 style=\"margin: 0 0 10px 0; color: #047857; font-size: 14px;\">LỊCH HẸN PHỎNG VẤN TRỰC TUYẾN</h3>\n      <p style=\"margin: 4px 0; font-size: 13px;\"><strong>Thời gian:</strong> ${formattedTime}, ${formattedDate}</p>\n      <p style=\"margin: 4px 0; font-size: 13px;\"><strong>Đường dẫn Google Meet:</strong> <a href=\"${googleMeetUrl}\" style=\"color: #059669; font-weight: 700;\">${googleMeetUrl}</a></p>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b;\">Trân trọng,<br><strong>Hội đồng Tuyển dụng & AI Recruitment Agent</strong></p>\n  </div>\n</div>`;\n\nreturn [{\n  json: {\n    action: 'FAST_TRACK_INTERVIEW_SCHEDULED',\n    tier: 'TIER_1_EXCELLENT',\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    techScore,\n    skills,\n    summary,\n    interviewDate: formattedDate,\n    interviewTime: formattedTime,\n    googleMeetUrl,\n    emailSubject: `[HR Tech] Thư mời phỏng vấn vị trí ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
+        "jsCode": "const candidate = $('Parse & Validate AI Evaluation').first().json;\nconst candidateId = candidate.candidateId;\nconst candidateName = candidate.name || '\u1ee8ng vi\u00ean ti\u1ec1m n\u0103ng';\nconst candidateEmail = candidate.email || 'candidate@example.com';\nconst jobTitle = candidate.jobTitle || 'V\u1ecb tr\u00ed \u1ee9ng tuy\u1ec3n';\nconst matchScore = candidate.matchScore;\nconst techScore = candidate.techScore;\nconst skills = Array.isArray(candidate.parsedSkillsJson) ? candidate.parsedSkillsJson.join(', ') : '';\nconst summary = candidate.summary || '';\n\n// \u0110\u1ec1 xu\u1ea5t ng\u00e0y ph\u1ecfng v\u1ea5n sau 3 ng\u00e0y l\u00e0m vi\u1ec7c l\u00fac 09:30 AM\nconst interviewDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);\ninterviewDate.setHours(9, 30, 0, 0);\nconst formattedDate = interviewDate.toLocaleDateString('vi-VN', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\nconst formattedTime = '09:30 - 10:30 (Gi\u1edd Vi\u1ec7t Nam)';\n\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst googleMeetUrl = `https://meet.google.com/${randomRoomId}`;\n\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 24px; font-weight: 800;\">TH\u01af M\u1edcI PH\u1eceNG V\u1ea4N TR\u1ef0C TUY\u1ebeN</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;\">AI Recruitment Agent \u2022 Fast-Track Interview</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6;\">K\u00ednh g\u1eedi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Ch\u00fac m\u1eebng b\u1ea1n! H\u1ed3 s\u01a1 \u1ee9ng tuy\u1ec3n c\u1ee7a b\u1ea1n cho v\u1ecb tr\u00ed <strong>${jobTitle}</strong> \u0111\u00e3 \u0111\u01b0\u1ee3c h\u1ec7 th\u1ed1ng AI \u0111\u00e1nh gi\u00e1 r\u1ea5t cao v\u1edbi \u0111i\u1ec3m t\u01b0\u01a1ng th\u00edch \u1ea5n t\u01b0\u1ee3ng <strong style=\"color: #10b981; font-size: 16px;\">${matchScore}%</strong> (\u0110i\u1ec3m k\u1ef9 thu\u1eadt: ${techScore}%).\n    </p>\n    <div style=\"background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 20px 0;\">\n      <h3 style=\"margin: 0 0 10px 0; color: #047857; font-size: 14px;\">L\u1ecaCH H\u1eb8N PH\u1eceNG V\u1ea4N TR\u1ef0C TUY\u1ebeN</h3>\n      <p style=\"margin: 4px 0; font-size: 13px;\"><strong>Th\u1eddi gian:</strong> ${formattedTime}, ${formattedDate}</p>\n      <p style=\"margin: 4px 0; font-size: 13px;\"><strong>\u0110\u01b0\u1eddng d\u1eabn Google Meet:</strong> <a href=\"${googleMeetUrl}\" style=\"color: #059669; font-weight: 700;\">${googleMeetUrl}</a></p>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b;\">Tr\u00e2n tr\u1ecdng,<br><strong>H\u1ed9i \u0111\u1ed3ng Tuy\u1ec3n d\u1ee5ng & AI Recruitment Agent</strong></p>\n  </div>\n</div>`;\n\nreturn [{\n  json: {\n    action: 'FAST_TRACK_INTERVIEW_SCHEDULED',\n    tier: 'TIER_1_EXCELLENT',\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    techScore,\n    skills,\n    summary,\n    interviewDate: formattedDate,\n    interviewTime: formattedTime,\n    googleMeetUrl,\n    emailSubject: `[HR Tech] Th\u01b0 m\u1eddi ph\u1ecfng v\u1ea5n v\u1ecb tr\u00ed ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        950,
+        1250,
         -350
       ],
       "id": "tier1-generate-meet",
-      "name": "Tier 1: Tạo Lịch Google Meet & Thư Mời"
+      "name": "Tier 1: T\u1ea1o L\u1ecbch Google Meet & Th\u01b0 M\u1eddi"
     },
     {
       "parameters": {
-        "jsCode": "const data = $json;\nconst isUrgent = (data.matchScore || 0) >= 85;\nconst salaryText = data.salaryBenchmark?.formatted || 'Theo thỏa thuận';\nconst practicalScore = data.practicalProjectScore || data.matchScore || 80;\n\nreturn [{\n  json: {\n    success: true,\n    alertType: isUrgent ? 'FAST_TRACK_URGENT_HIRE' : 'HIGH_PRIORITY_CANDIDATE',\n    priority: isUrgent ? 'P1_CRITICAL' : 'P2_HIGH',\n    headline: isUrgent ? '🚨 [FAST TRACK - TUYỂN GẤP 24H]' : '🌟 [ỨNG VIÊN TIỀM NĂNG CAO]',\n    message: `${isUrgent ? '🚨 [TUYỂN GẤP 24H]' : '🌟'} Ứng viên xuất sắc ${data.candidateName} đạt ${data.matchScore}% cho vị trí ${data.jobTitle}. Thực chiến: ${practicalScore}/100. Lương đề xuất: ${salaryText}. Đã tạo phòng Meet: ${data.googleMeetUrl}`,\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    techScore: data.techScore,\n    practicalProjectScore: practicalScore,\n    salaryBenchmark: data.salaryBenchmark,\n    practicalProjectHighlights: data.practicalProjectHighlights,\n    scheduledInterview: `${data.interviewTime}, ${data.interviewDate}`,\n    googleMeetUrl: data.googleMeetUrl,\n    actionRequired: isUrgent ? 'Hiring Lead duyệt và chốt lịch phỏng vấn trong 24 giờ để tránh mất nhân tài' : 'Tham gia phỏng vấn theo lịch hẹn',\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "const data = $json;\nconst matchScore = data.matchScore || 0;\nconst isUrgent = matchScore >= 85;\n\nreturn [{\n  json: {\n    ...data,\n    isUrgentHire: isUrgent,\n    urgentAlertReason: isUrgent ? '\u1ee8ng vi\u00ean v\u01b0\u1ee3t tr\u1ed9i (Match Score >= 85). K\u00edch ho\u1ea1t ch\u1ebf \u0111\u1ed9 tuy\u1ec3n d\u1ee5ng kh\u1ea9n c\u1ea5p trong 24 gi\u1edd.' : null,\n    urgentChannel: isUrgent ? '#recruitment-urgent-hires' : '#recruitment-interviews'\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1250,
+        1500,
+        -350
+      ],
+      "id": "wf4-fast-track-check",
+      "name": "Fast-Track Check: Tuy\u1ec3n G\u1ea5p 24h?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nconst isUrgent = (data.matchScore || 0) >= 85;\nconst salaryText = data.salaryBenchmark?.formatted || 'Theo th\u1ecfa thu\u1eadn';\nconst practicalScore = data.practicalProjectScore || data.matchScore || 80;\n\nreturn [{\n  json: {\n    success: true,\n    alertType: isUrgent ? 'FAST_TRACK_URGENT_HIRE' : 'HIGH_PRIORITY_CANDIDATE',\n    priority: isUrgent ? 'P1_CRITICAL' : 'P2_HIGH',\n    headline: isUrgent ? '\ud83d\udea8 [FAST TRACK - TUY\u1ec2N G\u1ea4P 24H]' : '\ud83c\udf1f [\u1ee8NG VI\u00caN TI\u1ec0M N\u0102NG CAO]',\n    message: `${isUrgent ? '\ud83d\udea8 [TUY\u1ec2N G\u1ea4P 24H]' : '\ud83c\udf1f'} \u1ee8ng vi\u00ean xu\u1ea5t s\u1eafc ${data.candidateName} \u0111\u1ea1t ${data.matchScore}% cho v\u1ecb tr\u00ed ${data.jobTitle}. Th\u1ef1c chi\u1ebfn: ${practicalScore}/100. L\u01b0\u01a1ng \u0111\u1ec1 xu\u1ea5t: ${salaryText}. \u0110\u00e3 t\u1ea1o ph\u00f2ng Meet: ${data.googleMeetUrl}`,\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    techScore: data.techScore,\n    practicalProjectScore: practicalScore,\n    salaryBenchmark: data.salaryBenchmark,\n    practicalProjectHighlights: data.practicalProjectHighlights,\n    scheduledInterview: `${data.interviewTime}, ${data.interviewDate}`,\n    googleMeetUrl: data.googleMeetUrl,\n    actionRequired: isUrgent ? 'Hiring Lead duy\u1ec7t v\u00e0 ch\u1ed1t l\u1ecbch ph\u1ecfng v\u1ea5n trong 24 gi\u1edd \u0111\u1ec3 tr\u00e1nh m\u1ea5t nh\u00e2n t\u00e0i' : 'Tham gia ph\u1ecfng v\u1ea5n theo l\u1ecbch h\u1eb9n',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1750,
         -350
       ],
       "id": "tier1-hr-alert",
-      "name": "Tier 1: Bắn Alert Tuyển Dụng Nhanh (HR Lead)"
+      "name": "Tier 1: B\u1eafn Alert Tuy\u1ec3n D\u1ee5ng Nhanh (HR Lead)"
     },
     {
       "parameters": {
-        "jsCode": "const candidate = $('Parse & Validate AI Evaluation').first().json;\nconst candidateId = candidate.candidateId;\nconst candidateName = candidate.name || 'Ứng viên';\nconst candidateEmail = candidate.email || 'candidate@example.com';\nconst jobTitle = candidate.jobTitle || 'Vị trí ứng tuyển';\nconst matchScore = candidate.matchScore;\nconst skills = Array.isArray(candidate.parsedSkillsJson) ? candidate.parsedSkillsJson.join(', ') : '';\nconst summary = candidate.summary || '';\n\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 22px; font-weight: 800;\">THÔNG BÁO XÉT DUYỆT HỒ SƠ</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;\">AI Recruitment Agent • HR Review</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6;\">Kính gửi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Cảm ơn bạn đã ứng tuyển vị trí <strong>${jobTitle}</strong>. Hồ sơ của bạn đã vượt qua vòng sơ loại tự động với điểm tương thích <strong>${matchScore}%</strong>.\n    </p>\n    <div style=\"background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px; margin: 20px 0;\">\n      <p style=\"margin: 0; font-size: 13px; color: #1e40af; line-height: 1.6;\">\n        Hồ sơ của bạn hiện đang được chuyển tới Trưởng bộ phận chuyên môn xem xét chi tiết các dự án và kinh nghiệm liên quan. Chúng tôi sẽ thông báo kết quả cụ thể trong vòng 2-3 ngày làm việc.\n      </p>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b;\">Trân trọng,<br><strong>Ban Tuyển dụng & AI Recruitment Agent</strong></p>\n  </div>\n</div>`;\n\nreturn [{\n  json: {\n    action: 'MANUAL_HR_REVIEW_QUEUED',\n    tier: 'TIER_2_POTENTIAL',\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    summary,\n    reviewStatus: 'PENDING_HIRING_MANAGER_REVIEW',\n    emailSubject: `[HR Tech] Cập nhật tiến độ hồ sơ ứng tuyển ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        950,
-        -100
-      ],
-      "id": "tier2-manual-review",
-      "name": "Tier 2: Phân Loại Đánh Giá Vòng 2"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    success: true,\n    queueType: 'MANUAL_REVIEW_QUEUE',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    actionRequired: 'Trưởng bộ phận chuyên môn xem xét CV trong 48h',\n    queuedAt: new Date().toISOString()\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1250,
-        -100
-      ],
-      "id": "tier2-hr-queue",
-      "name": "Tier 2: Ghi Nhận Danh Sách Chờ Duyệt (HR Queue)"
-    },
-    {
-      "parameters": {
-        "jsCode": "const candidate = $('Parse & Validate AI Evaluation').first().json;\nconst candidateId = candidate.candidateId;\nconst candidateName = candidate.name || 'Ứng viên';\nconst candidateEmail = candidate.email || 'candidate@example.com';\nconst jobTitle = candidate.jobTitle || 'Vị trí ứng tuyển';\nconst matchScore = candidate.matchScore;\nconst skills = Array.isArray(candidate.parsedSkillsJson) ? candidate.parsedSkillsJson.join(', ') : '';\n\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #475569 0%, #1e293b 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 22px; font-weight: 800;\">THƯ CẢM ƠN ỨNG TUYỂN</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 13px; opacity: 0.85;\">AI Recruitment Agent • Talent Pool Retention</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6;\">Kính gửi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      Cảm ơn bạn đã dành thời gian nộp hồ sơ cho vị trí <strong>${jobTitle}</strong>. Dù hiện tại yêu cầu vị trí này chưa thực sự trùng khớp với thế mạnh chuyên môn của bạn, chúng tôi rất trân trọng năng lực và kinh nghiệm của bạn.\n    </p>\n    <div style=\"background: #f8fafc; border-left: 4px solid #64748b; border-radius: 6px; padding: 14px; margin: 20px 0;\">\n      <p style=\"margin: 0; font-size: 13px; color: #475569; line-height: 1.6;\">\n        Hồ sơ của bạn đã được chủ động lưu vào <strong>Mạng lưới Nhân tài (Talent Pool)</strong>. Khi có dự án hoặc vị trí mới phù hợp hơn, chúng tôi sẽ ưu tiên liên hệ trực tiếp với bạn.\n      </p>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b;\">Trân trọng,<br><strong>Ban Tuyển dụng & AI Recruitment Agent</strong></p>\n  </div>\n</div>`;\n\nreturn [{\n  json: {\n    action: 'TALENT_POOL_ARCHIVED',\n    tier: 'TIER_3_RESERVE',\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    status: 'SAVED_TO_TALENT_POOL',\n    emailSubject: `[HR Tech] Thư cảm ơn ứng tuyển vị trí ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        950,
-        150
-      ],
-      "id": "tier3-rejection-talentpool",
-      "name": "Tier 3: Soạn Thư Cảm Ơn & Lưu Trữ Talent Pool"
-    },
-    {
-      "parameters": {
-        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    success: true,\n    archiveStatus: 'TALENT_POOL_ACTIVE',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    archivedAt: new Date().toISOString(),\n    note: 'Lưu trữ hồ sơ dự phòng, ưu tiên liên hệ khi mở đợt tuyển dụng mới'\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1250,
-        150
-      ],
-      "id": "tier3-sync-talentpool",
-      "name": "Tier 3: Đồng Bộ Vào Mạng Lưới Talent Pool"
-    },
-    {
-      "parameters": {
-        "jsCode": "const webhookData = $('Webhook: Receive CV Application').first().json.body || $('Webhook: Receive CV Application').first().json;\nconst candidateId = webhookData.candidateId;\n\nreturn [{\n  json: {\n    candidateId,\n    matchScore: 0,\n    experienceYears: 0,\n    summary: \"CV trống hoặc không đọc được nội dung văn bản (file PDF dạng ảnh scan hoặc không có chữ).\",\n    parsedSkillsJson: [],\n    errorFlag: 'EMPTY_OR_SCANNED_PDF'\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -400,
-        200
-      ],
-      "id": "6f3d2492-bb16-4672-aac4-0322de17f632",
-      "name": "Nhánh CV Lỗi: Báo Cáo Không Có Dữ Liệu"
-    },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "=http://host.docker.internal:3001/recruitment/candidates/{{ $json.candidateId }}/ai-evaluation",
+        "method": "POST",
+        "url": "http://127.0.0.1:5678/webhook/schedule-interview",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Content-Type",
               "value": "application/json"
-            },
-            {
-              "name": "x-api-key",
-              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"matchScore\": 0,\n  \"experienceYears\": 0,\n  \"summary\": {{ JSON.stringify($json.summary) }},\n  \"parsedSkillsJson\": []\n}",
+        "jsonBody": "={\n  \"candidateId\": \"{{ $json.candidateId }}\",\n  \"name\": \"{{ $json.candidateName }}\",\n  \"email\": \"{{ $json.candidateEmail }}\",\n  \"jobTitle\": \"{{ $json.jobTitle }}\",\n  \"matchScore\": {{ $json.matchScore }},\n  \"parsedSkillsJson\": {{ JSON.stringify($json.parsedSkillsJson) }}\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        0,
-        200
+        2000,
+        -350
       ],
-      "id": "err-update-backend",
-      "name": "Update Backend (CV Lỗi)"
+      "id": "wf4-trigger-wf5-webhook",
+      "name": "T\u1ef1 \u0110\u1ed9ng K\u00edch Ho\u1ea1t WF_05 (Interview Webhook Trigger)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidate = $('Parse & Validate AI Evaluation').first().json;\nconst candidateId = candidate.candidateId;\nconst candidateName = candidate.name || '\u1ee8ng vi\u00ean';\nconst candidateEmail = candidate.email || 'candidate@example.com';\nconst jobTitle = candidate.jobTitle || 'V\u1ecb tr\u00ed \u1ee9ng tuy\u1ec3n';\nconst matchScore = candidate.matchScore;\nconst skills = Array.isArray(candidate.parsedSkillsJson) ? candidate.parsedSkillsJson.join(', ') : '';\nconst summary = candidate.summary || '';\n\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 22px; font-weight: 800;\">TH\u00d4NG B\u00c1O X\u00c9T DUY\u1ec6T H\u1ed2 S\u01a0</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;\">AI Recruitment Agent \u2022 HR Review</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6;\">K\u00ednh g\u1eedi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 \u1ee9ng tuy\u1ec3n v\u1ecb tr\u00ed <strong>${jobTitle}</strong>. H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111\u00e3 v\u01b0\u1ee3t qua v\u00f2ng s\u01a1 lo\u1ea1i t\u1ef1 \u0111\u1ed9ng v\u1edbi \u0111i\u1ec3m t\u01b0\u01a1ng th\u00edch <strong>${matchScore}%</strong>.\n    </p>\n    <div style=\"background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 18px; margin: 20px 0;\">\n      <p style=\"margin: 0; font-size: 13px; color: #1e40af; line-height: 1.6;\">\n        H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n hi\u1ec7n \u0111ang \u0111\u01b0\u1ee3c chuy\u1ec3n t\u1edbi Tr\u01b0\u1edfng b\u1ed9 ph\u1eadn chuy\u00ean m\u00f4n xem x\u00e9t chi ti\u1ebft c\u00e1c d\u1ef1 \u00e1n v\u00e0 kinh nghi\u1ec7m li\u00ean quan. Ch\u00fang t\u00f4i s\u1ebd th\u00f4ng b\u00e1o k\u1ebft qu\u1ea3 c\u1ee5 th\u1ec3 trong v\u00f2ng 2-3 ng\u00e0y l\u00e0m vi\u1ec7c.\n      </p>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b;\">Tr\u00e2n tr\u1ecdng,<br><strong>Ban Tuy\u1ec3n d\u1ee5ng & AI Recruitment Agent</strong></p>\n  </div>\n</div>`;\n\nreturn [{\n  json: {\n    action: 'MANUAL_HR_REVIEW_QUEUED',\n    tier: 'TIER_2_POTENTIAL',\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    summary,\n    reviewStatus: 'PENDING_HIRING_MANAGER_REVIEW',\n    emailSubject: `[HR Tech] C\u1eadp nh\u1eadt ti\u1ebfn \u0111\u1ed9 h\u1ed3 s\u01a1 \u1ee9ng tuy\u1ec3n ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        -100
+      ],
+      "id": "tier2-manual-review",
+      "name": "Tier 2: Ph\u00e2n Lo\u1ea1i \u0110\u00e1nh Gi\u00e1 V\u00f2ng 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    success: true,\n    queueType: 'MANUAL_REVIEW_QUEUE',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    actionRequired: 'Tr\u01b0\u1edfng b\u1ed9 ph\u1eadn chuy\u00ean m\u00f4n xem x\u00e9t CV trong 48h',\n    queuedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        -100
+      ],
+      "id": "tier2-hr-queue",
+      "name": "Tier 2: Ghi Nh\u1eadn Danh S\u00e1ch Ch\u1edd Duy\u1ec7t (HR Queue)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    ...data,\n    notificationType: 'SLACK_HR_REVIEW_QUEUE',\n    channel: '#recruitment-review-queue',\n    message: `\ud83d\udccb H\u1ed3 s\u01a1 ch\u1edd duy\u1ec7t: ${data.candidateName} - V\u1ecb tr\u00ed: ${data.jobTitle} (\u0110i\u1ec3m: ${data.matchScore}%)`,\n    timestamp: new Date().toISOString()\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1750,
+        -100
+      ],
+      "id": "wf4-tier2-slack-alert",
+      "name": "Tier 2: Th\u00f4ng B\u00e1o HR Squad Review (Slack Queue)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidate = $('Parse & Validate AI Evaluation').first().json;\nconst candidateId = candidate.candidateId;\nconst candidateName = candidate.name || '\u1ee8ng vi\u00ean';\nconst candidateEmail = candidate.email || 'candidate@example.com';\nconst jobTitle = candidate.jobTitle || 'V\u1ecb tr\u00ed \u1ee9ng tuy\u1ec3n';\nconst matchScore = candidate.matchScore;\nconst skills = Array.isArray(candidate.parsedSkillsJson) ? candidate.parsedSkillsJson.join(', ') : '';\n\nconst emailHtml = `\n<div style=\"font-family: 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);\">\n  <div style=\"background: linear-gradient(135deg, #475569 0%, #1e293b 100%); padding: 32px 24px; text-align: center; color: #ffffff;\">\n    <h1 style=\"margin: 0; font-size: 22px; font-weight: 800;\">TH\u01af C\u1ea2M \u01a0N \u1ee8NG TUY\u1ec2N</h1>\n    <p style=\"margin: 8px 0 0 0; font-size: 13px; opacity: 0.85;\">AI Recruitment Agent \u2022 Talent Pool Retention</p>\n  </div>\n  <div style=\"padding: 32px 24px; color: #1e293b;\">\n    <p style=\"font-size: 15px; line-height: 1.6;\">K\u00ednh g\u1eedi <strong>${candidateName}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n      C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 d\u00e0nh th\u1eddi gian n\u1ed9p h\u1ed3 s\u01a1 cho v\u1ecb tr\u00ed <strong>${jobTitle}</strong>. D\u00f9 hi\u1ec7n t\u1ea1i y\u00eau c\u1ea7u v\u1ecb tr\u00ed n\u00e0y ch\u01b0a th\u1ef1c s\u1ef1 tr\u00f9ng kh\u1edbp v\u1edbi th\u1ebf m\u1ea1nh chuy\u00ean m\u00f4n c\u1ee7a b\u1ea1n, ch\u00fang t\u00f4i r\u1ea5t tr\u00e2n tr\u1ecdng n\u0103ng l\u1ef1c v\u00e0 kinh nghi\u1ec7m c\u1ee7a b\u1ea1n.\n    </p>\n    <div style=\"background: #f8fafc; border-left: 4px solid #64748b; border-radius: 6px; padding: 14px; margin: 20px 0;\">\n      <p style=\"margin: 0; font-size: 13px; color: #475569; line-height: 1.6;\">\n        H\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n \u0111\u00e3 \u0111\u01b0\u1ee3c ch\u1ee7 \u0111\u1ed9ng l\u01b0u v\u00e0o <strong>M\u1ea1ng l\u01b0\u1edbi Nh\u00e2n t\u00e0i (Talent Pool)</strong>. Khi c\u00f3 d\u1ef1 \u00e1n ho\u1eb7c v\u1ecb tr\u00ed m\u1edbi ph\u00f9 h\u1ee3p h\u01a1n, ch\u00fang t\u00f4i s\u1ebd \u01b0u ti\u00ean li\u00ean h\u1ec7 tr\u1ef1c ti\u1ebfp v\u1edbi b\u1ea1n.\n      </p>\n    </div>\n    <p style=\"font-size: 13px; color: #64748b;\">Tr\u00e2n tr\u1ecdng,<br><strong>Ban Tuy\u1ec3n d\u1ee5ng & AI Recruitment Agent</strong></p>\n  </div>\n</div>`;\n\nreturn [{\n  json: {\n    action: 'TALENT_POOL_ARCHIVED',\n    tier: 'TIER_3_RESERVE',\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    status: 'SAVED_TO_TALENT_POOL',\n    emailSubject: `[HR Tech] Th\u01b0 c\u1ea3m \u01a1n \u1ee9ng tuy\u1ec3n v\u1ecb tr\u00ed ${jobTitle} - ${candidateName}`,\n    emailHtml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1250,
+        150
+      ],
+      "id": "tier3-rejection-talentpool",
+      "name": "Tier 3: So\u1ea1n Th\u01b0 C\u1ea3m \u01a0n & L\u01b0u Tr\u1eef Talent Pool"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    success: true,\n    archiveStatus: 'TALENT_POOL_ACTIVE',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    archivedAt: new Date().toISOString(),\n    note: 'L\u01b0u tr\u1eef h\u1ed3 s\u01a1 d\u1ef1 ph\u00f2ng, \u01b0u ti\u00ean li\u00ean h\u1ec7 khi m\u1edf \u0111\u1ee3t tuy\u1ec3n d\u1ee5ng m\u1edbi'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        150
+      ],
+      "id": "tier3-sync-talentpool",
+      "name": "Tier 3: \u0110\u1ed3ng B\u1ed9 V\u00e0o M\u1ea1ng L\u01b0\u1edbi Talent Pool"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5678/webhook/rejection-notification",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"candidateId\": \"{{ $json.candidateId }}\",\n  \"name\": \"{{ $json.candidateName }}\",\n  \"email\": \"{{ $json.candidateEmail }}\",\n  \"jobTitle\": \"{{ $json.jobTitle }}\",\n  \"matchScore\": {{ $json.matchScore }},\n  \"parsedSkillsJson\": {{ JSON.stringify($json.parsedSkillsJson) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1750,
+        150
+      ],
+      "id": "wf4-trigger-wf6-webhook",
+      "name": "T\u1ef1 \u0110\u1ed9ng K\u00edch Ho\u1ea1t WF_06 (Rejection & Talent Pool Trigger)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## GIAI \u0110O\u1ea0N 1: TI\u1ebeP NH\u1eacN & TR\u00cdCH XU\u1ea4T CV (INGESTION & OCR)\n- Nh\u1eadn file PDF qua Webhook tuy\u1ec3n d\u1ee5ng\n- T\u1ea3i file t\u1eeb Cloud/Backend & OCR tr\u00edch xu\u1ea5t n\u1ed9i dung v\u0103n b\u1ea3n th\u00f4\n- R\u1ebd nh\u00e1nh ph\u00e1t hi\u1ec7n h\u1ed3 s\u01a1 r\u1ed7ng/l\u1ed7i \u0111\u1ecbnh d\u1ea1ng",
+        "height": 550,
+        "width": 900,
+        "color": 2
+      },
+      "id": "sticky-wf4-p1",
+      "name": "Sticky Note Phase 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1650,
+        -250
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## GIAI \u0110O\u1ea0N 2: GEMINI AI & \u0110\u00c1NH GI\u00c1 CHUY\u00caN S\u00c2U (DEEP ASSESSMENT & METRICS)\n- Gemini AI ph\u00e2n t\u00edch k\u1ef9 thu\u1eadt v\u00e0 b\u00f3c t\u00e1ch d\u1ef1 \u00e1n th\u1ef1c t\u1ebf\n- AI Salary Benchmark Engine: \u0110\u1ecbnh gi\u00e1 kho\u1ea3ng l\u01b0\u01a1ng th\u1ecb tr\u01b0\u1eddng IT 2026\n- Practical Project & Anti-Cheat: Ch\u1ea5m \u0111i\u1ec3m th\u1ef1c chi\u1ebfn & qu\u00e9t t\u1eeb kh\u00f3a nh\u1ed3i nh\u00e9t\n- \u0110\u1ed3ng b\u1ed9 to\u00e0n b\u1ed9 d\u1eef li\u1ec7u v\u00e0o PostgreSQL qua NestJS API",
+        "height": 340,
+        "width": 1550,
+        "color": 4
+      },
+      "id": "sticky-wf4-p2",
+      "name": "Sticky Note Phase 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -650,
+        -250
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## GIAI \u0110O\u1ea0N 3: \u0110\u1ecaNH TUY\u1ebeN DOANH NGHI\u1ec6P & T\u1ef0 \u0110\u1ed8NG K\u00cdCH HO\u1ea0T QUY TR\u00ccNH (ENTERPRISE ROUTING)\n- Tier 1 (>=80%): Fast-track tuy\u1ec3n g\u1ea5p 24h & K\u00edch ho\u1ea1t WF_05 t\u1ea1o l\u1ecbch Meet\n- Tier 2 (50-79%): \u0110\u01b0a v\u00e0o h\u00e0ng \u0111\u1ee3i HR Squad \u0111\u00e1nh gi\u00e1 v\u00f2ng 2\n- Tier 3 (<50%): K\u00edch ho\u1ea1t WF_06 g\u1eedi th\u01b0 c\u1ea3m \u01a1n & l\u01b0u kho nh\u00e2n t\u00e0i t\u01b0\u01a1ng lai",
+        "height": 720,
+        "width": 1250,
+        "color": 3
+      },
+      "id": "sticky-wf4-p3",
+      "name": "Sticky Note Phase 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        950,
+        -450
+      ]
     }
   ],
   "connections": {
@@ -427,18 +583,18 @@
         ],
         [
           {
-            "node": "Nhánh CV Lỗi: Báo Cáo Không Có Dữ Liệu",
+            "node": "Nh\u00e1nh CV L\u1ed7i: B\u00e1o C\u00e1o Kh\u00f4ng C\u00f3 D\u1eef Li\u1ec7u",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Nhánh CV Lỗi: Báo Cáo Không Có Dữ Liệu": {
+    "Nh\u00e1nh CV L\u1ed7i: B\u00e1o C\u00e1o Kh\u00f4ng C\u00f3 D\u1eef Li\u1ec7u": {
       "main": [
         [
           {
-            "node": "Update Backend (CV Lỗi)",
+            "node": "Update Backend (CV L\u1ed7i)",
             "type": "main",
             "index": 0
           }
@@ -460,14 +616,36 @@
       "main": [
         [
           {
-            "node": "Parse & Validate AI Evaluation",
+            "node": "Parse & Validate Core AI Data",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Parse & Validate AI Evaluation": {
+    "Parse & Validate Core AI Data": {
+      "main": [
+        [
+          {
+            "node": "AI Salary Benchmark Engine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Salary Benchmark Engine": {
+      "main": [
+        [
+          {
+            "node": "Practical Project & Anti-Cheat Screener",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Practical Project & Anti-Cheat Screener": {
       "main": [
         [
           {
@@ -493,54 +671,98 @@
       "main": [
         [
           {
-            "node": "Tier 1: Tạo Lịch Google Meet & Thư Mời",
+            "node": "Tier 1: T\u1ea1o L\u1ecbch Google Meet & Th\u01b0 M\u1eddi",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Tier 2: Phân Loại Đánh Giá Vòng 2",
+            "node": "Tier 2: Ph\u00e2n Lo\u1ea1i \u0110\u00e1nh Gi\u00e1 V\u00f2ng 2",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Tier 3: Soạn Thư Cảm Ơn & Lưu Trữ Talent Pool",
+            "node": "Tier 3: So\u1ea1n Th\u01b0 C\u1ea3m \u01a0n & L\u01b0u Tr\u1eef Talent Pool",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Tier 1: Tạo Lịch Google Meet & Thư Mời": {
+    "Tier 1: T\u1ea1o L\u1ecbch Google Meet & Th\u01b0 M\u1eddi": {
       "main": [
         [
           {
-            "node": "Tier 1: Bắn Alert Tuyển Dụng Nhanh (HR Lead)",
+            "node": "Fast-Track Check: Tuy\u1ec3n G\u1ea5p 24h?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Tier 2: Phân Loại Đánh Giá Vòng 2": {
+    "Fast-Track Check: Tuy\u1ec3n G\u1ea5p 24h?": {
       "main": [
         [
           {
-            "node": "Tier 2: Ghi Nhận Danh Sách Chờ Duyệt (HR Queue)",
+            "node": "Tier 1: B\u1eafn Alert Tuy\u1ec3n D\u1ee5ng Nhanh (HR Lead)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Tier 3: Soạn Thư Cảm Ơn & Lưu Trữ Talent Pool": {
+    "Tier 1: B\u1eafn Alert Tuy\u1ec3n D\u1ee5ng Nhanh (HR Lead)": {
       "main": [
         [
           {
-            "node": "Tier 3: Đồng Bộ Vào Mạng Lưới Talent Pool",
+            "node": "T\u1ef1 \u0110\u1ed9ng K\u00edch Ho\u1ea1t WF_05 (Interview Webhook Trigger)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tier 2: Ph\u00e2n Lo\u1ea1i \u0110\u00e1nh Gi\u00e1 V\u00f2ng 2": {
+      "main": [
+        [
+          {
+            "node": "Tier 2: Ghi Nh\u1eadn Danh S\u00e1ch Ch\u1edd Duy\u1ec7t (HR Queue)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tier 2: Ghi Nh\u1eadn Danh S\u00e1ch Ch\u1edd Duy\u1ec7t (HR Queue)": {
+      "main": [
+        [
+          {
+            "node": "Tier 2: Th\u00f4ng B\u00e1o HR Squad Review (Slack Queue)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tier 3: So\u1ea1n Th\u01b0 C\u1ea3m \u01a0n & L\u01b0u Tr\u1eef Talent Pool": {
+      "main": [
+        [
+          {
+            "node": "Tier 3: \u0110\u1ed3ng B\u1ed9 V\u00e0o M\u1ea1ng L\u01b0\u1edbi Talent Pool",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tier 3: \u0110\u1ed3ng B\u1ed9 V\u00e0o M\u1ea1ng L\u01b0\u1edbi Talent Pool": {
+      "main": [
+        [
+          {
+            "node": "T\u1ef1 \u0110\u1ed9ng K\u00edch Ho\u1ea1t WF_06 (Rejection & Talent Pool Trigger)",
             "type": "main",
             "index": 0
           }
@@ -575,7 +797,7 @@
         "updatedAt": "2026-09-30T14:32:33.272Z",
         "createdAt": "2026-09-30T13:39:28.905Z",
         "id": "6fLB1uBc0gD1ogBQ",
-        "name": "Đoàn Huy <doanthanhhuy1309@gmail.com>",
+        "name": "\u0110o\u00e0n Huy <doanthanhhuy1309@gmail.com>",
         "type": "personal",
         "icon": null,
         "description": null,
