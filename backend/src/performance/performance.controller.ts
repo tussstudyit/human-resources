@@ -18,7 +18,8 @@ export class PerformanceController {
     @Query('email') email?: string,
     @Query('period') period?: string,
   ) {
-    return this.performanceService.getFeedbackDetail(userId, email, period || '2026-Q4');
+    const data = await this.performanceService.getFeedbackDetail(userId, email, period || '2026-Q4');
+    return { data };
   }
 
   @Post('feedback-public')

@@ -44,26 +44,15 @@ export default function PerformancePage() {
       const res = await axios.get('/api/performance/employees');
       if (res.data?.success && Array.isArray(res.data.data)) {
         const origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.2.123:3000';
-        let stored: Record<string, any> = {};
-        try {
-          stored = JSON.parse(localStorage.getItem('hr_360_submitted_reviews') || '{}');
-        } catch {}
-
         const mapped = res.data.data.map((emp: EmployeeReview) => {
-          const emailKey = (emp.email || '').trim().toLowerCase();
-          const uidKey = emp.userId ? String(emp.userId).toLowerCase() : '';
-          const isSubmitted = emp.completed ||
-            (emailKey && Boolean(stored[emailKey])) ||
-            (uidKey && Object.values(stored).some((item: any) => item?.userId === emp.userId));
-
           let link = (emp.magicLink || '').replace('http://localhost:3000', origin).replace('http://192.168.2.123:3000', origin);
           if (emp.userId && !link.includes('userId=')) link += `&userId=${emp.userId}`;
           if (emp.email && !link.includes('email=')) link += `&email=${encodeURIComponent(emp.email)}`;
 
           return {
             ...emp,
-            status: isSubmitted ? 'Đã hoàn thành' : emp.status,
-            completed: isSubmitted,
+            status: emp.completed ? 'Đã hoàn thành' : 'Chờ nộp',
+            completed: Boolean(emp.completed),
             magicLink: link,
           };
         });
@@ -204,10 +193,11 @@ export default function PerformancePage() {
         payload: {
           event: 'single_360_feedback_reminder',
           recipient: {
-            id: emp.id,
+            id: emp.userId || emp.id,
             userId: emp.userId || emp.id,
             name: emp.name,
             email: emp.email,
+            department: emp.dept,
             magicLink: emp.magicLink
           }
         }

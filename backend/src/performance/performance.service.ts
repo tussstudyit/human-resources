@@ -98,22 +98,28 @@ export class PerformanceService {
   }) {
     let reviewee = null;
     const targetId = dto.revieweeId || dto.userId;
-    if (targetId) {
+    if (targetId && targetId !== 'usr-emp' && targetId.length > 10) {
       reviewee = await this.prisma.user.findUnique({ where: { id: targetId } });
     }
     if (!reviewee && dto.email) {
       reviewee = await this.prisma.user.findUnique({ where: { email: dto.email.trim() } });
     }
     if (!reviewee && dto.employeeName) {
-      reviewee = await this.prisma.user.findFirst({
+      // Chỉ tìm theo tên nếu có DUY NHẤT 1 nhân sự có tên này, tránh nhầm lẫn giữa các email trùng tên
+      const matchingUsers = await this.prisma.user.findMany({
         where: { fullName: { equals: dto.employeeName.trim(), mode: 'insensitive' } },
       });
+      if (matchingUsers.length === 1) {
+        reviewee = matchingUsers[0];
+      } else {
+        console.warn(`[360 Feedback] Không thể xác định nhân sự duy nhất cho tên "${dto.employeeName}" vì có ${matchingUsers.length} tài khoản trùng tên. Bắt buộc cần email hoặc userId.`);
+      }
     }
 
     if (!reviewee) {
-      reviewee = await this.prisma.user.findFirst();
+      console.warn('[360 Feedback] Không tìm thấy nhân sự phù hợp với payload:', dto);
+      return null;
     }
-    if (!reviewee) return null;
 
     const period = dto.period || '2026-Q4';
 
@@ -146,7 +152,7 @@ export class PerformanceService {
   // Lấy chi tiết đánh giá 360 đã nộp của nhân viên để hiển thị lên form khi xem lại
   async getFeedbackDetail(userId?: string, email?: string, period = '2026-Q4') {
     let user = null;
-    if (userId) {
+    if (userId && userId !== 'usr-emp' && userId.length > 10) {
       user = await this.prisma.user.findUnique({ where: { id: userId } });
     }
     if (!user && email) {

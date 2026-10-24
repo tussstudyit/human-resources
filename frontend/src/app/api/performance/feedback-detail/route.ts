@@ -15,7 +15,12 @@ export async function GET(request: NextRequest) {
     );
 
     if (res.ok) {
-      const data = await res.json();
+      const text = await res.text();
+      let data = null;
+      try {
+        const parsed = text ? JSON.parse(text) : null;
+        data = parsed?.data !== undefined ? parsed.data : parsed;
+      } catch {}
       return NextResponse.json({ success: true, data });
     }
 
