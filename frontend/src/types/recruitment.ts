@@ -23,6 +23,33 @@ export interface InterviewerInfo {
   phone?: string;
 }
 
+export interface SalaryBenchmark {
+  minSalary?: number;
+  maxSalary?: number;
+  currency?: string;
+  formatted?: string;
+  level?: string;
+  rationale?: string;
+}
+
+export interface ScorecardRubricItem {
+  pillar: string;
+  weight: string;
+  description: string;
+  scoringLevels?: {
+    excellent?: string;
+    acceptable?: string;
+    poor?: string;
+  };
+}
+
+export interface MiniCodeChallenge {
+  domain?: string;
+  title?: string;
+  taskDescription?: string;
+  suggestedDuration?: string;
+}
+
 export interface InterviewScheduleInfo {
   time?: string;
   type?: 'ONLINE' | 'OFFICE' | string;
@@ -33,6 +60,11 @@ export interface InterviewScheduleInfo {
   googleCalendarEventId?: string;
   googleCalendarHtmlLink?: string;
   interviewer?: InterviewerInfo;
+  rsvpStatus?: 'PENDING_CONFIRMATION' | 'CONFIRMED' | 'RESCHEDULE_REQUESTED' | string;
+  rsvpConfirmUrl?: string;
+  rsvpRescheduleUrl?: string;
+  scorecardRubric?: ScorecardRubricItem[];
+  miniCodeChallenge?: MiniCodeChallenge;
 }
 
 export interface TalentPoolInfo {
@@ -42,15 +74,34 @@ export interface TalentPoolInfo {
   emailSent?: boolean;
   archivedAt?: string;
   recommendedNextRole?: string;
+  tag?: string;
+  detailedTalentTag?: string;
+  candidateLevel?: string;
+  reEngagementDate?: string;
+  cxSurveyUrl?: string;
+  suggestedSkills?: string[];
 }
 
 export interface ParsedSkillsData {
   skills?: string[];
+  coreSkills?: string[];
+  secondarySkills?: string[];
+  systemScaleScore?: number;
+  practicalProjectScore?: number;
+  practicalProjectHighlights?: string[];
+  salaryBenchmark?: SalaryBenchmark;
+  githubUrl?: string | null;
   interviewSchedule?: InterviewScheduleInfo;
   talentPool?: TalentPoolInfo;
   decision?: string;
   recommendation?: string;
   summary?: string;
+  interviewKit?: Array<{
+    question: string;
+    targetSkill: string;
+    whyAsk: string;
+    goodAnswerSignals: string;
+  }>;
 }
 
 export type CandidateSkills = string[] | ParsedSkillsData | null;

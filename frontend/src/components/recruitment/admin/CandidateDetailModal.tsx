@@ -19,6 +19,9 @@ import {
   Briefcase,
   AlertCircle,
   Archive,
+  DollarSign,
+  Code2,
+  Zap,
 } from 'lucide-react';
 import { Candidate, InterviewScheduleInfo, TalentPoolInfo } from '@/types/recruitment';
 import {
@@ -113,6 +116,10 @@ export default function CandidateDetailModal({
       talentPool = parsed.talentPool;
     }
   }
+
+  const salaryBenchmark = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? (parsed as any).salaryBenchmark : undefined;
+  const practicalScore = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? (parsed as any).practicalProjectScore : undefined;
+  const practicalHighlights = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? (parsed as any).practicalProjectHighlights : undefined;
 
   const score = candidate.matchScore ?? 0;
   const isPending = candidate.aiStatus === 'PENDING';
@@ -432,6 +439,56 @@ export default function CandidateDetailModal({
               </div>
             </div>
 
+            {/* Enterprise Tech ATS Metrics: Salary Benchmark & Practical Project Score */}
+            {(salaryBenchmark || practicalScore !== undefined) && (
+              <div className="grid grid-cols-2 gap-3">
+                {salaryBenchmark && (
+                  <div className="border border-[#bbf7d0] bg-[#f0fdf4] rounded-[8px] p-3 space-y-1">
+                    <div className="font-mono text-[10px] font-semibold text-[#166534] uppercase tracking-wider flex items-center space-x-1">
+                      <DollarSign className="w-3 h-3 text-[#16a34a]" />
+                      <span>ĐỊNH GIÁ LƯƠNG AI</span>
+                    </div>
+                    <div className="text-xs font-bold text-[#15803d]">
+                      {salaryBenchmark.formatted || `${salaryBenchmark.minSalary} - ${salaryBenchmark.maxSalary} VND`}
+                    </div>
+                    <div className="text-[10px] text-[#166534] opacity-90">
+                      Cấp bậc: <span className="font-semibold">{salaryBenchmark.level || 'Chuyên viên'}</span>
+                    </div>
+                  </div>
+                )}
+
+                {practicalScore !== undefined && (
+                  <div className="border border-[#bfdbfe] bg-[#eff6ff] rounded-[8px] p-3 space-y-1">
+                    <div className="font-mono text-[10px] font-semibold text-[#1e40af] uppercase tracking-wider flex items-center space-x-1">
+                      <Zap className="w-3 h-3 text-[#2563eb]" />
+                      <span>THỰC CHIẾN DỰ ÁN</span>
+                    </div>
+                    <div className="text-xs font-bold text-[#1d4ed8]">
+                      {practicalScore}/100 Điểm
+                    </div>
+                    <div className="text-[10px] text-[#1e40af] opacity-90">
+                      Tư duy kiến trúc & Production
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Practical Project Highlights */}
+            {practicalHighlights && practicalHighlights.length > 0 && (
+              <div className="border border-[#ebebeb] bg-[#fafafa] rounded-[8px] p-3.5 space-y-2">
+                <div className="font-mono text-[10px] font-semibold text-[#171717] uppercase tracking-wider flex items-center space-x-1.5">
+                  <Code2 className="w-3.5 h-3.5 text-[#0070f3]" />
+                  <span>ĐIỂM SÁNG THỰC CHIẾN KỸ THUẬT</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-[#334155] list-disc list-inside">
+                  {practicalHighlights.map((h: string, i: number) => (
+                    <li key={i} className="leading-relaxed text-[11px]">{h}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Google Meet & Interview Schedule Card */}
             {interviewSchedule && (
               <div className="border border-[#0070f3]/30 bg-[#d3e5ff]/20 rounded-[8px] p-4 space-y-3">
@@ -440,8 +497,8 @@ export default function CandidateDetailModal({
                     <Calendar className="w-3.5 h-3.5" />
                     <span>LỊCH PHỎNG VẤN ĐÃ TẠO</span>
                   </div>
-                  <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-[#0070f3] text-white">
-                    CONFIRMED
+                  <span className={`font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] text-white ${interviewSchedule.rsvpStatus === 'CONFIRMED' ? 'bg-[#16a34a]' : 'bg-[#0070f3]'}`}>
+                    {interviewSchedule.rsvpStatus === 'CONFIRMED' ? '✓ ĐÃ XÁC NHẬN (RSVP)' : 'CHỜ XÁC NHẬN (PENDING)'}
                   </span>
                 </div>
 
@@ -463,6 +520,15 @@ export default function CandidateDetailModal({
                       <div className="font-mono text-[10px] text-[#8f8f8f]">
                         {interviewSchedule.interviewer.email}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Mini Code Challenge */}
+                  {interviewSchedule.miniCodeChallenge && (
+                    <div className="p-2.5 bg-white rounded-[6px] border border-[#cbd5e1] text-[11px] space-y-1">
+                      <div className="font-mono text-[10px] font-semibold text-[#0f172a] uppercase">💡 ĐỀ BÀI THẢO LUẬN KỸ THUẬT:</div>
+                      <div className="font-semibold text-[#2563eb]">{interviewSchedule.miniCodeChallenge.title}</div>
+                      <div className="text-[#475569]">{interviewSchedule.miniCodeChallenge.taskDescription}</div>
                     </div>
                   )}
 
@@ -515,7 +581,7 @@ export default function CandidateDetailModal({
                     <span>KHO LƯU TRỮ NHÂN TÀI</span>
                   </div>
                   <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-white border border-[#ebebeb] text-[#171717]">
-                    {talentPool.tier || 'ACTIVE'}
+                    {talentPool.detailedTalentTag || talentPool.tag || talentPool.tier || 'ACTIVE'}
                   </span>
                 </div>
 
@@ -530,6 +596,12 @@ export default function CandidateDetailModal({
                         : 'Lưu trữ vòng hồ sơ'}
                     </span>
                   </div>
+                  {talentPool.reEngagementDate && (
+                    <div className="flex items-center justify-between font-mono text-[11px] text-[#2563eb] font-semibold">
+                      <span>Chu kỳ tái liên hệ (6 tháng):</span>
+                      <span>{new Date(talentPool.reEngagementDate).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  )}
                   {talentPool.archivedAt && (
                     <div className="flex items-center justify-between font-mono text-[11px]">
                       <span className="text-[#8f8f8f]">Ngày lưu trữ:</span>
@@ -539,7 +611,7 @@ export default function CandidateDetailModal({
                   {talentPool.emailSent && (
                     <div className="flex items-center space-x-1 text-[#166534] pt-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Đã gửi email thông báo từ chối tinh tế đến ứng viên</span>
+                      <span>Đã gửi email thông báo từ chối tinh tế & khảo sát CX đến ứng viên</span>
                     </div>
                   )}
                 </div>
