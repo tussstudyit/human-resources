@@ -181,4 +181,86 @@ export class RecruitmentController {
     });
     stream.pipe(res);
   }
+
+  // 12. PUBLIC: Handle candidate RSVP response from interview invite email
+  @SkipThrottle()
+  @Get('candidates/:id/rsvp')
+  async candidateRsvp(
+    @Param('id') id: string,
+    @Query('status') status: string,
+    @Res() res: Response,
+  ) {
+    const result = await this.recruitmentService.handleCandidateRsvp(id, status);
+    const isConfirmed = result.status === 'CONFIRMED';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Xác Nhận Lịch Phỏng Vấn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px 20px; text-align: center; color: #1e293b;">
+  <div style="max-width: 500px; margin: 0 auto; background: #ffffff; padding: 36px 28px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+    <div style="font-size: 48px; margin-bottom: 16px;">${isConfirmed ? '🎉' : '📅'}</div>
+    <h2 style="color: ${isConfirmed ? '#16a34a' : '#2563eb'}; margin-top: 0; font-size: 22px;">
+      ${isConfirmed ? 'Đã Xác Nhận Tham Gia Phỏng Vấn' : 'Đã Ghi Nhận Yêu Cầu Dời Lịch'}
+    </h2>
+    <p style="font-size: 15px; color: #334155; line-height: 1.6;">
+      Chào bạn <strong>${result.candidateName}</strong>,
+    </p>
+    <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+      ${
+        isConfirmed
+          ? `Hệ thống đã ghi nhận bạn sẽ tham gia buổi phỏng vấn (${result.dateTimeFormatted}). Vui lòng kiểm tra email để cập nhật thông tin và đường dẫn Google Meet.`
+          : 'Bộ phận Tuyển dụng đã tiếp nhận yêu cầu dời lịch của bạn và sẽ chủ động liên hệ lại sớm nhất để sắp xếp khung giờ phù hợp hơn.'
+      }
+    </p>
+    <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
+      Hệ Thống Tuyển Dụng Thông Minh • AI Recruitment Portal
+    </div>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  }
+
+  // 13. PUBLIC: Handle Candidate Experience feedback rating (1-5 stars)
+  @SkipThrottle()
+  @Get('cx-feedback')
+  async cxFeedback(
+    @Query('candidateId') candidateId: string,
+    @Query('score') score: string,
+    @Res() res: Response,
+  ) {
+    const stars = parseInt(score, 10) || 5;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Khảo Sát Trải Nghiệm Tuyển Dụng</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, 'Segoe UI', sans-serif; background: #f8fafc; padding: 40px 20px; text-align: center; color: #1e293b;">
+  <div style="max-width: 500px; margin: 0 auto; background: #ffffff; padding: 36px 28px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+    <div style="font-size: 36px; margin-bottom: 12px;">🌟</div>
+    <h2 style="color: #0f172a; margin-top: 0; font-size: 20px;">Cảm Ơn Đóng Góp Của Bạn!</h2>
+    <p style="font-size: 15px; color: #475569; line-height: 1.6;">
+      Chúng tôi đã ghi nhận đánh giá <strong>${'⭐'.repeat(Math.min(Math.max(stars, 1), 5))}</strong> từ bạn.
+    </p>
+    <p style="font-size: 14px; color: #64748b; line-height: 1.6;">
+      Ý kiến đóng góp quý báu này giúp đội ngũ nhân sự tiếp tục hoàn thiện và nâng cao chất lượng trải nghiệm ứng tuyển cho cộng đồng công nghệ.
+    </p>
+    <div style="margin-top: 28px; padding-top: 18px; border-top: 1px solid #f1f5f9; font-size: 12px; color: #94a3b8;">
+      HR Tech Enterprise • Talent Acquisition Team
+    </div>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  }
 }

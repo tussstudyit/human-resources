@@ -629,4 +629,42 @@ export class RecruitmentService {
   async archiveCandidateTalentPool(candidateId: string, scenario?: string) {
     return this.archiveTalentPool(candidateId, scenario);
   }
+
+  // 14. PUBLIC: Handle candidate RSVP response from interview invite email
+  async handleCandidateRsvp(candidateId: string, status?: string) {
+    const candidate = await this.prisma.candidate.findUnique({
+      where: { id: candidateId },
+    });
+    if (!candidate) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    const isReschedule = String(status).toUpperCase() === 'RESCHEDULE';
+    const newStatus = isReschedule ? 'RESCHEDULE_REQUESTED' : 'CONFIRMED';
+
+    const existingJson = (candidate.parsedSkillsJson as any) || {};
+    const existingSchedule = existingJson.interviewSchedule || {};
+
+    const updatedSchedule = {
+      ...existingSchedule,
+      rsvpStatus: newStatus,
+      rsvpUpdatedAt: new Date().toISOString(),
+    };
+
+    await this.prisma.candidate.update({
+      where: { id: candidateId },
+      data: {
+        parsedSkillsJson: {
+          ...existingJson,
+          interviewSchedule: updatedSchedule,
+        },
+      },
+    });
+
+    return {
+      candidateName: candidate.name,
+      status: newStatus,
+      dateTimeFormatted: existingSchedule.dateTimeFormatted || 'Thời gian đã hẹn',
+    };
+  }
 }
