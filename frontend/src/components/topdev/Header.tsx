@@ -183,10 +183,8 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex items-center justify-between h-16 sm:h-18">
             
-            {/* Left Group: Logo + Navigation Links */}
-            <div className="flex items-center gap-6 lg:gap-8 xl:gap-10">
-              {/* Zone 1: Single Brand Wordmark */}
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Zone 1: Single Brand Wordmark */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link 
                 href="/" 
                 className="flex items-center gap-1.5 focus:outline-none group text-left cursor-pointer"
@@ -207,8 +205,8 @@ export const Header: React.FC<HeaderProps> = ({
               </Link>
             </div>
 
-            {/* Zone 2: Navigation Links (single-line, clean typography, responsive gap) */}
-            <nav className="hidden lg:flex items-center gap-2.5 xl:gap-5 text-xs xl:text-sm font-semibold text-slate-700">
+            {/* Zone 2: Navigation Links (Centered in the middle of navbar) */}
+            <nav className="hidden lg:flex items-center justify-center flex-1 mx-4 xl:mx-8 gap-4 xl:gap-6 text-xs xl:text-sm font-semibold text-slate-700">
               <Link
                 href="/"
                 className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer ${
@@ -365,7 +363,6 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
             </nav>
-            </div>
 
             {/* Zone 3: Actions & Primary CTA / Profile Box */}
             <div className="flex items-center gap-3 shrink-0">
