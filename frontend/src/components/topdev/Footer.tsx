@@ -51,13 +51,13 @@ export const Footer: React.FC<FooterProps> = ({
 
   return (
     <footer className="w-full bg-slate-950 text-slate-400 text-xs border-t border-slate-900 pt-10 sm:pt-14 pb-8 sm:pb-10 mt-auto">
-      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         
-        {/* Top 5-Column Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-10 pb-8 sm:pb-12 border-b border-slate-800/80">
+        {/* Top 4-Column Balanced Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 xl:gap-12 pb-8 sm:pb-12 border-b border-slate-800/80">
           
-          {/* Col 1: Brand & About (Spans 2 cols on lg) */}
-          <div className="sm:col-span-2 md:col-span-3 lg:col-span-2 space-y-4">
+          {/* Col 1: Brand & About */}
+          <div className="space-y-4">
             <Link href="/" className="inline-flex items-center gap-2 group cursor-pointer">
               <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white font-extrabold text-sm font-mono shadow-xs group-hover:scale-105 transition-transform">
                 &lt;/&gt;
