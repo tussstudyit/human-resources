@@ -197,7 +197,8 @@ export class PerformanceService {
       const deptName = u.department?.name || 'Toàn công ty';
       const roleTitle = u.role === 'HR' ? 'HR Specialist' : (u.role === 'MANAGER' ? 'Manager' : 'Nhân sự');
       const token = Buffer.from(`${u.id}:${period}:static`).toString('base64url');
-      const magicLink = `http://192.168.2.123:3000/bieu-mau-danh-gia-360.html?token=${token}&period=${period}&name=${encodeURIComponent(u.fullName)}&email=${encodeURIComponent(u.email)}&userId=${u.id}`;
+      const frontendBase = process.env.FRONTEND_URL || 'https://cvresources.tech';
+      const magicLink = `${frontendBase}/bieu-mau-danh-gia-360?token=${token}&period=${period}&name=${encodeURIComponent(u.fullName)}&email=${encodeURIComponent(u.email)}&userId=${u.id}`;
 
       return {
         id: index + 1,
