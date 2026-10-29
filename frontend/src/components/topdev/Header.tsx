@@ -54,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [hrDropdownOpen, setHrDropdownOpen] = useState(false);
+  const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
 
   // Internal Modals fallback state when Header is rendered standalone
   const [internalSalaryOpen, setInternalSalaryOpen] = useState(false);
@@ -64,6 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const hrDropdownRef = useRef<HTMLDivElement>(null);
   const hrDropdownButtonRef = useRef<HTMLButtonElement>(null);
+  const toolsDropdownRef = useRef<HTMLDivElement>(null);
 
   const { user, isAuthenticated, logout, initAuth } = useAuthStore();
 
@@ -79,6 +81,9 @@ export const Header: React.FC<HeaderProps> = ({
       }
       if (hrDropdownRef.current && !hrDropdownRef.current.contains(event.target as Node)) {
         setHrDropdownOpen(false);
+      }
+      if (toolsDropdownRef.current && !toolsDropdownRef.current.contains(event.target as Node)) {
+        setToolsDropdownOpen(false);
       }
     };
     document.addEventListener('pointerdown', handleClickOutside);
@@ -306,30 +311,57 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Công ty hàng đầu</span>
               </button>
 
-              <button
-                onClick={handleReportModalClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
-              >
-                <TrendingUp className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-red-500" />
-                <span>Báo cáo Lương IT</span>
-                <span className="text-[9px] xl:text-[10px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">2026</span>
-              </button>
+              {/* Tools Dropdown */}
+              <div className="relative" ref={toolsDropdownRef}>
+                <button
+                  onClick={() => setToolsDropdownOpen(!toolsDropdownOpen)}
+                  className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-red-500" />
+                  <span>Công Cụ IT</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${toolsDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-              <button
-                onClick={handleSalaryCalcClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
-              >
-                <Calculator className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
-                <span>Tính Lương Gross-Net</span>
-              </button>
+                {toolsDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        setToolsDropdownOpen(false);
+                        handleReportModalClick();
+                      }}
+                      className="w-full flex items-center justify-between rounded-lg px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <TrendingUp className="w-4 h-4 text-red-500" />
+                        <span>Báo cáo Lương IT</span>
+                      </div>
+                      <span className="text-[9px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">2026</span>
+                    </button>
 
-              <button
-                onClick={handleCVBuilderClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
-              >
-                <FileText className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
-                <span>Tạo CV IT</span>
-              </button>
+                    <button
+                      onClick={() => {
+                        setToolsDropdownOpen(false);
+                        handleSalaryCalcClick();
+                      }}
+                      className="w-full flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <Calculator className="w-4 h-4 text-slate-400" />
+                      <span>Tính Lương Gross - Net</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setToolsDropdownOpen(false);
+                        handleCVBuilderClick();
+                      }}
+                      className="w-full flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <FileText className="w-4 h-4 text-slate-400" />
+                      <span>Tạo CV IT Chuẩn Quốc Tế</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </nav>
 
             {/* Zone 3: Actions & Primary CTA / Profile Box */}
