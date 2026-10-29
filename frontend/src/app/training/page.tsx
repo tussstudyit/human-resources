@@ -546,7 +546,7 @@ export default function TrainingPage() {
         {/* Skill Gap Radar Chart & Certifications Table */}
         <section className="grid gap-6 lg:grid-cols-2">
           {/* Radar Chart */}
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <div className="rounded-xl border bg-white p-5 shadow-sm min-w-0 overflow-hidden">
             <div className="mb-3">
               <h2 className="text-xl font-bold">Skill Gap Radar Chart</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -607,7 +607,7 @@ export default function TrainingPage() {
           </div>
 
           {/* Certifications Table */}
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <div className="rounded-xl border bg-white p-5 shadow-sm min-w-0 overflow-hidden">
             <div className="mb-4">
               <h2 className="text-xl font-bold">Chứng chỉ & Hiệu lực</h2>
               <p className="mt-1 text-sm text-slate-500">

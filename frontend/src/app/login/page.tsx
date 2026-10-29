@@ -49,7 +49,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen w-full max-w-full bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
       {/* Subtle tech background grid pattern & ambient glow from TopDev Hero */}
       <div
         className="absolute inset-0 opacity-15 pointer-events-none"
