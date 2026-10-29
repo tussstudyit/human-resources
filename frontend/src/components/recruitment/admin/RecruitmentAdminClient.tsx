@@ -302,7 +302,7 @@ export default function RecruitmentAdminClient() {
               <span>•</span>
               <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-0.5 animate-pulse" />
-                N8N ENGINE CONNECTED
+                HỆ THỐNG TỰ ĐỘNG ĐÃ KẾT NỐI
               </span>
               {candidates.some((c) => c.aiStatus === 'PENDING') && (
                 <span className="inline-flex items-center gap-1 text-[#0070f3] bg-[#d3e5ff] px-1.5 py-0.5 rounded border border-[#0070f3]/20 font-semibold animate-pulse">

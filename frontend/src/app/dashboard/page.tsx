@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Header } from '@/components/topdev/Header';
+import Footer from '@/components/topdev/Footer';
 import { api } from '@/lib/api';
 import {
   Users,
@@ -164,14 +165,14 @@ export default function DashboardPage() {
       count: totalCandidates.toString(),
       rate: '100%',
       color: 'bg-red-600',
-      desc: 'Tổng ứng viên nộp qua Careers & n8n',
+      desc: 'Tổng ứng viên tiếp nhận trên hệ thống',
     },
     {
       name: '2. Chờ AI thẩm định',
       count: pipeline.pending.toString(),
       rate: formatRate(pipeline.pending),
       color: 'bg-amber-500',
-      desc: 'Chờ n8n WF_04 trích xuất & chấm điểm',
+      desc: 'Chờ AI trích xuất kỹ năng & chấm điểm',
     },
     {
       name: '3. AI đã chấm điểm',
@@ -185,14 +186,14 @@ export default function DashboardPage() {
       count: pipeline.interview.toString(),
       rate: formatRate(pipeline.interview),
       color: 'bg-emerald-500',
-      desc: 'n8n WF_05 đã xếp lịch Google Meet',
+      desc: 'Hệ thống tự động xếp lịch Google Meet',
     },
     {
       name: '5. Kho nhân tài (Pool)',
       count: pipeline.talentPool.toString(),
       rate: formatRate(pipeline.talentPool),
       color: 'bg-indigo-600',
-      desc: 'n8n WF_06 phân loại & lưu trữ',
+      desc: 'Hệ thống tự động phân loại & lưu kho',
     },
   ];
 
@@ -206,7 +207,7 @@ export default function DashboardPage() {
       stats: 'Hoạt động 100%',
       tasksCount: totalCandidates > 0 ? `${totalCandidates} hồ sơ đã tiếp nhận` : 'Sẵn sàng tiếp nhận',
       active: true,
-      workflows: ['WF_04 (Parser)', 'WF_05 (Meet)', 'WF_06 (Pool)'],
+      workflows: ['Trích xuất CV AI', 'Xếp lịch tự động', 'Kho dữ liệu nhân tài'],
     },
   ];
 
@@ -242,7 +243,7 @@ export default function DashboardPage() {
                 Xin chào, {user.fullName}!
               </h2>
               <p className="text-slate-300 text-xs max-w-2xl leading-relaxed">
-                Hệ thống Quản lý Tuyển dụng & Nhân sự UpCareer kết nối trực tiếp cơ sở dữ liệu và n8n Automation Engine để sàng lọc ứng viên, tạo lịch phỏng vấn và quản trị nhân tài.
+                Hệ thống Quản lý Tuyển dụng & Nhân sự UpCareer kết nối trực tiếp cơ sở dữ liệu và hệ thống tự động hóa để sàng lọc ứng viên, tạo lịch phỏng vấn và quản trị nhân tài.
               </p>
             </div>
 
@@ -429,10 +430,10 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#ebebeb]">
               <div>
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                  HỆ THỐNG MULTI-AGENT
+                  HỆ THỐNG QUẢN TRỊ NHÂN SỰ
                 </div>
                 <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
-                  5 Tác Tử AI Doanh Nghiệp (Multi-Agent Squad)
+                  5 Phân Hệ Quản Trị Nhân Sự Doanh Nghiệp
                 </h3>
               </div>
               <span className="font-mono text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] flex items-center gap-1.5">
@@ -456,7 +457,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <h4 className="text-xs font-semibold text-[#171717] group-hover:text-[#0070f3] transition-colors flex items-center justify-between">
-                  AI Recruitment Agent
+                  Tuyển Dụng & Ứng Viên (ATS)
                   <ArrowRight className="h-3 w-3 text-[#8f8f8f] group-hover:translate-x-0.5 transition-transform" />
                 </h4>
                 <p className="text-[11px] text-[#4d4d4d] mt-1 line-clamp-2 leading-relaxed">
@@ -464,7 +465,7 @@ export default function DashboardPage() {
                 </p>
                 <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
                   <span>TRẠNG THÁI</span>
-                  <span className="font-semibold">Hoạt động (n8n WF 04-06)</span>
+                  <span className="font-semibold">Hoạt động tự động</span>
                 </div>
               </Link>
 
@@ -568,7 +569,7 @@ export default function DashboardPage() {
                 </p>
                 <div className="mt-3 pt-2 border-t border-[#ebebeb] flex items-center justify-between text-[10px] font-mono text-emerald-600">
                   <span>TRẠNG THÁI</span>
-                  <span className="font-semibold">Hoạt động (n8n & Sheets)</span>
+                  <span className="font-semibold">Hoạt động tự động</span>
                 </div>
               </Link>
             </div>
@@ -668,7 +669,7 @@ export default function DashboardPage() {
                       </span>
                     </div>
                     <p className="text-xs text-[#4d4d4d] mt-1.5 max-w-2xl leading-relaxed">
-                      Phân tích CV ứng viên, trích xuất kỹ năng bằng Gemini AI, chấm điểm tương thích chính xác theo tiêu chí từng vị trí và tự động hóa xếp lịch phỏng vấn Google Meet qua n8n Engine.
+                      Phân tích CV ứng viên, trích xuất kỹ năng bằng Gemini AI, chấm điểm tương thích chính xác theo tiêu chí từng vị trí và tự động hóa xếp lịch phỏng vấn Google Meet.
                     </p>
                     <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-mono text-[#8f8f8f]">
                       <span>Tác vụ:</span>
@@ -690,12 +691,12 @@ export default function DashboardPage() {
               {/* 3 Live Connected Workflows */}
               <div className="pt-5">
                 <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider mb-3">
-                  QUY TRÌNH TỰ ĐỘNG HÓA N8N ĐANG HOẠT ĐỘNG (3 WORKFLOWS)
+                  CÁC QUY TRÌNH TỰ ĐỘNG HÓA TUYỂN DỤNG ĐANG KÍCH HOẠT
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[11px] font-bold text-red-600">WF_04</span>
+                      <span className="font-mono text-[11px] font-bold text-red-600">TRÍCH XUẤT CV</span>
                       <span className="inline-flex items-center text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                         ONLINE
@@ -709,7 +710,7 @@ export default function DashboardPage() {
 
                   <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[11px] font-bold text-red-600">WF_05</span>
+                      <span className="font-mono text-[11px] font-bold text-red-600">XẾP LỊCH MEET</span>
                       <span className="inline-flex items-center text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                         ONLINE
@@ -723,7 +724,7 @@ export default function DashboardPage() {
 
                   <div className="p-3.5 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] hover:border-red-500/40 transition-colors">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-mono text-[11px] font-bold text-red-600">WF_06</span>
+                      <span className="font-mono text-[11px] font-bold text-red-600">KHO NHÂN TÀI</span>
                       <span className="inline-flex items-center text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
                         ONLINE
@@ -747,7 +748,7 @@ export default function DashboardPage() {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
                     </span>
-                    <span>ĐÃ ĐỒNG BỘ CSDL VÀ N8N THỜI GIAN THỰC</span>
+                    <span>ĐÃ ĐỒNG BỘ CSDL VÀ HỆ THỐNG THỜI GIAN THỰC</span>
                   </div>
                 </div>
               </div>
@@ -760,10 +761,10 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#ebebeb]">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    ĐÁNH GIÁ TRỰC TIẾP N8N & GEMINI AI
+                    ĐÁNH GIÁ TRỰC TIẾP QUA GEMINI AI
                   </div>
                   <h3 className="text-sm font-semibold text-[#171717] tracking-tight mt-0.5">
-                    Hồ Sơ Được Thẩm Định Gần Nhất Qua n8n & Gemini AI
+                    Hồ Sơ Được Thẩm Định Gần Nhất Qua Gemini AI
                   </h3>
                 </div>
                 <Link
@@ -1154,6 +1155,7 @@ export default function DashboardPage() {
             </div>
           )}
         </main>
+      <Footer />
     </div>
   );
 }

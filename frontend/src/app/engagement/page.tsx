@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
+import { Footer } from '@/components/topdev/Footer';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   HeartHandshake,
@@ -114,7 +115,7 @@ export default function EngagementPage() {
       department: 'Phòng Tuyển dụng & HR',
       employeeName: 'Sarah HR',
       sentiment: 'positive',
-      comment: 'Hệ thống AI ATS và tự động hóa n8n mới giúp team tiết kiệm đến 40% thời gian duyệt hồ sơ và gửi email phỏng vấn.',
+      comment: 'Hệ thống AI ATS và quy trình tự động hóa mới giúp team tiết kiệm đến 40% thời gian duyệt hồ sơ và gửi email phỏng vấn.',
       category: 'Công cụ & Quy trình',
       time: 'Hôm qua',
       status: 'resolved',
@@ -295,7 +296,7 @@ export default function EngagementPage() {
 
       setStatusMessage({
         type: 'success',
-        text: `[WF 01 Thành công] Đã ghi nhận khảo sát từ ${surveyForm.employeeName}. Gemini AI phân loại: "${aiCategory}", Nguy cơ kiệt sức: ${burnoutRisk}. (Đã đồng bộ Google Sheets${burnoutRisk === 'High' || burnoutRisk === 'Critical' ? ' & Gửi cảnh báo Slack/Email' : ''}).`,
+        text: `[Ghi Nhận Thành Công] Đã tiếp nhận bài khảo sát từ ${surveyForm.employeeName}. Phân tích cảm xúc: "${aiCategory}", Đánh giá kiệt sức: ${burnoutRisk}. (Đã đồng bộ Google Sheets${burnoutRisk === 'High' || burnoutRisk === 'Critical' ? ' & Gửi cảnh báo Slack/Email' : ''}).`,
       });
 
       // Add to feedbacks feed
@@ -319,7 +320,7 @@ export default function EngagementPage() {
       console.error('Lỗi khi gửi khảo sát:', err);
       setStatusMessage({
         type: 'error',
-        text: `Lỗi kết nối tới WF 01: ${err.response?.data?.message || err.message}`,
+        text: `Lỗi khi gửi khảo sát: ${err.response?.data?.message || err.message}`,
       });
     } finally {
       setTriggeringWF(null);
@@ -352,7 +353,7 @@ export default function EngagementPage() {
 
       setStatusMessage({
         type: 'success',
-        text: `[WF 02 Thành công] Đã kích hoạt ${pkgTitle} (Mã: ${actionCode}) cho ${wellbeingForm.employeeName} (${wellbeingForm.employeeEmail}). Email can thiệp đã được gửi!`,
+        text: `[Can Thiệp Thành Công] Đã kích hoạt ${pkgTitle} (Mã: ${actionCode}) cho ${wellbeingForm.employeeName} (${wellbeingForm.employeeEmail}). Email chăm sóc đã được gửi thành công!`,
       });
 
       setShowWellbeingModal(false);
@@ -360,14 +361,14 @@ export default function EngagementPage() {
       console.error('Lỗi khi kích hoạt Wellbeing:', err);
       setStatusMessage({
         type: 'error',
-        text: `Lỗi kết nối tới WF 02: ${err.response?.data?.message || err.message}`,
+        text: `Lỗi khi kích hoạt gói phúc lợi: ${err.response?.data?.message || err.message}`,
       });
     } finally {
       setTriggeringWF(null);
     }
   };
 
-  // WF 03: Dispatch Weekly Pulse Survey Campaign
+  // Dispatch Weekly Pulse Survey Campaign
   const handleDispatchPulseSurvey = async () => {
     setTriggeringWF('wf3');
     setStatusMessage(null);
@@ -403,14 +404,14 @@ export default function EngagementPage() {
 
       setStatusMessage({
         type: 'success',
-        text: `[WF 03 Thành công] Đã khởi chạy chiến dịch Pulse Survey Tuần 42 tới ${recipients.length} nhân sự. n8n đang tự động tạo Magic Link và gửi email khảo sát!`,
+        text: `[Khởi Chạy Thành Công] Đã phát hành chiến dịch khảo sát tuần tới ${recipients.length} nhân sự. Hệ thống đã tự động gửi Magic Link qua email!`,
       });
       setShowDispatchModal(false);
     } catch (err: any) {
-      console.error('Lỗi khi khởi chạy WF 03:', err);
+      console.error('Lỗi khi khởi chạy khảo sát:', err);
       setStatusMessage({
         type: 'error',
-        text: `Lỗi khởi chạy WF 03: ${err.response?.data?.message || err.message}`,
+        text: `Lỗi phát hành khảo sát tuần: ${err.response?.data?.message || err.message}`,
       });
     } finally {
       setTriggeringWF(null);
@@ -441,21 +442,21 @@ export default function EngagementPage() {
           <div className="relative z-10 space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 font-mono text-[11px] text-rose-300 uppercase tracking-wider bg-rose-950/80 px-2.5 py-1 rounded-md border border-rose-800/60">
               <HeartHandshake className="w-3.5 h-3.5 text-rose-400" />
-              <span>AGENT 5 · ENGAGEMENT & WELLBEING (WF 01 - WF 02 - WF 03)</span>
+              <span>TRUNG TÂM GẮN KẾT & PHÚC LỢI NHÂN SỰ</span>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               <span className="text-emerald-400">ACTIVE & AUTOMATED</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-              <span>❤️ AI Employee Engagement & Wellbeing</span>
+              <span>❤️ Gắn Kết Nhân Sự & Chăm Sóc Sức Khỏe Tinh Thần</span>
             </h1>
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-              Tự động phân phối khảo sát định kỳ (WF 03), thu thập & phân tích tâm lý kiệt sức qua Gemini AI (WF 01), và điều phối các gói can thiệp chăm sóc sức khỏe thể chất & tinh thần (WF 02).
+              Tự động phân phối khảo sát định kỳ, thu thập & phân tích mức độ kiệt sức qua trí tuệ nhân tạo, và điều phối các gói can thiệp chăm sóc sức khỏe thể chất & tinh thần cho nhân viên.
             </p>
           </div>
 
           {/* Interactive Trigger Buttons */}
           <div className="relative z-10 flex flex-wrap items-center gap-3 shrink-0">
-            {/* Button WF 03 */}
+            {/* Button Dispatch Pulse Survey */}
             <button
               onClick={() => setShowDispatchModal(true)}
               disabled={triggeringWF !== null}
@@ -463,21 +464,21 @@ export default function EngagementPage() {
               title="Gửi email khảo sát Pulse Survey kèm Magic Link tới nhân viên"
             >
               <Send className={`w-3.5 h-3.5 text-blue-400 ${triggeringWF === 'wf3' ? 'animate-spin' : ''}`} />
-              <span>🚀 Gửi Khảo Sát Tuần (WF 03)</span>
+              <span>🚀 Gửi Khảo Sát Tuần</span>
             </button>
 
-            {/* Button WF 01 */}
+            {/* Button Survey Intake */}
             <button
               onClick={() => setShowSurveyModal(true)}
               disabled={triggeringWF !== null}
               className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold text-xs text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 transition-all shadow-md disabled:opacity-50 cursor-pointer"
-              title="Điền khảo sát nhịp đập & kiểm tra Gemini AI phân loại tâm lý"
+              title="Điền khảo sát nhịp đập & kiểm tra phân loại tâm lý"
             >
               <Sparkles className={`w-3.5 h-3.5 text-amber-200 ${triggeringWF === 'wf1' ? 'animate-spin' : ''}`} />
-              <span>✍️ Điền Khảo Sát (WF 01)</span>
+              <span>✍️ Làm Khảo Sát Gắn Kết</span>
             </button>
 
-            {/* Button WF 02 */}
+            {/* Button Wellbeing Action */}
             <button
               onClick={() => setShowWellbeingModal(true)}
               disabled={triggeringWF !== null}
@@ -485,7 +486,7 @@ export default function EngagementPage() {
               title="Điều phối gói can thiệp sức khỏe (Voucher cafe, tư vấn tâm lý, giảm tải)"
             >
               <Coffee className={`w-3.5 h-3.5 ${triggeringWF === 'wf2' ? 'animate-spin' : ''}`} />
-              <span>☕ Can Thiệp Wellbeing (WF 02)</span>
+              <span>☕ Can Thiệp Phúc Lợi</span>
             </button>
           </div>
         </div>
@@ -588,9 +589,9 @@ export default function EngagementPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                  WORKFLOW 03
+                  PHÂN PHỐI KHẢO SÁT
                 </span>
-                <span className="text-[11px] text-slate-400">Dispatcher</span>
+                <span className="text-[11px] text-slate-400">Tự động hóa</span>
               </div>
               <h3 className="text-sm font-bold text-slate-900">Phân Phối Khảo Sát Tuần (Pulse Survey)</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -609,13 +610,13 @@ export default function EngagementPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">
-                  WORKFLOW 01
+                  THU THẬP & PHÂN TÍCH AI
                 </span>
-                <span className="text-[11px] text-slate-400">Collector & AI</span>
+                <span className="text-[11px] text-slate-400">Trí tuệ nhân tạo</span>
               </div>
               <h3 className="text-sm font-bold text-slate-900">Thu Thập & Phân Tích Tâm Lý Gemini AI</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Nhân viên gửi điểm (1-10) và ý kiến. Gemini AI phân loại 5 chủ đề, tính điểm Burnout Risk, đồng bộ Sheet & cảnh báo Slack nếu căng thẳng.
+                Nhân viên gửi điểm (1-10) và ý kiến. Gemini AI phân loại 5 chủ đề, tính điểm Burnout Risk, đồng bộ dữ liệu & thông báo nếu căng thẳng.
               </p>
             </div>
             <button
@@ -630,9 +631,9 @@ export default function EngagementPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">
-                  WORKFLOW 02
+                  GÓI HỖ TRỢ PHÚC LỢI
                 </span>
-                <span className="text-[11px] text-slate-400">Intervention</span>
+                <span className="text-[11px] text-slate-400">Chăm sóc nhân sự</span>
               </div>
               <h3 className="text-sm font-bold text-slate-900">Điều Phối Can Thiệp Wellbeing Cá Nhân Hóa</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -760,7 +761,7 @@ export default function EngagementPage() {
                           title="Gửi gói chăm sóc Wellbeing cho nhân sự này"
                         >
                           <Coffee className="w-3 h-3" />
-                          <span>Can thiệp (WF 02)</span>
+                          <span>Can thiệp phúc lợi</span>
                         </button>
                       )}
 
@@ -838,8 +839,8 @@ export default function EngagementPage() {
               <div className="flex items-center gap-2.5">
                 <Sparkles className="w-5 h-5 text-amber-300" />
                 <div>
-                  <h3 className="font-bold text-sm">Điền Khảo Sát Pulse Survey (WF 01)</h3>
-                  <p className="text-[11px] text-rose-200">Gemini AI phân loại cảm xúc & Burnout Risk tự động</p>
+                  <h3 className="font-bold text-sm">Khảo Sát Xung Nhịp Tuần (Pulse Survey)</h3>
+                  <p className="text-[11px] text-rose-200">Trí tuệ nhân tạo phân loại cảm xúc & đánh giá kiệt sức tự động</p>
                 </div>
               </div>
               <button
@@ -966,11 +967,11 @@ export default function EngagementPage() {
               <div className="p-3 bg-rose-50/70 border border-rose-100 rounded-xl text-[11px] text-rose-800 space-y-1">
                 <p className="font-bold flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-rose-600" />
-                  Quy trình tự động hóa n8n (WF 01):
+                  Quy trình xử lý tự động:
                 </p>
-                <p>1. Ghi nhận vào Google Sheets & đồng bộ báo cáo nội bộ.</p>
-                <p>2. Gemini AI phân loại: Workload, Comp, Leadership, Culture, Growth.</p>
-                <p>3. Nếu điểm ≤ 4 hoặc Burnout Risk Cao: Tự động gửi cảnh báo Slack & gửi email động viên.</p>
+                <p>1. Ghi nhận vào cơ sở dữ liệu & đồng bộ báo cáo nội bộ.</p>
+                <p>2. AI phân loại chủ đề: Khối lượng công việc, Chế độ đãi ngộ, Lãnh đạo, Văn hóa, Phát triển.</p>
+                <p>3. Nếu điểm ≤ 4 hoặc có dấu hiệu quá tải: Tự động gửi cảnh báo & đề xuất hỗ trợ kịp thời.</p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
@@ -1005,8 +1006,8 @@ export default function EngagementPage() {
               <div className="flex items-center gap-2.5">
                 <Coffee className="w-5 h-5 text-amber-300" />
                 <div>
-                  <h3 className="font-bold text-sm">Điều Phối Can Thiệp Wellbeing (WF 02)</h3>
-                  <p className="text-[11px] text-amber-200">Gửi Voucher & hỗ trợ tâm lý cá nhân hóa qua Gemini AI</p>
+                  <h3 className="font-bold text-sm">Điều Phối Gói Can Thiệp Phúc Lợi</h3>
+                  <p className="text-[11px] text-amber-200">Gửi Voucher & hỗ trợ tâm lý cá nhân hóa qua trợ lý AI</p>
                 </div>
               </div>
               <button
@@ -1089,9 +1090,9 @@ export default function EngagementPage() {
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 space-y-1">
                 <p className="font-bold flex items-center gap-1">
                   <Zap className="w-3.5 h-3.5 text-amber-600" />
-                  Hành động tiếp theo của n8n (WF 02):
+                  Hành động tiếp theo của hệ thống:
                 </p>
-                <p>• Gemini AI tạo nội dung thư động viên chân thành theo hoàn cảnh riêng.</p>
+                <p>• Trí tuệ nhân tạo soạn thảo thư động viên chân thành theo hoàn cảnh riêng.</p>
                 <p>• Tự sinh mã quà tặng / thư mời tư vấn và gửi trực tiếp tới email <strong>{wellbeingForm.employeeEmail}</strong>.</p>
               </div>
 
@@ -1127,8 +1128,8 @@ export default function EngagementPage() {
               <div className="flex items-center gap-2.5">
                 <Send className="w-5 h-5 text-blue-300" />
                 <div>
-                  <h3 className="font-bold text-sm">Khởi Chạy Pulse Survey Tuần (WF 03)</h3>
-                  <p className="text-[11px] text-blue-200">Tự động phát hành Magic Link và gửi email hàng loạt</p>
+                  <h3 className="font-bold text-sm">Phát Hành Khảo Sát Tuần Mới</h3>
+                  <p className="text-[11px] text-blue-200">Tự động phát hành Magic Link và gửi email hàng loạt cho nhân sự</p>
                 </div>
               </div>
               <button
@@ -1196,7 +1197,7 @@ export default function EngagementPage() {
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11px] text-blue-900 space-y-1">
                 <p className="font-bold flex items-center gap-1">
                   <Mail className="w-3.5 h-3.5 text-blue-600" />
-                  Quy trình gửi email của n8n:
+                  Quy trình gửi email tự động:
                 </p>
                 <p>• Mỗi nhân sự nhận được 1 email tiêu đề: <strong>[Pulse Survey Tuần 42] Khảo sát nhịp đập & gắn kết nhân viên</strong>.</p>
                 <p>• Nút &ldquo;Bắt đầu khảo sát&rdquo; gắn Magic Link dẫn trực tiếp về trang <code>/engagement?tab=survey&email=...</code>.</p>
@@ -1225,6 +1226,9 @@ export default function EngagementPage() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
+import Footer from '@/components/topdev/Footer';
 import {
   ArrowLeft,
   GraduationCap,
@@ -334,15 +335,15 @@ export default function TrainingPage() {
             <div className="relative z-10 space-y-2">
               <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-300 uppercase tracking-wider bg-indigo-950/80 px-2.5 py-1 rounded-md border border-indigo-800/60">
                 <GraduationCap className="w-3.5 h-3.5 text-indigo-400" />
-                <span>AGENT 4 · SKILLS & TRAINING AUTOMATION</span>
+                <span>ĐÀO TẠO & PHÁT TRIỂN KỸ NĂNG</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-emerald-400">WF_10 & WF_11 ACTIVE</span>
+                <span className="text-emerald-400">HỆ THỐNG TỰ ĐỘNG ĐANG HOẠT ĐỘNG</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-                <span>🎯 AI Skill Gap & Training Recommender</span>
+                <span>🎯 Phân Tích Khoảng Cách Kỹ Năng & Đề Xuất Đào Tạo AI</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Phân tích khoảng cách kỹ năng (Skill Gap), đối chiếu chứng chỉ chuyên môn và tự động đề xuất khóa học trực tuyến (Coursera/Udemy) qua n8n.
+                Phân tích khoảng cách kỹ năng (Skill Gap), đối chiếu chứng chỉ chuyên môn và tự động đề xuất khóa học trực tuyến (Coursera/Udemy) phù hợp.
               </p>
             </div>
 
@@ -353,7 +354,7 @@ export default function TrainingPage() {
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition-all shadow-md disabled:opacity-50 cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${fetchingRecs ? 'animate-spin' : ''}`} />
-                <span>{fetchingRecs ? 'Đang phân tích...' : 'Gợi ý khóa học AI (WF_11)'}</span>
+                <span>{fetchingRecs ? 'Đang phân tích...' : 'Gợi ý khóa học AI'}</span>
               </button>
               <button
                 onClick={() => setShowForm(!showForm)}
@@ -364,7 +365,7 @@ export default function TrainingPage() {
             </div>
           </div>
 
-          {/* AI Course Recommendations from WF_11 */}
+          {/* AI Course Recommendations */}
           {courseRecs.length > 0 && (
             <div className="bg-white rounded-2xl border border-indigo-100 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
@@ -374,7 +375,7 @@ export default function TrainingPage() {
                   </div>
                   <div>
                     <h2 className="text-base font-bold text-slate-900">
-                      Khóa Học Đề Xuất Bởi AI (WF_11 Skill Gap Analysis)
+                      Khóa Học Đề Xuất Bởi Trí Tuệ Nhân Tạo (Skill Gap Analysis)
                     </h2>
                     <p className="text-xs text-slate-500">
                       Tự động tính toán độ chênh lệch kỹ năng từ database và truy xuất khóa đào tạo phù hợp.
@@ -437,7 +438,7 @@ export default function TrainingPage() {
                 <BookOpen className="w-5 h-5 flex-shrink-0" />
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900 text-sm">Gợi ý khóa học: Next.js & n8n Microservices</h3>
+                <h3 className="font-semibold text-slate-900 text-sm">Gợi ý khóa học: Kiến trúc Microservices & Next.js Nâng Cao</h3>
                 <p className="text-xs text-slate-500 mt-0.5">Đề xuất bởi AI Agent dựa trên hồ sơ kỹ năng của bạn (Tiến độ: 85%).</p>
               </div>
             </div>
@@ -685,7 +686,7 @@ export default function TrainingPage() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900">Gửi Nhắc nhở Đào tạo & Chứng chỉ</h2>
-              <p className="text-xs text-slate-500">Tự động kích hoạt n8n workflow gửi email nhắc hạn hoàn thành khóa học.</p>
+              <p className="text-xs text-slate-500">Tự động gửi email thông báo và nhắc hạn hoàn thành khóa học tới nhân sự.</p>
             </div>
           </div>
 
@@ -776,13 +777,14 @@ export default function TrainingPage() {
                 'Đang gửi...'
               ) : (
                 <>
-                  <Send className="w-4 h-4" /> Gửi Nhắc Nhở Đào Tạo (n8n Webhook)
+                  <Send className="w-4 h-4" /> Gửi Nhắc Nhở Đào Tạo Tự Động
                 </>
               )}
             </button>
           </form>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

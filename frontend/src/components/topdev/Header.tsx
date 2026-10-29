@@ -175,40 +175,40 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-xs backdrop-blur-md bg-white/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-6 h-18">
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-2 sm:gap-6 h-16 sm:h-18">
             
             {/* Zone 1: Single Brand Wordmark */}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link 
                 href="/" 
                 className="flex items-center gap-1.5 focus:outline-none group text-left cursor-pointer"
                 title="UpCareer - Việc Làm IT Hàng Đầu Việt Nam"
               >
-                <div className="w-10 h-10 rounded-lg bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-extrabold text-xl shadow-xs group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-extrabold text-base sm:text-xl shadow-xs group-hover:scale-105 transition-transform shrink-0">
                   <span className="font-mono tracking-tighter text-white">&lt;/&gt;</span>
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center text-2xl font-black tracking-tight leading-none text-slate-900">
+                  <div className="flex items-center text-lg sm:text-2xl font-black tracking-tight leading-none text-slate-900">
                     <span className="text-red-600">UP</span>
                     <span className="text-slate-900">CAREER</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase leading-tight mt-0.5">
+                  <span className="text-[8px] sm:text-[10px] font-semibold text-slate-500 tracking-wider uppercase leading-tight mt-0.5 truncate max-w-[120px] sm:max-w-none">
                     Vietnam IT Jobs & HR Tech
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* Zone 2: Navigation Links (single-line, clean typography) */}
-            <nav className="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-semibold text-slate-700">
+            {/* Zone 2: Navigation Links (single-line, clean typography, responsive gap) */}
+            <nav className="hidden lg:flex items-center gap-2.5 xl:gap-5 text-xs xl:text-sm font-semibold text-slate-700">
               <Link
                 href="/"
-                className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer ${
+                className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer ${
                   pathname === '/' || pathname === '/careers' ? 'text-red-600 font-bold' : ''
                 }`}
               >
-                <Briefcase className="w-4 h-4 text-slate-400" />
+                <Briefcase className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
                 <span>Việc làm IT</span>
               </Link>
 
@@ -220,12 +220,12 @@ export const Header: React.FC<HeaderProps> = ({
                   aria-expanded={hrDropdownOpen}
                   aria-controls="hr-agents-menu"
                   onClick={() => setHrDropdownOpen((open) => !open)}
-                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
+                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
                     isHRPage ? 'text-red-600 font-bold' : ''
                   }`}
                 >
-                  <LayoutDashboard className={`w-4 h-4 ${isHRPage ? 'text-red-600' : 'text-slate-400'}`} />
-                  <span>Hệ Thống AI HR</span>
+                  <LayoutDashboard className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isHRPage ? 'text-red-600' : 'text-slate-400'}`} />
+                  <span>Cổng Quản Trị HR</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${hrDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
@@ -242,7 +242,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Tổng quan</span>
+                      <span className="leading-tight">Bảng Điều Khiển Tổng Quan</span>
                     </Link>
                     <Link
                       href="/recruitment"
@@ -252,7 +252,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <Briefcase className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Tuyển dụng</span>
+                      <span className="leading-tight">Tuyển Dụng & Ứng Viên (ATS)</span>
                     </Link>
                     <Link
                       href="/onboarding"
@@ -262,7 +262,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <Compass className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Hội nhập</span>
+                      <span className="leading-tight">Tiếp Nhận & Hội Nhập Nhân Sự</span>
                     </Link>
                     <Link
                       href="/performance"
@@ -272,7 +272,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <TrendingUp className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Hiệu suất</span>
+                      <span className="leading-tight">Quản Trị Hiệu Suất 360°</span>
                     </Link>
                     <Link
                       href="/training"
@@ -282,7 +282,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <GraduationCap className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Đào tạo & kỹ năng</span>
+                      <span className="leading-tight">Đào Tạo & Phát Triển Kỹ Năng</span>
                     </Link>
                     <Link
                       href="/engagement"
@@ -292,7 +292,7 @@ export const Header: React.FC<HeaderProps> = ({
                       }`}
                     >
                       <Heart className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Gắn kết nhân viên</span>
+                      <span className="leading-tight">Khảo Sát Gắn Kết & Phúc Lợi</span>
                     </Link>
                   </div>
                 )}
@@ -300,34 +300,34 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 onClick={() => handleNavClick('companies-section')}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
+                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
               >
-                <Building2 className="w-4 h-4 text-slate-400" />
+                <Building2 className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
                 <span>Công ty hàng đầu</span>
               </button>
 
               <button
                 onClick={handleReportModalClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
+                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
               >
-                <TrendingUp className="w-4 h-4 text-red-500" />
+                <TrendingUp className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-red-500" />
                 <span>Báo cáo Lương IT</span>
-                <span className="text-[10px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">2026</span>
+                <span className="text-[9px] xl:text-[10px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">2026</span>
               </button>
 
               <button
                 onClick={handleSalaryCalcClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
+                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
               >
-                <Calculator className="w-4 h-4 text-slate-400" />
+                <Calculator className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
                 <span>Tính Lương Gross-Net</span>
               </button>
 
               <button
                 onClick={handleCVBuilderClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
+                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
               >
-                <FileText className="w-4 h-4 text-slate-400" />
+                <FileText className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
                 <span>Tạo CV IT</span>
               </button>
             </nav>
@@ -412,7 +412,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <Briefcase className="w-4 h-4 text-slate-400" />
-                          <span>Agent 1 · AI Tuyển Dụng (ATS)</span>
+                          <span>Tuyển Dụng & Ứng Viên (ATS)</span>
                         </Link>
 
                         <Link
@@ -421,7 +421,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <Compass className="w-4 h-4 text-slate-400" />
-                          <span>Agent 2 · AI Onboarding</span>
+                          <span>Tiếp Nhận & Hội Nhập Nhân Sự</span>
                         </Link>
 
                         <Link
@@ -430,7 +430,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <TrendingUp className="w-4 h-4 text-slate-400" />
-                          <span>Agent 3 · AI Performance</span>
+                          <span>Quản Trị Hiệu Suất & Đánh Giá 360°</span>
                         </Link>
 
                         <Link
@@ -439,7 +439,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <GraduationCap className="w-4 h-4 text-slate-400" />
-                          <span>Agent 4 · AI Skills & Training</span>
+                          <span>Đào Tạo & Phát Triển Kỹ Năng</span>
                         </Link>
 
                         <Link
@@ -448,7 +448,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <Heart className="w-4 h-4 text-slate-400" />
-                          <span>Agent 5 · AI Engagement</span>
+                          <span>Khảo Sát Gắn Kết & Phúc Lợi</span>
                         </Link>
                       </div>
 
@@ -558,7 +558,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <Briefcase className="w-4 h-4 text-slate-500" />
-              Agent 1 · AI Tuyển Dụng
+              Tuyển Dụng & Ứng Viên (ATS)
             </Link>
 
             <Link
@@ -567,7 +567,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <Compass className="w-4 h-4 text-slate-500" />
-              Agent 2 · AI Onboarding
+              Tiếp Nhận & Hội Nhập Nhân Sự
             </Link>
 
             <Link
@@ -576,7 +576,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <TrendingUp className="w-4 h-4 text-slate-500" />
-              Agent 3 · AI Performance
+              Quản Trị Hiệu Suất & Đánh Giá 360°
             </Link>
 
             <Link
@@ -585,7 +585,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <GraduationCap className="w-4 h-4 text-slate-500" />
-              Agent 4 · AI Training
+              Đào Tạo & Phát Triển Kỹ Năng
             </Link>
 
             <Link
@@ -594,7 +594,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <Heart className="w-4 h-4 text-slate-500" />
-              Agent 5 · AI Engagement
+              Khảo Sát Gắn Kết & Phúc Lợi
             </Link>
 
             <button

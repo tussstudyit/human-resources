@@ -53,7 +53,7 @@ export default function Sidebar() {
     },
     {
       name: 'AI Employee Engagement',
-      desc: 'Khảo sát eNPS & Wellbeing (n8n)',
+      desc: 'Khảo sát eNPS & Phúc lợi',
       icon: Heart,
       href: '/engagement',
       badge: 'ACTIVE',

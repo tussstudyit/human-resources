@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
+import Footer from '@/components/topdev/Footer';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   TrendingUp,
@@ -223,12 +224,12 @@ export default function PerformancePage() {
             <div className="relative z-10 space-y-2">
               <div className="inline-flex items-center gap-2 font-mono text-[11px] text-purple-300 uppercase tracking-wider bg-purple-950/80 px-2.5 py-1 rounded-md border border-purple-800/60">
                 <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
-                <span>AGENT 3 · PERFORMANCE & 360° FEEDBACK</span>
+                <span>QUẢN TRỊ HIỆU SUẤT & ĐÁNH GIÁ 360°</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-emerald-400">WF_09 ACTIVE</span>
+                <span className="text-emerald-400">HỆ THỐNG TỰ ĐỘNG ĐANG HOẠT ĐỘNG</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-                <span>📊 AI Performance Tracking & 360° Review</span>
+                <span>📊 Theo Dõi Hiệu Suất KPI & Đánh Giá 360° Tự Động</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
                 Tự động hóa theo dõi chỉ số KPI thực tế vs mục tiêu và lên lịch gửi Magic Link đánh giá hiệu suất 360 độ vào ngày 25 hàng tháng.
@@ -283,20 +284,20 @@ export default function PerformancePage() {
                 <span className="text-xs text-slate-400 font-medium">/{employees.length} nhân sự</span>
               </div>
               <p className="mt-3 text-xs text-slate-400">
-                Sẵn sàng phát Magic Link qua WF_09
+                Sẵn sàng phát Magic Link đánh giá tự động
               </p>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lịch chạy n8n Cronjob</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lịch chạy tự động định kỳ</span>
                 <Calendar className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-lg font-bold text-slate-900">Ngày 25 hàng tháng</span>
               </div>
               <p className="mt-3 text-xs text-emerald-600 font-medium">
-                🟢 WF_09 đang ở trạng thái kích hoạt (Active)
+                🟢 Quy trình tự động đang ở trạng thái kích hoạt
               </p>
             </div>
           </div>
@@ -430,6 +431,7 @@ export default function PerformancePage() {
               </div>
           </div>
         </main>
+      <Footer />
     </div>
   );
 }
