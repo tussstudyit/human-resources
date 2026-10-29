@@ -89,9 +89,6 @@ N8N_ENCRYPTION_KEY=hr_n8n_encryption_secret_key_123
 WEBHOOK_URL="https://n8n.cvresources.tech/"
 EOF
 
-# Khởi động lại container postgres nếu đã tồn tại để nhận mật khẩu chuẩn
-docker compose down || true
-docker volume rm human-resources_hr_postgres_data 2>/dev/null || docker volume rm hr_postgres_data 2>/dev/null || true
 docker compose up -d postgres n8n
 
 echo "-> Đang chờ PostgreSQL khởi động..."
@@ -134,7 +131,7 @@ EOF
 npm install --legacy-peer-deps
 npm run build
 pm2 delete hr-frontend 2>/dev/null || true
-pm2 start "npm run start -- -p 3000" --name "hr-frontend"
+pm2 start npm --name "hr-frontend" -- run start -- -p 3000
 
 # Lưu trạng thái PM2 tự khởi động khi reboot VPS
 pm2 save
