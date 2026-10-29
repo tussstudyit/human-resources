@@ -6,6 +6,9 @@ echo "🚀 BẮT ĐẦU TỰ ĐỘNG CÀI ĐẶT & TRIỂN KHAI HUMAN RESOURCES 
 echo "🌐 Domain: cvresources.tech"
 echo "=========================================================="
 
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 # 1. Cấu hình 4GB Swap RAM ảo
 echo -e "\n[1/7] Cấu hình 4GB Swap RAM ảo..."
 if [ ! -f /swapfile ]; then
@@ -16,7 +19,7 @@ if [ ! -f /swapfile ]; then
     echo '/swapfile none swap sw 0 0' >> /etc/fstab
     echo "-> Đã tạo 4GB Swap thành công!"
 else
-    echo "-> Swapfile đã tồn tại, bỏ qua."
+    echo "-> Swapfile đã tồn tại."
 fi
 
 # 2. Cài đặt các gói cơ bản
@@ -73,14 +76,9 @@ systemctl restart caddy
 systemctl enable caddy
 echo "-> Caddy đã được cấu hình với SSL tự động cho cvresources.tech!"
 
-# 6. Khởi động Docker Containers (Postgres, n8n)
+# 6. Khởi động Docker Containers (Postgres, n8n) với mật khẩu chuẩn
 echo -e "\n[6/7] Khởi động PostgreSQL 16 & n8n Engine..."
-cd "$(dirname "$0")/.."
-PROJECT_ROOT="$(pwd)"
-
-# Đảm bảo file .env gốc tồn tại
-if [ ! -f .env ]; then
-    cp .env.example .env 2>/dev/null || cat << 'EOF' > .env
+cat << 'EOF' > "$PROJECT_ROOT/.env"
 POSTGRES_USER=hr_admin
 POSTGRES_PASSWORD=hr_secure_password_2026
 POSTGRES_DB=hr_core_db
@@ -90,11 +88,13 @@ N8N_PORT=5678
 N8N_ENCRYPTION_KEY=hr_n8n_encryption_secret_key_123
 WEBHOOK_URL="https://n8n.cvresources.tech/"
 EOF
-fi
 
+# Khởi động lại container postgres nếu đã tồn tại để nhận mật khẩu chuẩn
+docker compose down || true
+docker volume rm human-resources_hr_postgres_data 2>/dev/null || docker volume rm hr_postgres_data 2>/dev/null || true
 docker compose up -d postgres n8n
 
-echo "-> Đang chờ PostgreSQL sẵn sàng..."
+echo "-> Đang chờ PostgreSQL khởi động..."
 until docker exec hr_postgres pg_isready -U hr_admin -d hr_core_db 2>/dev/null; do
     sleep 2
 done
@@ -103,8 +103,7 @@ echo "-> PostgreSQL đã sẵn sàng!"
 # 7. Cài đặt & Build Backend NestJS
 echo -e "\n[7/7] Cài đặt & Khởi động Backend & Frontend..."
 cd "$PROJECT_ROOT/backend"
-if [ ! -f .env ]; then
-    cat << 'EOF' > .env
+cat << 'EOF' > .env
 DATABASE_URL="postgresql://hr_admin:hr_secure_password_2026@localhost:5432/hr_core_db?schema=public"
 JWT_SECRET="hr_jwt_secret_super_key_2026_antigravity"
 JWT_EXPIRES_IN="7d"
@@ -118,10 +117,9 @@ N8N_REJECTION_WEBHOOK="http://localhost:5678/webhook/rejection-notification"
 BACKEND_INTERNAL_URL="https://api.cvresources.tech"
 N8N_API_KEY="750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
 EOF
-fi
 
 npm install --legacy-peer-deps
-npx prisma db push --skip-generate || npx prisma db push
+npx prisma db push --accept-data-loss
 npm run build
 pm2 delete hr-backend 2>/dev/null || true
 pm2 start dist/main.js --name "hr-backend"
