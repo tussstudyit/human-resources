@@ -203,19 +203,28 @@ export default function EngagementPage() {
         { id: 1, name: 'Tú Đặng', email: 'tunguyen2006.qt@gmail.com', dept: 'Phòng Kỹ thuật & Công nghệ' },
         { id: 2, name: 'Nguyễn Văn A', email: 'tudang43.qtdn@gmail.com', dept: 'Phòng Tuyển dụng & HR' },
         { id: 3, name: 'Trần Thị B', email: 'anhtanht1905@gmail.com', dept: 'Phòng Marketing' },
+        { id: 4, name: 'Đặng Tú Nguyên', email: 'dang.2006.qt@gmail.com', dept: 'Toàn công ty' },
       ];
-      setEmployees(defaultList);
+      setEmployees((prev) => {
+        const merged = [...prev];
+        for (const def of defaultList) {
+          if (!merged.some((m) => m.email.toLowerCase() === def.email.toLowerCase())) {
+            merged.push(def);
+          }
+        }
+        return merged;
+      });
       setSurveyForm((prev) => ({
         ...prev,
-        employeeName: defaultList[0].name,
-        employeeEmail: defaultList[0].email,
-        department: defaultList[0].dept || prev.department,
+        employeeName: prev.employeeName || defaultList[0].name,
+        employeeEmail: prev.employeeEmail || defaultList[0].email,
+        department: prev.department || defaultList[0].dept,
       }));
       setWellbeingForm((prev) => ({
         ...prev,
-        employeeName: defaultList[0].name,
-        employeeEmail: defaultList[0].email,
-        department: defaultList[0].dept || prev.department,
+        employeeName: prev.employeeName || defaultList[0].name,
+        employeeEmail: prev.employeeEmail || defaultList[0].email,
+        department: prev.department || defaultList[0].dept,
       }));
     }
   }, []);
@@ -229,12 +238,28 @@ export default function EngagementPage() {
       const name = params.get('name');
       const dept = params.get('dept');
       if (tab === 'survey' || email) {
-        setSurveyForm((prev) => ({
-          ...prev,
-          employeeEmail: email || prev.employeeEmail,
-          employeeName: name || prev.employeeName,
-          department: dept || prev.department,
-        }));
+        if (email) {
+          const decodedName = name ? decodeURIComponent(name) : email.split('@')[0];
+          const decodedDept = dept ? decodeURIComponent(dept) : 'Toàn công ty';
+          const magicEmp: EmployeeOption = {
+            id: 'magic-' + Date.now(),
+            name: decodedName,
+            email: email,
+            dept: decodedDept,
+          };
+          setEmployees((prev) => {
+            if (prev.some((e) => e.email.toLowerCase() === email.toLowerCase())) {
+              return prev;
+            }
+            return [magicEmp, ...prev];
+          });
+          setSurveyForm((prev) => ({
+            ...prev,
+            employeeEmail: email,
+            employeeName: decodedName,
+            department: decodedDept,
+          }));
+        }
         setShowSurveyModal(true);
       }
     }
@@ -826,6 +851,13 @@ export default function EngagementPage() {
             </div>
 
             <form onSubmit={handleSubmitSurvey} className="p-6 space-y-4">
+              <div className="p-3 bg-rose-50/80 border border-rose-200 rounded-xl text-xs text-rose-900 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>
+                  Khảo sát nhanh 60 giây. Mọi phản hồi đều được Gemini AI bảo mật và tổng hợp tự động.
+                </span>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Chọn Nhân Sự Đánh Giá</label>
                 <select
