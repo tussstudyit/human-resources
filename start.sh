@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# Load NVM & Node.js
+# Load NVM & Node.js dynamically
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-export PATH="$HOME/.nvm/versions/node/v24.21.0/bin:$PATH"
+if [ -d "$HOME/.nvm/versions/node" ]; then
+  LATEST_NODE=$(ls -1d "$HOME/.nvm/versions/node"/v* 2>/dev/null | tail -n 1)
+  [ -n "$LATEST_NODE" ] && export PATH="$LATEST_NODE/bin:$PATH"
+fi
 
 echo "=================================================="
 echo "🚀 ĐANG KHỞI ĐỘNG HỆ THỐNG HUMAN RESOURCES AI PLATFORM"
@@ -43,6 +46,6 @@ echo -e "\n=================================================="
 echo "🎉 TẤT CẢ DỊCH VỤ ĐÃ SẴN SÀNG:"
 echo "👉 1. Giao diện người dùng (Frontend):  http://localhost:3000"
 echo "👉 2. Backend API (NestJS):             http://localhost:3001"
-echo "👉 3. n8n Automation Engine:           http://localhost:5678"
+echo "👉 3. n8n Automation Engine:           http://localhost:5679"
 echo "👉 4. pgAdmin Quản trị Database:        http://localhost:5050"
 echo "=================================================="
