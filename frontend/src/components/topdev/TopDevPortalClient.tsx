@@ -556,7 +556,7 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
       </main>
 
       {/* 4. Featured Tech Employers Section */}
-      <FeaturedCompanies
+      <FeaturedCompanies jobs={allJobs}
         onSelectCompany={(compName) => {
           setCompanyFilter(compName);
           handleSearchSubmit();
