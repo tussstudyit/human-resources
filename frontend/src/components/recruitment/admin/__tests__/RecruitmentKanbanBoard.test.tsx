@@ -1,10 +1,21 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import RecruitmentKanbanBoard from '../RecruitmentKanbanBoard';
 import { Candidate } from '@/types/recruitment';
 
 describe('RecruitmentKanbanBoard', () => {
+  it('keeps a scheduled interview in Meet even when AI still requires HR review',()=>{
+    const candidate={...mockCandidates[1],parsedSkillsJson:{interviewSchedule:{googleMeetUrl:'https://meet.google.com/abc-defg-hij',status:'SCHEDULED'},evaluation:{id:'run',status:'NEEDS_REVIEW',approvalStatus:'PENDING_HR'}}} as Candidate;
+    render(<RecruitmentKanbanBoard candidates={[candidate]} onSelectCandidate={vi.fn()}/>);
+    expect(within(screen.getByRole('region',{name:'Lịch Phỏng Vấn (Meet)'})).getByText(candidate.name)).toBeInTheDocument();
+    expect(within(screen.getByRole('region',{name:'Cần HR xem xét'})).queryByText(candidate.name)).not.toBeInTheDocument();
+  });
+  it('keeps archived talent in Pool instead of AI review and excludes cancelled meetings',()=>{
+    const candidate={...mockCandidates[2],parsedSkillsJson:{talentPool:{tier:'RETAINED_TALENT_POOL'},interviewSchedule:{status:'CANCELLED',googleMeetUrl:'https://meet.google.com/abc-defg-hij'},evaluation:{id:'run',status:'NEEDS_REVIEW'}}} as Candidate;
+    render(<RecruitmentKanbanBoard candidates={[candidate]} onSelectCandidate={vi.fn()}/>);
+    expect(within(screen.getByRole('region',{name:'Kho Nhân Tài (Pool)'})).getByText(candidate.name)).toBeInTheDocument();
+  });
   const mockCandidates: Candidate[] = [
     {
       id: 'cand-1',

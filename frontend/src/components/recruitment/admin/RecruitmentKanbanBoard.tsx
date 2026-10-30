@@ -16,11 +16,13 @@ import { Candidate, InterviewScheduleInfo, TalentPoolInfo } from '@/types/recrui
 interface RecruitmentKanbanBoardProps {
   candidates: Candidate[];
   onSelectCandidate: (c: Candidate) => void;
+  jobTitles?: Record<string, string>;
 }
 
 export default function RecruitmentKanbanBoard({
   candidates,
   onSelectCandidate,
+  jobTitles,
 }: RecruitmentKanbanBoardProps) {
   // Helper to extract parsed data safely
   const getParsedData = (candidate: Candidate) => {
@@ -40,7 +42,7 @@ export default function RecruitmentKanbanBoard({
     return { skills, interviewSchedule, talentPool };
   };
 
-  // Categorize candidates into 5 columns
+  // Delivery stage is independent of the latest AI review status.
   const pendingCol: Candidate[] = [];
   const evaluatedCol: Candidate[] = [];
   const reviewCol: Candidate[] = [];
@@ -51,16 +53,16 @@ export default function RecruitmentKanbanBoard({
   candidates.forEach((c) => {
     const { interviewSchedule, talentPool } = getParsedData(c);
 
-    if (c.aiStatus === 'PENDING') {
+    if (interviewSchedule && interviewSchedule.status !== 'CANCELLED' && (interviewSchedule.googleMeetUrl || interviewSchedule.status === 'SCHEDULED')) {
+      interviewCol.push(c);
+    } else if (talentPool && talentPool.tier) {
+      talentPoolCol.push(c);
+    } else if (c.aiStatus === 'PENDING') {
       pendingCol.push(c);
     } else if (c.aiStatus === 'FAILED') {
       rejectedCol.push(c);
     } else if (c.parsedSkillsJson && !Array.isArray(c.parsedSkillsJson) && c.parsedSkillsJson.evaluation?.status === 'NEEDS_REVIEW') {
       reviewCol.push(c);
-    } else if (interviewSchedule && (interviewSchedule.googleMeetUrl || interviewSchedule.status === 'SCHEDULED')) {
-      interviewCol.push(c);
-    } else if (talentPool && talentPool.tier) {
-      talentPoolCol.push(c);
     } else {
       evaluatedCol.push(c);
     }
@@ -122,6 +124,8 @@ export default function RecruitmentKanbanBoard({
         return (
           <div
             key={col.id}
+            role="region"
+            aria-label={col.title}
             className="flex flex-col bg-white border border-[#ebebeb] rounded-[12px] overflow-hidden shadow-[0px_1px_1px_rgba(0,0,0,0.04)]"
           >
             {/* Column Header - Vercel Spec-sheet style */}
@@ -176,6 +180,7 @@ export default function RecruitmentKanbanBoard({
                             <Mail className="w-3 h-3 mr-1 shrink-0 text-[#a1a1a1]" aria-hidden="true" />
                             <span className="truncate">{candidate.email}</span>
                           </p>
+                          {jobTitles?.[candidate.jobId] && <p className="mt-1 truncate text-[10px] text-slate-600" title={jobTitles[candidate.jobId]}>{jobTitles[candidate.jobId]}</p>}
                         </div>
 
                         {candidate.aiStatus === 'PENDING' ? (

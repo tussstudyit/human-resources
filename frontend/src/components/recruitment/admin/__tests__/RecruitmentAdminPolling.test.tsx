@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import RecruitmentAdminClient from '../RecruitmentAdminClient';
 import { getAdminJobs, getJobCandidates } from '@/lib/api/recruitment';
@@ -9,6 +9,31 @@ vi.mock('../CandidateDetailModal',()=>({default:()=>null}));
 vi.mock('../JobManageModal',()=>({default:()=>null}));
 vi.mock('../RecruitmentKanbanBoard',()=>({default:({candidates}:{candidates:{aiStatus:string;matchScore:number|null}[]})=><div data-testid="candidate-result">{candidates.map(c=>`${c.aiStatus}:${c.matchScore??'pending'}`).join(',')}</div>}));
 afterEach(()=>{vi.useRealTimers();vi.clearAllMocks();});
+it('combines every job by default and switches between one job and all jobs',async()=>{
+ const jobs=[{id:'mobile',title:'Mobile',status:'OPEN',_count:{candidates:1}},{id:'backend',title:'Backend',status:'OPEN',_count:{candidates:1}}];
+ vi.mocked(getAdminJobs).mockResolvedValue(jobs as never);
+ vi.mocked(getJobCandidates).mockImplementation(async id=>[{id,jobId:id,name:id,email:'test@example.invalid',aiStatus:'DONE',matchScore:id==='mobile'?30:70}] as never);
+ await act(async()=>{render(<RecruitmentAdminClient/>);});
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent('DONE:70,DONE:30');
+ expect(screen.getByRole('button',{name:/^Tất cả vị trí/})).toHaveAttribute('aria-pressed','true');
+ expect(screen.queryByRole('button',{name:'Chỉnh sửa tin tuyển dụng'})).not.toBeInTheDocument();
+ await act(async()=>{fireEvent.click(screen.getByRole('button',{name:/^Mobile/}));});
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent(/^DONE:30$/);
+ expect(screen.getByRole('button',{name:'Chỉnh sửa tin tuyển dụng'})).toBeInTheDocument();
+ await act(async()=>{fireEvent.click(screen.getByRole('button',{name:/^Tất cả vị trí/}));});
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent('DONE:70,DONE:30');
+});
+it('ignores a late all-jobs response after switching to a specific job',async()=>{
+ let resolveMobile!:(value:never)=>void;
+ const late=new Promise<never>(resolve=>{resolveMobile=resolve;});
+ vi.mocked(getAdminJobs).mockResolvedValue([{id:'mobile',title:'Mobile'},{id:'backend',title:'Backend'}] as never);
+ vi.mocked(getJobCandidates).mockImplementation(id=>id==='mobile'?late:Promise.resolve([{id:'b',jobId:'backend',aiStatus:'DONE',matchScore:70}] as never));
+ await act(async()=>{render(<RecruitmentAdminClient/>);});
+ await act(async()=>{fireEvent.click(screen.getByRole('button',{name:/^Backend/}));});
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent(/^DONE:70$/);
+ await act(async()=>{resolveMobile([{id:'m',jobId:'mobile',aiStatus:'DONE',matchScore:30}] as never);});
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent(/^DONE:70$/);
+});
 it('refreshes a scoring result arriving after one minute and stops when complete',async()=>{
  vi.useFakeTimers();
  const pending={id:'test',name:'TEST',email:'test@example.invalid',jobId:'job',aiStatus:'PENDING',matchScore:null,createdAt:'2026-10-30'};
