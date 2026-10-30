@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nreturn {\n  responseId: body.responseId || ('resp_' + Date.now()),\n  employeeId: body.employeeId || 'EMP-2026-08',\n  employeeName: body.employeeName || 'Nguyễn Văn A',\n  employeeEmail: body.employeeEmail || 'nguyen.vana@company.com',\n  department: body.department || 'Phòng Kỹ thuật & AI',\n  surveyTitle: body.surveyTitle || 'Khảo sát Hạnh phúc & Gắn kết Q4',\n  rating: Number(body.rating || 6),\n  textAnswer: body.textAnswer || 'Dạo này dự án chạy nước rút, liên tục OT cuối tuần nên tôi cảm thấy khá mệt mỏi và kiệt sức. Cần sự hỗ trợ cân đối lại khối lượng việc.',\n  submittedAt: new Date().toISOString()\n};"
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  responseId: body.responseId || ('resp_' + Date.now()),\n  employeeId: body.employeeId || body.userId || 'EMP-2026',\n  employeeName: body.employeeName || body.name || 'Đặng Tú Nguyên',\n  employeeEmail: body.employeeEmail || body.email || 'tunguyen2006.qt@gmail.com',\n  department: body.department || body.dept || 'Phòng Nhân sự',\n  surveyTitle: body.surveyTitle || 'Khảo sát Hạnh phúc & Gắn kết Q4',\n  rating: Number(body.rating || 6),\n  textAnswer: body.textAnswer || body.feedback || 'Dạo này dự án chạy nước rút, liên tục OT cuối tuần nên tôi cảm thấy khá mệt mỏi và kiệt sức. Cần sự hỗ trợ cân đối lại khối lượng việc.',\n  submittedAt: new Date().toISOString()\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,

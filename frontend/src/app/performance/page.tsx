@@ -1,28 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
+import Footer from '@/components/topdev/Footer';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   TrendingUp,
   Send,
   CheckCircle2,
   Clock,
-  Sparkles,
   BarChart3,
   Calendar,
   ExternalLink,
   ShieldAlert,
   User,
   Users,
-  Terminal,
   RefreshCw,
   Mail
 } from 'lucide-react';
 
 interface EmployeeReview {
-  id: number;
+  id: string | number;
+  userId?: string;
   name: string;
   email: string;
   role: string;
@@ -35,12 +35,115 @@ interface EmployeeReview {
 
 export default function PerformancePage() {
   const { user, initAuth } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [employees, setEmployees] = useState<EmployeeReview[]>([]);
+
+  const fetchEmployees = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await axios.get('/api/performance/employees');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.2.123:3000';
+        const mapped = res.data.data.map((emp: EmployeeReview) => {
+          let link = (emp.magicLink || '').replace('http://localhost:3000', origin).replace('http://192.168.2.123:3000', origin);
+          if (emp.userId && !link.includes('userId=')) link += `&userId=${emp.userId}`;
+          if (emp.email && !link.includes('email=')) link += `&email=${encodeURIComponent(emp.email)}`;
+
+          return {
+            ...emp,
+            status: emp.completed ? 'Đã hoàn thành' : 'Chờ nộp',
+            completed: Boolean(emp.completed),
+            magicLink: link,
+          };
+        });
+        setEmployees(mapped);
+        return;
+      }
+    } catch (err) {
+      console.warn('Lỗi khi tải nhân viên từ CSDL, sử dụng danh sách dự phòng:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+
+    // Fallback nếu chưa kết nối được CSDL
+    const fallbackList: EmployeeReview[] = [
+      {
+        id: 1,
+        name: 'John Developer',
+        email: 'dev.john@example.com',
+        role: 'Fullstack Engineer',
+        dept: 'Kỹ thuật & AI',
+        status: 'Chờ nộp',
+        completed: false,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_john_9821&period=2026-Q4&name=John%20Developer',
+        reminded: false,
+      },
+      {
+        id: 2,
+        name: 'Nguyễn Văn HR',
+        email: 'hr.lead@example.com',
+        role: 'HR Lead',
+        dept: 'Phòng Nhân sự',
+        status: 'Đã hoàn thành',
+        completed: true,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_hr_4410&period=2026-Q4&name=Nguy%E1%BB%85n%20V%C4%83n%20HR',
+        reminded: false,
+      },
+      {
+        id: 3,
+        name: 'Kiểm Thử Viên 17296',
+        email: 'tester_17296@test.com',
+        role: 'QA Engineer',
+        dept: 'Kỹ thuật & AI',
+        status: 'Chờ nộp',
+        completed: false,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tester_7732&period=2026-Q4&name=Ki%E1%BB%83m%20Th%E1%BB%AD%20Vi%C3%AAn%2017296',
+        reminded: false,
+      },
+      {
+        id: 4,
+        name: 'Đặng Tú Nguyên',
+        email: 'tunguyen2006.qt@gmail.com',
+        role: 'Talent Acquisition',
+        dept: 'Phòng Nhân sự',
+        status: 'Đã hoàn thành',
+        completed: true,
+        magicLink: 'http://localhost:3000/bieu-mau-danh-gia-360.html?token=ml_tunguyen_1109&period=2026-Q4&name=%C4%90%E1%BA%B7ng%20T%C3%BA%20Nguy%C3%AAn',
+        reminded: false,
+      },
+    ];
+    setEmployees(fallbackList);
+  }, []);
 
   useEffect(() => {
     initAuth();
-  }, [initAuth]);
+    fetchEmployees();
 
-  const [loading, setLoading] = useState(false);
+    const handleFocus = () => {
+      fetchEmployees();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchEmployees();
+      }
+    };
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'hr_360_submitted_reviews') {
+        fetchEmployees();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [initAuth, fetchEmployees]);
 
   // Dữ liệu biểu đồ so sánh KPI (kpi_metrics)
   const kpiMetrics = [
@@ -50,63 +153,12 @@ export default function PerformancePage() {
     { id: 'k4', metric: 'Tỷ lệ hoàn thành mục tiêu OKR Quý', target: 85, actual: 92, dept: 'Sản phẩm' },
   ];
 
-  const [employees, setEmployees] = useState<EmployeeReview[]>([
-    {
-      id: 1,
-      name: 'John Developer',
-      email: 'dev.john@example.com',
-      role: 'Fullstack Engineer',
-      dept: 'Kỹ thuật & AI',
-      status: 'Chờ nộp',
-      completed: false,
-      magicLink: 'http://localhost:3000/performance?token=ml_john_9821&period=2026-Q4',
-      reminded: false,
-    },
-    {
-      id: 2,
-      name: 'Nguyễn Văn HR',
-      email: 'hr.lead@example.com',
-      role: 'HR Lead',
-      dept: 'Phòng Nhân sự',
-      status: 'Đã hoàn thành',
-      completed: true,
-      magicLink: 'http://localhost:3000/performance?token=ml_hr_4410&period=2026-Q4',
-      reminded: false,
-    },
-    {
-      id: 3,
-      name: 'Kiểm Thử Viên 17296',
-      email: 'tester_17296@test.com',
-      role: 'QA Engineer',
-      dept: 'Kỹ thuật & AI',
-      status: 'Chờ nộp',
-      completed: false,
-      magicLink: 'http://localhost:3000/performance?token=ml_tester_7732&period=2026-Q4',
-      reminded: false,
-    },
-    {
-      id: 4,
-      name: 'Đặng Tú Nguyên',
-      email: 'tunguyen2006.qt@gmail.com',
-      role: 'Talent Acquisition',
-      dept: 'Phòng Nhân sự',
-      status: 'Đã hoàn thành',
-      completed: true,
-      magicLink: 'http://localhost:3000/performance?token=ml_tunguyen_1109&period=2026-Q4',
-      reminded: false,
-    },
-  ]);
-
-  const [logs, setLogs] = useState([
-    { time: 'Ngày 25', text: 'Cronjob định kỳ hàng tháng sẵn sàng quét danh sách nhân sự chưa nộp đánh giá 360° (WF_09)', type: 'info' }
-  ]);
-
   const handleTriggerAllPending = async () => {
     setLoading(true);
     const pendingList = employees.filter(e => !e.completed);
 
     try {
-      const res = await axios.post('/api/n8n', {
+      await axios.post('/api/n8n', {
         workflow: 'feedback_reminder',
         payload: {
           event: 'monthly_360_feedback_reminder',
@@ -114,6 +166,7 @@ export default function PerformancePage() {
           totalPending: pendingList.length,
           recipients: pendingList.map(emp => ({
             id: emp.id,
+            userId: emp.userId || emp.id,
             name: emp.name,
             email: emp.email,
             department: emp.dept,
@@ -123,15 +176,6 @@ export default function PerformancePage() {
       });
 
       setEmployees(employees.map(emp => !emp.completed ? { ...emp, reminded: true, status: 'Đã gửi Magic Link' } : emp));
-
-      setLogs(prev => [
-        {
-          time: res.data.timestamp || new Date().toLocaleTimeString('vi-VN'),
-          text: `[WF_09]: Đã quét thấy ${pendingList.length} nhân sự chưa nộp (${pendingList.map(p => p.name).join(', ')}) và phát tin nhắn kèm Magic Link thành công`,
-          type: 'success'
-        },
-        ...prev
-      ]);
     } catch (err: any) {
       console.error('Lỗi gửi Magic Link:', err);
     } finally {
@@ -139,33 +183,28 @@ export default function PerformancePage() {
     }
   };
 
-  const handleSendSingleMagicLink = async (empId: number) => {
-    const emp = employees.find(e => e.id === empId);
+  const handleSendSingleMagicLink = async (empId: string | number) => {
+    const emp = employees.find(e => e.id === empId || e.userId === empId);
     if (!emp) return;
 
     setLoading(true);
     try {
-      const res = await axios.post('/api/n8n', {
+      await axios.post('/api/n8n', {
         workflow: 'feedback_reminder',
         payload: {
           event: 'single_360_feedback_reminder',
           recipient: {
+            id: emp.userId || emp.id,
+            userId: emp.userId || emp.id,
             name: emp.name,
             email: emp.email,
+            department: emp.dept,
             magicLink: emp.magicLink
           }
         }
       });
 
-      setEmployees(employees.map(e => e.id === empId ? { ...e, reminded: true, status: 'Đã gửi Magic Link' } : e));
-      setLogs(prev => [
-        {
-          time: res.data.timestamp || new Date().toLocaleTimeString('vi-VN'),
-          text: `Đã phát Magic Link đánh giá cá nhân tới ${emp.name} (${emp.email})`,
-          type: 'success'
-        },
-        ...prev
-      ]);
+      setEmployees(employees.map(e => (e.id === empId || e.userId === empId) ? { ...e, reminded: true, status: 'Đã gửi Magic Link' } : e));
     } catch (err: any) {
       console.error('Lỗi gửi cá nhân:', err);
     } finally {
@@ -185,12 +224,12 @@ export default function PerformancePage() {
             <div className="relative z-10 space-y-2">
               <div className="inline-flex items-center gap-2 font-mono text-[11px] text-purple-300 uppercase tracking-wider bg-purple-950/80 px-2.5 py-1 rounded-md border border-purple-800/60">
                 <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
-                <span>AGENT 3 · PERFORMANCE & 360° FEEDBACK</span>
+                <span>QUẢN TRỊ HIỆU SUẤT & ĐÁNH GIÁ 360°</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-emerald-400">WF_09 ACTIVE</span>
+                <span className="text-emerald-400">HỆ THỐNG TỰ ĐỘNG ĐANG HOẠT ĐỘNG</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-                <span>📊 AI Performance Tracking & 360° Review</span>
+                <span>📊 Theo Dõi Hiệu Suất KPI & Đánh Giá 360° Tự Động</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
                 Tự động hóa theo dõi chỉ số KPI thực tế vs mục tiêu và lên lịch gửi Magic Link đánh giá hiệu suất 360 độ vào ngày 25 hàng tháng.
@@ -198,6 +237,16 @@ export default function PerformancePage() {
             </div>
 
             <div className="relative z-10 flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => fetchEmployees()}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs text-slate-200 bg-slate-800/80 hover:bg-slate-700 active:bg-slate-900 transition-all border border-slate-700 shadow-sm cursor-pointer disabled:opacity-50"
+                title="Làm mới danh sách và trạng thái nộp"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-slate-300 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? 'Đang tải...' : 'Làm mới'}</span>
+              </button>
+
               <button
                 onClick={handleTriggerAllPending}
                 disabled={loading}
@@ -235,29 +284,27 @@ export default function PerformancePage() {
                 <span className="text-xs text-slate-400 font-medium">/{employees.length} nhân sự</span>
               </div>
               <p className="mt-3 text-xs text-slate-400">
-                Sẵn sàng phát Magic Link qua WF_09
+                Sẵn sàng phát Magic Link đánh giá tự động
               </p>
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lịch chạy n8n Cronjob</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Lịch chạy tự động định kỳ</span>
                 <Calendar className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-lg font-bold text-slate-900">Ngày 25 hàng tháng</span>
               </div>
               <p className="mt-3 text-xs text-emerald-600 font-medium">
-                🟢 WF_09 đang ở trạng thái kích hoạt (Active)
+                🟢 Quy trình tự động đang ở trạng thái kích hoạt
               </p>
             </div>
           </div>
 
-          {/* Main 2-Column Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left 2 Cols: KPI & 360 List */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* KPI Comparison Chart */}
+          {/* Main Content */}
+          <div className="space-y-6">
+            {/* KPI Comparison Chart */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
@@ -313,9 +360,19 @@ export default function PerformancePage() {
                       Click vào từng nhân sự để gửi riêng Magic Link nộp đánh giá
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
-                    {employees.filter(e => e.completed).length}/{employees.length} Hoàn tất
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => fetchEmployees()}
+                      disabled={isRefreshing}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-slate-100 transition-all cursor-pointer"
+                      title="Làm mới trạng thái nộp"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-purple-600' : ''}`} />
+                    </button>
+                    <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                      {employees.filter(e => e.completed).length}/{employees.length} Hoàn tất
+                    </span>
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -346,6 +403,17 @@ export default function PerformancePage() {
                           {emp.status}
                         </span>
 
+                        <a
+                          href={emp.magicLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer"
+                          title="Mở biểu mẫu đánh giá 360°"
+                        >
+                          <ExternalLink className="w-3 h-3 text-slate-500" />
+                          <span>Xem form</span>
+                        </a>
+
                         {!emp.completed && (
                           <button
                             onClick={() => handleSendSingleMagicLink(emp.id)}
@@ -361,66 +429,9 @@ export default function PerformancePage() {
                   ))}
                 </div>
               </div>
-            </div>
-
-            {/* Right 1 Col: Magic Link Overview & Logs */}
-            <div className="space-y-6">
-              {/* Magic Link Info Card */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  Cơ chế Magic Review Link
-                </h2>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Mỗi nhân sự được cấp một token bảo mật duy nhất cho kỳ đánh giá 2026-Q4. Đường dẫn tự động định danh người đánh giá mà không cần nhập lại mật khẩu.
-                </p>
-
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono text-slate-700 break-all">
-                  http://localhost:3000/performance?token=ml_auth_360_secure
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    onClick={handleTriggerAllPending}
-                    disabled={loading}
-                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {loading ? 'Đang gửi...' : 'Gửi lại toàn bộ danh sách chờ'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Activity Logs */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-slate-600" />
-                  Nhật ký hoạt động n8n
-                </h2>
-
-                <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                  {logs.map((log, index) => (
-                    <div 
-                      key={index} 
-                      className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1"
-                    >
-                      <div className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span className="font-mono">{log.time}</span>
-                        <span className={`font-bold uppercase ${
-                          log.type === 'success' ? 'text-emerald-600' : 'text-purple-600'
-                        }`}>
-                          {log.type}
-                        </span>
-                      </div>
-                      <p className="text-slate-800 font-medium leading-relaxed">
-                        {log.text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         </main>
+      <Footer />
     </div>
   );
 }

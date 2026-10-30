@@ -43,8 +43,7 @@ describe('LoginPage - Xác Thực Người Dùng Chuẩn UI/UX Pro Max', () => {
     render(<LoginPage />);
 
     expect(screen.getByText('HR Platform')).toBeInTheDocument();
-    expect(screen.getByText('XÁC THỰC TÀI KHOẢN')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Đăng nhập hệ thống' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Đăng nhập' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('ten.ban@company.com')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Đăng nhập vào Hệ thống/i })).toBeInTheDocument();

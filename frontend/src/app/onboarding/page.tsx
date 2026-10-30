@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Header } from '@/components/topdev/Header';
+import Footer from '@/components/topdev/Footer';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   Compass,
@@ -51,7 +52,7 @@ export default function OnboardingPage() {
     {
       id: 't2',
       title: 'Nhận tài khoản công ty (Email, Jira, Slack, AWS)',
-      desc: 'Khi tick hoàn thành, n8n tự động kích hoạt WF_07 để khởi tạo toàn bộ tài khoản kỹ thuật',
+      desc: 'Khi tick hoàn thành, hệ thống tự động khởi tạo toàn bộ tài khoản kỹ thuật (Email, Jira, Slack, AWS)',
       category: 'IT Provisioning',
       completed: false,
       isAccountTask: true,
@@ -107,15 +108,20 @@ export default function OnboardingPage() {
   // LUỒNG 1: Gọi WF_07 (IT Tool Provisioning qua n8n)
   const triggerITProvisioning = async () => {
     setProvisioning(true);
-    const empEmail = user?.email || 'dev.lead@company.vn';
+    const empEmail = user?.email || 'anhtanht1905@gmail.com';
     const empName = user?.fullName || 'Trần Công Nghệ';
 
     try {
       const res = await axios.post('/api/n8n', {
         workflow: 'it_provisioning',
         payload: {
+          userEmail: empEmail,
+          fullName: empName,
+          department: 'Tech',
+          role: user?.role || 'EMPLOYEE',
           employee: {
             name: empName,
+            userEmail: empEmail,
             personalEmail: empEmail,
             department: 'Tech',
             role: user?.role || 'EMPLOYEE'
@@ -139,7 +145,7 @@ export default function OnboardingPage() {
       setLogs(prev => [
         {
           time: res.data.timestamp || new Date().toLocaleTimeString('vi-VN'),
-          text: `[WF_07 Thành Công]: Đã cấp phát mã ${empId}, Email công ty, Slack & Jira cho ${empName}`,
+          text: `[Cấp phát thành công]: Đã kích hoạt mã ${empId}, Email công ty, Slack & Jira cho ${empName}`,
           type: 'success'
         },
         ...prev
@@ -224,15 +230,15 @@ export default function OnboardingPage() {
             <div className="relative z-10 space-y-2">
               <div className="inline-flex items-center gap-2 font-mono text-[11px] text-indigo-300 uppercase tracking-wider bg-indigo-950/80 px-2.5 py-1 rounded-md border border-indigo-800/60">
                 <Compass className="w-3.5 h-3.5 text-indigo-400" />
-                <span>AGENT 2 · ONBOARDING AUTOMATION</span>
+                <span>TIẾP NHẬN & HỘI NHẬP NHÂN SỰ</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-emerald-400">WF_07 & WF_08 ACTIVE</span>
+                <span className="text-emerald-400">HỆ THỐNG TỰ ĐỘNG ĐANG HOẠT ĐỘNG</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-                <span>🚀 AI Onboarding & IT Provisioning</span>
+                <span>🚀 Hội Nhập Nhân Sự & Cấp Phát Tài Khoản IT Tự Động</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                Tự động hóa toàn trình: cấp phát bộ tài khoản IT (Jira, Slack, Email) khi tick hoàn thành nhiệm vụ và giám sát cảnh báo tiến độ tuần đầu sau 3 ngày làm việc.
+                Tự động hóa toàn trình: cấp phát bộ tài khoản IT (Jira, Slack, Email) khi hoàn thành nhiệm vụ và giám sát cảnh báo tiến độ tuần đầu sau 3 ngày làm việc.
               </p>
             </div>
 
@@ -243,7 +249,7 @@ export default function OnboardingPage() {
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition-all shadow-md disabled:opacity-50 cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${checkingIn ? 'animate-spin' : ''}`} />
-                <span>{checkingIn ? 'Đang chạy WF_08...' : 'Chạy kiểm tra tiến độ 3 ngày (WF_08)'}</span>
+                <span>{checkingIn ? 'Đang rà soát...' : 'Kiểm tra tiến độ 3 ngày đầu'}</span>
               </button>
             </div>
           </div>
@@ -282,7 +288,7 @@ export default function OnboardingPage() {
                 </span>
               </div>
               <p className="mt-3 text-xs text-slate-400 leading-tight">
-                {itAccounts.provisioned ? `Mã NV: ${itAccounts.empId}` : 'Tick vào nhiệm vụ "Nhận tài khoản" để kích hoạt n8n'}
+                {itAccounts.provisioned ? `Mã NV: ${itAccounts.empId}` : 'Tick vào nhiệm vụ "Nhận tài khoản" để kích hoạt tự động'}
               </p>
             </div>
 
@@ -341,7 +347,7 @@ export default function OnboardingPage() {
                             </h3>
                             {t.isAccountTask && (
                               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200">
-                                Webhook n8n Auto
+                                Cấp phát tự động
                               </span>
                             )}
                           </div>
@@ -365,7 +371,7 @@ export default function OnboardingPage() {
                           } disabled:opacity-50`}
                         >
                           {t.isAccountTask && provisioning
-                            ? 'Đang tạo qua n8n...'
+                            ? 'Đang tạo tài khoản...'
                             : t.completed
                             ? '✓ Đã hoàn thành'
                             : 'Đánh dấu xong'}
@@ -382,7 +388,7 @@ export default function OnboardingPage() {
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                      Chi tiết tài khoản doanh nghiệp được cấp tự động (WF_07)
+                      Chi tiết tài khoản doanh nghiệp được cấp tự động
                     </span>
                     <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
                       itAccounts.provisioned ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
@@ -447,7 +453,7 @@ export default function OnboardingPage() {
                     <span className="font-bold text-emerald-600">≥ 50% checklist</span>
                   </div>
                   <div className="flex justify-between py-1.5 border-b border-slate-100">
-                    <span className="text-slate-400">Cơ chế cảnh báo (WF_08):</span>
+                    <span className="text-slate-400">Cơ chế cảnh báo & nhắc nhở:</span>
                     <span className="font-bold text-amber-600">Slack & Email HR Mentor</span>
                   </div>
                 </div>
@@ -467,7 +473,7 @@ export default function OnboardingPage() {
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6 space-y-4">
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Terminal className="w-4 h-4 text-slate-600" />
-                  Nhật ký thực thi n8n
+                  Nhật ký tự động hóa
                 </h2>
 
                 <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
@@ -494,6 +500,7 @@ export default function OnboardingPage() {
             </div>
           </div>
         </main>
+      <Footer />
     </div>
   );
 }

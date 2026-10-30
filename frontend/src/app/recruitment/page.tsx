@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Header } from '@/components/topdev/Header';
+import Footer from '@/components/topdev/Footer';
 import RecruitmentAdminClient from '@/components/recruitment/admin/RecruitmentAdminClient';
 import Link from 'next/link';
 import { Lock, ArrowRight } from 'lucide-react';
@@ -73,6 +74,7 @@ export default function RecruitmentAdminPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         <RecruitmentAdminClient />
       </main>
+      <Footer />
     </div>
   );
 }

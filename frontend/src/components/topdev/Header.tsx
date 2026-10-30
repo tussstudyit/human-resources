@@ -54,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [hrDropdownOpen, setHrDropdownOpen] = useState(false);
+  const [toolsDropdownOpen, setToolsDropdownOpen] = useState(false);
 
   // Internal Modals fallback state when Header is rendered standalone
   const [internalSalaryOpen, setInternalSalaryOpen] = useState(false);
@@ -63,6 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const hrDropdownRef = useRef<HTMLDivElement>(null);
+  const hrDropdownButtonRef = useRef<HTMLButtonElement>(null);
+  const toolsDropdownRef = useRef<HTMLDivElement>(null);
 
   const { user, isAuthenticated, logout, initAuth } = useAuthStore();
 
@@ -79,10 +82,27 @@ export const Header: React.FC<HeaderProps> = ({
       if (hrDropdownRef.current && !hrDropdownRef.current.contains(event.target as Node)) {
         setHrDropdownOpen(false);
       }
+      if (toolsDropdownRef.current && !toolsDropdownRef.current.contains(event.target as Node)) {
+        setToolsDropdownOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!hrDropdownOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setHrDropdownOpen(false);
+        hrDropdownButtonRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [hrDropdownOpen]);
 
   const handleNavClick = (sectionId: string) => {
     if (onSelectNav) {
@@ -160,138 +180,124 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-xs backdrop-blur-md bg-white/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-6 h-18">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
+          <div className="flex items-center justify-between h-16 sm:h-18">
             
             {/* Zone 1: Single Brand Wordmark */}
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link 
                 href="/" 
                 className="flex items-center gap-1.5 focus:outline-none group text-left cursor-pointer"
                 title="UpCareer - Việc Làm IT Hàng Đầu Việt Nam"
               >
-                <div className="w-10 h-10 rounded-lg bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-extrabold text-xl shadow-xs group-hover:scale-105 transition-transform">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-linear-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-extrabold text-base sm:text-xl shadow-xs group-hover:scale-105 transition-transform shrink-0">
                   <span className="font-mono tracking-tighter text-white">&lt;/&gt;</span>
                 </div>
                 <div className="flex flex-col">
-                  <div className="flex items-center text-2xl font-black tracking-tight leading-none text-slate-900">
+                  <div className="flex items-center text-lg sm:text-2xl font-black tracking-tight leading-none text-slate-900">
                     <span className="text-red-600">UP</span>
                     <span className="text-slate-900">CAREER</span>
                   </div>
-                  <span className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase leading-tight mt-0.5">
+                  <span className="text-[8px] sm:text-[10px] font-semibold text-slate-500 tracking-wider uppercase leading-tight mt-0.5 truncate max-w-[120px] sm:max-w-none">
                     Vietnam IT Jobs & HR Tech
                   </span>
                 </div>
               </Link>
             </div>
 
-            {/* Zone 2: Navigation Links (single-line, clean typography) */}
-            <nav className="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-semibold text-slate-700">
+            {/* Zone 2: Navigation Links (Centered in the middle of navbar) */}
+            <nav className="hidden lg:flex items-center justify-center flex-1 mx-4 xl:mx-8 gap-4 xl:gap-6 text-xs xl:text-sm font-semibold text-slate-700">
               <Link
                 href="/"
-                className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer ${
+                className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer ${
                   pathname === '/' || pathname === '/careers' ? 'text-red-600 font-bold' : ''
                 }`}
               >
-                <Briefcase className="w-4 h-4 text-slate-400" />
+                <Briefcase className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
                 <span>Việc làm IT</span>
               </Link>
 
               {/* AI HR Agents Dropdown */}
               <div className="relative" ref={hrDropdownRef}>
                 <button
-                  onClick={() => setHrDropdownOpen(!hrDropdownOpen)}
-                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer ${
+                  ref={hrDropdownButtonRef}
+                  id="hr-agents-trigger"
+                  aria-expanded={hrDropdownOpen}
+                  aria-controls="hr-agents-menu"
+                  onClick={() => setHrDropdownOpen((open) => !open)}
+                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
                     isHRPage ? 'text-red-600 font-bold' : ''
                   }`}
                 >
-                  <LayoutDashboard className={`w-4 h-4 ${isHRPage ? 'text-red-600' : 'text-slate-400'}`} />
-                  <span>Hệ Thống AI HR</span>
+                  <LayoutDashboard className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isHRPage ? 'text-red-600' : 'text-slate-400'}`} />
+                  <span>Cổng Quản Trị HR</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${hrDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {hrDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
-                    <div className="px-3.5 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                      Trung Tâm Điều Hành & 5 Agents
-                    </div>
+                  <div
+                    id="hr-agents-menu"
+                    className="absolute left-0 mt-2 w-72 max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
+                  >
                     <Link
                       href="/dashboard"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/dashboard' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Bảng Điều Khiển Tổng Quan</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Chỉ số nhân sự, phòng ban & phễu</div>
-                      </div>
+                      <span className="leading-tight">Bảng Điều Khiển Tổng Quan</span>
                     </Link>
                     <Link
                       href="/recruitment"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/recruitment' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <Briefcase className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 1 · AI Tuyển Dụng (ATS)</div>
-                        <div className="text-[10px] text-slate-400 font-normal">CV parser, AI score & Meet (WF 04-06)</div>
-                      </div>
+                      <span className="leading-tight">Tuyển Dụng & Ứng Viên (ATS)</span>
                     </Link>
                     <Link
                       href="/onboarding"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/onboarding' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <Compass className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 2 · AI Onboarding</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Cấp tài khoản IT & Tiến độ (WF 07-08)</div>
-                      </div>
+                      <span className="leading-tight">Tiếp Nhận & Hội Nhập Nhân Sự</span>
                     </Link>
                     <Link
                       href="/performance"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/performance' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <TrendingUp className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 3 · AI Performance</div>
-                        <div className="text-[10px] text-slate-400 font-normal">KPI & Magic Link 360° Review (WF 09)</div>
-                      </div>
+                      <span className="leading-tight">Quản Trị Hiệu Suất 360°</span>
                     </Link>
                     <Link
                       href="/training"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/training' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <GraduationCap className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 4 · AI Skills & Training</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Skill Gap Radar & Khóa học (WF 10-11)</div>
-                      </div>
+                      <span className="leading-tight">Đào Tạo & Phát Triển Kỹ Năng</span>
                     </Link>
                     <Link
                       href="/engagement"
                       onClick={() => setHrDropdownOpen(false)}
-                      className={`flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors ${
+                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
                         pathname === '/engagement' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
                       }`}
                     >
                       <Heart className="w-4 h-4 text-slate-400" />
-                      <div>
-                        <div className="leading-tight">Agent 5 · AI Engagement</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Khảo sát eNPS & Wellbeing (WF 12)</div>
-                      </div>
+                      <span className="leading-tight">Khảo Sát Gắn Kết & Phúc Lợi</span>
                     </Link>
                   </div>
                 )}
@@ -299,36 +305,63 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 onClick={() => handleNavClick('companies-section')}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
+                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
               >
-                <Building2 className="w-4 h-4 text-slate-400" />
+                <Building2 className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-slate-400" />
                 <span>Công ty hàng đầu</span>
               </button>
 
-              <button
-                onClick={handleReportModalClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
-              >
-                <TrendingUp className="w-4 h-4 text-red-500" />
-                <span>Báo cáo Lương IT</span>
-                <span className="text-[10px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">2026</span>
-              </button>
+              {/* Tools Dropdown */}
+              <div className="relative" ref={toolsDropdownRef}>
+                <button
+                  onClick={() => setToolsDropdownOpen(!toolsDropdownOpen)}
+                  className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 xl:w-4 xl:h-4 text-red-500" />
+                  <span>Công Cụ IT</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${toolsDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-              <button
-                onClick={handleSalaryCalcClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
-              >
-                <Calculator className="w-4 h-4 text-slate-400" />
-                <span>Tính Lương Gross-Net</span>
-              </button>
+                {toolsDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        setToolsDropdownOpen(false);
+                        handleReportModalClick();
+                      }}
+                      className="w-full flex items-center justify-between rounded-lg px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <TrendingUp className="w-4 h-4 text-red-500" />
+                        <span>Báo cáo Lương IT</span>
+                      </div>
+                      <span className="text-[9px] font-bold uppercase bg-red-100 text-red-700 px-1.5 py-0.5 rounded">2026</span>
+                    </button>
 
-              <button
-                onClick={handleCVBuilderClick}
-                className="hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-2 cursor-pointer"
-              >
-                <FileText className="w-4 h-4 text-slate-400" />
-                <span>Tạo CV IT</span>
-              </button>
+                    <button
+                      onClick={() => {
+                        setToolsDropdownOpen(false);
+                        handleSalaryCalcClick();
+                      }}
+                      className="w-full flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <Calculator className="w-4 h-4 text-slate-400" />
+                      <span>Tính Lương Gross - Net</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setToolsDropdownOpen(false);
+                        handleCVBuilderClick();
+                      }}
+                      className="w-full flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer text-left"
+                    >
+                      <FileText className="w-4 h-4 text-slate-400" />
+                      <span>Tạo CV IT Chuẩn Quốc Tế</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </nav>
 
             {/* Zone 3: Actions & Primary CTA / Profile Box */}
@@ -411,7 +444,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <Briefcase className="w-4 h-4 text-slate-400" />
-                          <span>Agent 1 · AI Tuyển Dụng (ATS)</span>
+                          <span>Tuyển Dụng & Ứng Viên (ATS)</span>
                         </Link>
 
                         <Link
@@ -420,7 +453,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <Compass className="w-4 h-4 text-slate-400" />
-                          <span>Agent 2 · AI Onboarding</span>
+                          <span>Tiếp Nhận & Hội Nhập Nhân Sự</span>
                         </Link>
 
                         <Link
@@ -429,7 +462,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <TrendingUp className="w-4 h-4 text-slate-400" />
-                          <span>Agent 3 · AI Performance</span>
+                          <span>Quản Trị Hiệu Suất & Đánh Giá 360°</span>
                         </Link>
 
                         <Link
@@ -438,7 +471,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <GraduationCap className="w-4 h-4 text-slate-400" />
-                          <span>Agent 4 · AI Skills & Training</span>
+                          <span>Đào Tạo & Phát Triển Kỹ Năng</span>
                         </Link>
 
                         <Link
@@ -447,7 +480,7 @@ export const Header: React.FC<HeaderProps> = ({
                           className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                         >
                           <Heart className="w-4 h-4 text-slate-400" />
-                          <span>Agent 5 · AI Engagement</span>
+                          <span>Khảo Sát Gắn Kết & Phúc Lợi</span>
                         </Link>
                       </div>
 
@@ -557,7 +590,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <Briefcase className="w-4 h-4 text-slate-500" />
-              Agent 1 · AI Tuyển Dụng
+              Tuyển Dụng & Ứng Viên (ATS)
             </Link>
 
             <Link
@@ -566,7 +599,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <Compass className="w-4 h-4 text-slate-500" />
-              Agent 2 · AI Onboarding
+              Tiếp Nhận & Hội Nhập Nhân Sự
             </Link>
 
             <Link
@@ -575,7 +608,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <TrendingUp className="w-4 h-4 text-slate-500" />
-              Agent 3 · AI Performance
+              Quản Trị Hiệu Suất & Đánh Giá 360°
             </Link>
 
             <Link
@@ -584,7 +617,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <GraduationCap className="w-4 h-4 text-slate-500" />
-              Agent 4 · AI Training
+              Đào Tạo & Phát Triển Kỹ Năng
             </Link>
 
             <Link
@@ -593,7 +626,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
             >
               <Heart className="w-4 h-4 text-slate-500" />
-              Agent 5 · AI Engagement
+              Khảo Sát Gắn Kết & Phúc Lợi
             </Link>
 
             <button

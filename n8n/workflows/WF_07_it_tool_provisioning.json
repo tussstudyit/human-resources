@@ -5,26 +5,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "pinData": {
-    "1. Webhook Trigger": [
-      {
-        "json": {
-          "headers": {
-            "host": "localhost:5679",
-            "content-type": "application/json"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "userEmail": "dang.2006.qt@gmail.com",
-            "fullName": "Đặng Tú Nguyên",
-            "department": "Tech",
-            "role": "EMPLOYEE"
-          }
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "nodes": [
     {
       "parameters": {
@@ -52,7 +33,7 @@
             {
               "id": "sanitize-email",
               "name": "userEmail",
-              "value": "={{ $json.body?.userEmail || $json.body?.personalEmail || $json.userEmail || 'newhire@company.vn' }}",
+              "value": "={{ $json.body?.userEmail || $json.body?.personalEmail || $json.body?.email || $json.userEmail || $json.personalEmail || $json.email }}",
               "type": "string"
             },
             {
@@ -261,7 +242,7 @@
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.userEmail || 'anhtanht1905@gmail.com' }}",
+        "toEmail": "={{ $json.userEmail || $json.personalEmail || $json.email }}",
         "subject": "=[IT Provisioning] Hoàn tất cấp phát tài khoản - {{$json.empId}}",
         "emailFormat": "html",
         "html": "=Xin chào {{$json.fullName || 'bạn'}},<br><br>Tài khoản công ty của bạn đã sẵn sàng!<br><b>Mã nhân viên:</b> {{$json.empId}}<br><b>Email:</b> {{$json.userEmail}}<br><b>Mật khẩu tạm thời:</b> {{$json.tempPwd}}<br><b>Công cụ cấp phát:</b> {{$json.tools ? $json.tools.join(', ') : 'IT Tools'}}.<br><br>Trân trọng,<br>IT Helpdesk",
@@ -277,8 +258,8 @@
       "id": "wf07-send-email",
       "credentials": {
         "smtp": {
-          "id": "GmailSmtpCred01",
-          "name": "Gmail SMTP"
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
         }
       },
       "continueOnFail": true
@@ -304,31 +285,31 @@
             {
               "id": "audit-empid",
               "name": "empId",
-              "value": "={{ $('5. Generate Credentials').first().json.empId }}",
+              "value": "={{ $('9. Mock IT Provisioning API').first().json.empId }}",
               "type": "string"
             },
             {
               "id": "audit-email",
               "name": "userEmail",
-              "value": "={{ $('5. Generate Credentials').first().json.userEmail }}",
+              "value": "={{ $('9. Mock IT Provisioning API').first().json.userEmail }}",
               "type": "string"
             },
             {
               "id": "audit-name",
               "name": "fullName",
-              "value": "={{ $('2. Sanitize Data').first().json.fullName }}",
+              "value": "={{ $('9. Mock IT Provisioning API').first().json.fullName }}",
               "type": "string"
             },
             {
               "id": "audit-dept",
               "name": "department",
-              "value": "={{ $('2. Sanitize Data').first().json.department }}",
+              "value": "={{ $('9. Mock IT Provisioning API').first().json.department }}",
               "type": "string"
             },
             {
               "id": "audit-tools",
               "name": "tools",
-              "value": "={{ $('7. Setup Tech Stack (Jira/Slack)').first()?.json?.tools || $('8. Setup Standard Stack').first()?.json?.tools || ['Google Workspace', 'Slack', 'Jira'] }}",
+              "value": "={{ $('9. Mock IT Provisioning API').first().json.tools }}",
               "type": "array"
             }
           ]

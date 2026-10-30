@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Mail, Phone, MapPin, ShieldCheck, Heart } from 'lucide-react';
 
-interface FooterProps {
-  onSelectSkill: (skill: string) => void;
-  onOpenReportModal: () => void;
-  onOpenSalaryCalc: () => void;
-  onOpenCVBuilder: () => void;
+export interface FooterProps {
+  onSelectSkill?: (skill: string) => void;
+  onOpenReportModal?: () => void;
+  onOpenSalaryCalc?: () => void;
+  onOpenCVBuilder?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -16,38 +17,70 @@ export const Footer: React.FC<FooterProps> = ({
   onOpenSalaryCalc,
   onOpenCVBuilder
 }) => {
+  const handleSkillClick = (skill: string) => {
+    if (onSelectSkill) {
+      onSelectSkill(skill);
+    } else {
+      window.location.href = `/?skill=${encodeURIComponent(skill)}`;
+    }
+  };
+
+  const handleSalaryClick = () => {
+    if (onOpenSalaryCalc) {
+      onOpenSalaryCalc();
+    } else {
+      window.location.href = '/#salary';
+    }
+  };
+
+  const handleReportClick = () => {
+    if (onOpenReportModal) {
+      onOpenReportModal();
+    } else {
+      window.location.href = '/#report';
+    }
+  };
+
+  const handleCVClick = () => {
+    if (onOpenCVBuilder) {
+      onOpenCVBuilder();
+    } else {
+      window.location.href = '/#cv-builder';
+    }
+  };
+
   return (
-    <footer className="bg-slate-950 text-slate-400 text-xs border-t border-slate-900 pt-12 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="w-full bg-slate-950 text-slate-400 text-xs border-t border-slate-900 pt-10 sm:pt-14 pb-8 sm:pb-10 mt-auto">
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
         
-        {/* Top 4-Column Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-slate-800/80">
+        {/* Top 4-Column Balanced Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 xl:gap-12 pb-8 sm:pb-12 border-b border-slate-800/80">
           
           {/* Col 1: Brand & About */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white font-extrabold text-sm font-mono">
+          <div className="space-y-4">
+            <Link href="/" className="inline-flex items-center gap-2 group cursor-pointer">
+              <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center text-white font-extrabold text-sm font-mono shadow-xs group-hover:scale-105 transition-transform">
                 &lt;/&gt;
               </div>
               <span className="text-xl font-black tracking-tight text-white">
                 <span className="text-red-500">UP</span>CAREER
               </span>
-            </div>
+            </Link>
             
             <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
-              UpCareer là nền tảng tuyển dụng IT và hệ sinh thái việc làm công nghệ thông tin hàng đầu tại Việt Nam, kết nối hơn 450,000+ lập trình viên với các doanh nghiệp công nghệ hàng đầu thế giới.
+              UpCareer là nền tảng quản trị nhân sự và hệ sinh thái việc làm công nghệ thông tin hàng đầu tại Việt Nam, kết nối hơn 450,000+ nhân sự công nghệ với các doanh nghiệp tiên phong.
             </p>
 
-            <div className="space-y-2 text-slate-300">
+            <div className="space-y-2 text-slate-300 pt-1">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <span>
+                <span className="leading-snug">
                   <strong>Trụ sở chính TP.HCM:</strong> Tầng 12A, Tòa nhà AP Tower, 518B Điện Biên Phủ, P. 21, Q. Bình Thạnh, TP.HCM
                 </span>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <span>
+                <span className="leading-snug">
                   <strong>Chi nhánh Hà Nội:</strong> Tầng 7, Tòa nhà Diamond Flower, 48 Lê Văn Lương, Q. Thanh Xuân, Hà Nội
                 </span>
               </div>
@@ -71,7 +104,7 @@ export const Footer: React.FC<FooterProps> = ({
               {['ReactJS', 'NodeJS', 'Java', 'Golang', 'Python', 'DevOps', '.NET Core', 'AI Engineer'].map((tech) => (
                 <li key={tech}>
                   <button
-                    onClick={() => onSelectSkill(tech)}
+                    onClick={() => handleSkillClick(tech)}
                     className="hover:text-red-400 transition-colors text-left cursor-pointer"
                   >
                     Việc làm {tech}
@@ -84,20 +117,20 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Col 3: Career Tools */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-              Công Cụ Cho Lập Trình Viên
+              Công Cụ Nghề Nghiệp
             </h4>
             <ul className="space-y-2 text-slate-400">
               <li>
                 <button
-                  onClick={onOpenSalaryCalc}
+                  onClick={handleSalaryClick}
                   className="hover:text-red-400 transition-colors text-left cursor-pointer"
                 >
-                  Tính Lương Gross sang Net 2026
+                  Tính Lương Gross sang Net
                 </button>
               </li>
               <li>
                 <button
-                  onClick={onOpenReportModal}
+                  onClick={handleReportClick}
                   className="hover:text-red-400 transition-colors text-left cursor-pointer"
                 >
                   Báo cáo Lương IT Việt Nam
@@ -105,17 +138,21 @@ export const Footer: React.FC<FooterProps> = ({
               </li>
               <li>
                 <button
-                  onClick={onOpenCVBuilder}
+                  onClick={handleCVClick}
                   className="hover:text-red-400 transition-colors text-left cursor-pointer"
                 >
-                  Tạo CV IT Chuẩn ATS
+                  Tạo CV IT Chuẩn Quốc Tế
                 </button>
               </li>
               <li>
-                <span className="text-slate-500">Khảo Sát Mức Lương IT</span>
+                <Link href="/engagement" className="hover:text-red-400 transition-colors text-left block">
+                  Khảo Sát Gắn Kết & Phúc Lợi
+                </Link>
               </li>
               <li>
-                <span className="text-slate-500">Thư Viện Câu Hỏi Phỏng Vấn</span>
+                <Link href="/training" className="hover:text-red-400 transition-colors text-left block">
+                  Lộ Trình Đào Tạo Kỹ Năng
+                </Link>
               </li>
             </ul>
           </div>
@@ -126,12 +163,12 @@ export const Footer: React.FC<FooterProps> = ({
               Về UpCareer
             </h4>
             <ul className="space-y-2 text-slate-400">
-              <li><span>Giới thiệu UpCareer</span></li>
-              <li><span>Dành cho Nhà tuyển dụng</span></li>
-              <li><span>Chính sách bảo mật thông tin</span></li>
-              <li><span>Quy chế hoạt động Sàn TMĐT</span></li>
-              <li><span>Giải quyết tranh chấp</span></li>
-              <li><span>Liên hệ hợp tác truyền thông</span></li>
+              <li><Link href="/" className="hover:text-red-400 transition-colors">Giới thiệu UpCareer</Link></li>
+              <li><Link href="/recruitment" className="hover:text-red-400 transition-colors">Dành cho Nhà tuyển dụng</Link></li>
+              <li><span className="text-slate-400">Chính sách bảo mật thông tin</span></li>
+              <li><span className="text-slate-400">Quy chế hoạt động hệ thống</span></li>
+              <li><span className="text-slate-400">Giải quyết tranh chấp</span></li>
+              <li><span className="text-slate-400">Liên hệ hợp tác truyền thông</span></li>
             </ul>
 
             <div className="pt-2">
@@ -145,13 +182,13 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Bottom Bar: Copyright & Compliance */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 text-center sm:text-left">
           <div>
             © 2026 UpCareer. Bản quyền thuộc về UpCareer Technology JSC. Giấy phép MXH số 334/GP-BTTTT cấp bởi Bộ TT&TT.
           </div>
-          <div className="flex items-center gap-1">
-            <span>Made with passion for Vietnamese Software Engineers</span>
-            <Heart className="w-3 h-3 text-red-500 fill-red-500 inline" />
+          <div className="flex items-center justify-center gap-1">
+            <span>Phát triển cho cộng đồng Lập trình viên & Doanh nghiệp Việt Nam</span>
+            <Heart className="w-3 h-3 text-red-500 fill-red-500 inline ml-0.5" />
           </div>
         </div>
 
@@ -159,3 +196,5 @@ export const Footer: React.FC<FooterProps> = ({
     </footer>
   );
 };
+
+export default Footer;

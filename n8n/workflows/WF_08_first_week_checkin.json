@@ -5,21 +5,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "pinData": {
-    "1. Cronjob Schedule": [
-      {
-        "json": {
-          "timestamp": "2026-10-23T21:00:00.000Z",
-          "userId": "usr-dev-001",
-          "email": "dang.2006.qt@gmail.com",
-          "fullName": "Đặng Tú Nguyên",
-          "totalTasks": 10,
-          "completedTasks": 3,
-          "mentorEmail": "dang.2006.qt@gmail.com"
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "nodes": [
     {
       "parameters": {
@@ -56,13 +42,13 @@
             {
               "id": "wf08-set-email",
               "name": "email",
-              "value": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
+              "value": "={{ $json.body?.employeeEmail || $json.body?.email || $json.employeeEmail || $json.email }}",
               "type": "string"
             },
             {
               "id": "wf08-set-name",
               "name": "fullName",
-              "value": "={{ $json.fullName || 'Đặng Tú Nguyên' }}",
+              "value": "={{ $json.body?.employeeName || $json.body?.fullName || $json.employeeName || $json.fullName || \"Nhân sự\" }}",
               "type": "string"
             },
             {
@@ -80,7 +66,7 @@
             {
               "id": "wf08-set-mentor",
               "name": "mentorEmail",
-              "value": "={{ $json.mentorEmail || 'dang.2006.qt@gmail.com' }}",
+              "value": "={{ $json.body?.mentorEmail || $json.mentorEmail || $json.body?.employeeEmail || $json.employeeEmail || $json.email }}",
               "type": "string"
             }
           ]
@@ -280,10 +266,10 @@
     {
       "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.mentorEmail || 'dang.2006.qt@gmail.com' }}",
-        "subject": "={{ $json.emailSubject || '[Onboarding Check-in] Cảnh báo tiến độ tuần đầu' }}",
+        "toEmail": "={{ $json.mentorEmail || $json.email || $('7. Prepare Reminder Message').first().json.mentorEmail || $('7. Prepare Reminder Message').first().json.email }}",
+        "subject": "={{ $json.emailSubject || $('7. Prepare Reminder Message').first().json.emailSubject || '[Onboarding Check-in] Cảnh báo tiến độ tuần đầu' }}",
         "emailFormat": "html",
-        "html": "=Xin chào Buddy / HR Mentor,<br><br>Hệ thống gửi thông báo rà soát tiến độ tuần đầu tiên:<br><b>Nhân sự:</b> {{$json.fullName}} ({{$json.email}})<br><b>Tiến độ:</b> {{$json.progressPercent}}% ({{$json.completedTasks}}/{{$json.totalTasks}} việc hoàn thành)<br><b>Trạng thái:</b> {{$json.checkinStatus}}<br><br>Vui lòng hỗ trợ nhân sự hoàn tất các nhiệm vụ hội nhập kịp thời.<br><br>Trân trọng,<br>Hệ thống Quản trị Onboarding",
+        "html": "=Xin chào Buddy / HR Mentor,<br><br>Hệ thống gửi thông báo rà soát tiến độ tuần đầu tiên:<br><b>Nhân sự:</b> {{ $('7. Prepare Reminder Message').first().json.fullName }} ({{ $('7. Prepare Reminder Message').first().json.email }})<br><b>Tiến độ:</b> {{ $('7. Prepare Reminder Message').first().json.progressPercent }}% ({{ $('7. Prepare Reminder Message').first().json.completedTasks }}/{{ $('7. Prepare Reminder Message').first().json.totalTasks }} việc hoàn thành)<br><b>Trạng thái:</b> {{ $('7. Prepare Reminder Message').first().json.checkinStatus }}<br><br>Vui lòng hỗ trợ nhân sự hoàn tất các nhiệm vụ hội nhập kịp thời.<br><br>Trân trọng,<br>Hệ thống Quản trị Onboarding",
         "options": {}
       },
       "type": "n8n-nodes-base.emailSend",
@@ -296,8 +282,8 @@
       "id": "wf08-send-email",
       "credentials": {
         "smtp": {
-          "id": "GmailSmtpCred01",
-          "name": "Gmail SMTP"
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
         }
       },
       "continueOnFail": true
@@ -323,7 +309,7 @@
             {
               "id": "wf08-log-audit",
               "name": "auditLog",
-              "value": "={{ 'Logged check-in for ' + $json.fullName + ' with status: ' + $json.checkinStatus }}",
+              "value": "={{ 'Logged check-in for ' + $('7. Prepare Reminder Message').first().json.fullName + ' with status: ' + $('7. Prepare Reminder Message').first().json.checkinStatus }}",
               "type": "string"
             }
           ]
@@ -355,7 +341,7 @@
             {
               "id": "wf08-db-summary",
               "name": "syncSummary",
-              "value": "={{ 'Checked user ' + $json.userId + ': ' + $json.progressPercent + '% progress recorded.' }}",
+              "value": "={{ 'Checked user ' + $('2. Fetch Onboarding List').first().json.userId + ': ' + $('3. Calculate Progress %').first().json.progressPercent + '% progress recorded.' }}",
               "type": "string"
             }
           ]
@@ -371,6 +357,22 @@
       ],
       "name": "11. Update DB State",
       "id": "wf08-update-db"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "first-week-checkin",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        380
+      ],
+      "name": "1b. Webhook Trigger",
+      "id": "wf08-webhook-trigger",
+      "webhookId": "first-week-checkin"
     }
   ],
   "connections": {
@@ -443,19 +445,18 @@
             "node": "8. Send Slack to Employee",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "8. Send Slack to Employee": {
-      "main": [
-        [
+          },
           {
             "node": "9. Notify HR Mentor Email",
             "type": "main",
             "index": 0
           }
         ]
+      ]
+    },
+    "8. Send Slack to Employee": {
+      "main": [
+        []
       ]
     },
     "9. Notify HR Mentor Email": {
@@ -474,6 +475,17 @@
         [
           {
             "node": "11. Update DB State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b. Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "2. Fetch Onboarding List",
             "type": "main",
             "index": 0
           }

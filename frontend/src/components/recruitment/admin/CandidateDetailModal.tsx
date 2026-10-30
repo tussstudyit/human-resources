@@ -159,7 +159,7 @@ export default function CandidateDetailModal({
       const res = await scheduleCandidateInterview(candidate.id, 'ONLINE');
       showToast({
         type: 'success',
-        title: 'Đã kích hoạt n8n WF_05',
+        title: 'Đã thiết lập lịch phỏng vấn',
         message: res.message || 'Đang tạo sự kiện Google Calendar & link Meet...',
       });
       if (res?.updatedCandidate && onCandidateUpdated) {
@@ -187,7 +187,7 @@ export default function CandidateDetailModal({
       showToast({
         type: 'error',
         title: 'Thao tác thất bại',
-        message: err.message || 'Không thể kết nối đến n8n Interview Scheduler.',
+        message: err.message || 'Không thể kết nối đến hệ thống xếp lịch phỏng vấn.',
       });
     } finally {
       setSchedulingMeet(false);
@@ -200,7 +200,7 @@ export default function CandidateDetailModal({
       const res = await archiveCandidateTalentPool(candidate.id);
       showToast({
         type: 'success',
-        title: 'Đã kích hoạt n8n WF_06',
+        title: 'Đã lưu vào kho nhân tài',
         message: res.message || 'Đã phân bổ hồ sơ vào Kho Nhân Tài & gửi email phản hồi.',
       });
       if (res?.updatedCandidate && onCandidateUpdated) {
@@ -223,7 +223,7 @@ export default function CandidateDetailModal({
       showToast({
         type: 'error',
         title: 'Thao tác thất bại',
-        message: err.message || 'Không thể kết nối đến n8n Talent Pool Retention.',
+        message: err.message || 'Không thể kết nối đến hệ thống lưu trữ kho nhân tài.',
       });
     } finally {
       setArchivingPool(false);
@@ -302,7 +302,7 @@ export default function CandidateDetailModal({
               onClick={handleScheduleMeet}
               disabled={schedulingMeet || isPending}
               className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
-              title="Kích hoạt n8n WF_05: Xếp lịch Google Meet và gửi thư mời cho ứng viên"
+              title="Xếp lịch Google Meet và gửi thư mời cho ứng viên"
             >
               <Video className={`w-3.5 h-3.5 ${schedulingMeet ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{schedulingMeet ? 'Đang tạo Meet...' : 'Lên lịch Meet'}</span>
@@ -312,7 +312,7 @@ export default function CandidateDetailModal({
               onClick={handleArchivePool}
               disabled={archivingPool || isPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
-              title="Kích hoạt n8n WF_06: Lưu kho nhân tài và gửi email phản hồi"
+              title="Lưu kho nhân tài và gửi email phản hồi"
             >
               <Archive className={`w-3.5 h-3.5 ${archivingPool ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{archivingPool ? 'Đang lưu...' : 'Lưu Talent Pool'}</span>
@@ -322,7 +322,7 @@ export default function CandidateDetailModal({
               onClick={handleReEvaluate}
               disabled={reEvaluating || isPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
-              title="Gửi lại CV cho Gemini AI phân tích (n8n WF_04)"
+              title="Gửi lại CV cho Gemini AI phân tích"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${reEvaluating || isPending ? 'animate-spin' : ''}`} aria-hidden="true" />
               <span>{isPending ? 'Đang chấm...' : 'Chấm lại AI'}</span>
@@ -419,7 +419,7 @@ export default function CandidateDetailModal({
               {isPending && (
                 <div className="p-2.5 rounded-[6px] bg-[#fffbeb] border border-[#fde68a] text-[#854d0e] flex items-center space-x-2 text-xs font-sans">
                   <Sparkles className="w-4 h-4 text-[#d97706] shrink-0 animate-spin" />
-                  <span>Gemini AI (n8n WF_04) đang thẩm định lại hồ sơ... Kết quả sẽ tự động hiển thị sau vài giây.</span>
+                  <span>Gemini AI đang thẩm định lại hồ sơ... Kết quả sẽ tự động cập nhật sau vài giây.</span>
                 </div>
               )}
 

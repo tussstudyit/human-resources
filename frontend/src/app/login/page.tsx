@@ -13,7 +13,6 @@ import {
   Eye,
   EyeOff,
   X,
-  Sparkles,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -50,7 +49,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen w-full max-w-full bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
       {/* Subtle tech background grid pattern & ambient glow from TopDev Hero */}
       <div
         className="absolute inset-0 opacity-15 pointer-events-none"
@@ -88,16 +87,9 @@ export default function LoginPage() {
           </div>
 
           <div className="pt-2">
-            <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-red-500" />
-              <span>XÁC THỰC TÀI KHOẢN</span>
-            </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Đăng nhập hệ thống
+              Đăng nhập
             </h1>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Nhập email và mật khẩu công việc của bạn để quản trị nhân sự và ATS.
-            </p>
           </div>
         </div>
 

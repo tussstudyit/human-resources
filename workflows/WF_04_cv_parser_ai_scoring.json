@@ -772,14 +772,38 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
   },
   "staticData": null,
   "meta": {
     "instanceId": "d513a217739c970f06ba5b7905d56e04f8bf5bbc9d4fc9cc5d08fdd4d8b7ae7b"
   },
   "nodeGroups": [],
-  "pinData": {},
+  "pinData": {
+    "Webhook: Receive CV Application": [
+      {
+        "json": {
+          "headers": {
+            "host": "localhost:5678",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "candidateId": "53703860-9530-4e90-83dc-8466e73b0caa",
+            "candidateName": "Nguyễn Văn A",
+            "candidateEmail": "dang.2006.qt@gmail.com",
+            "jobTitle": "Senior Fullstack Developer",
+            "jobDescription": "Phát triển hệ thống Microservices với NestJS, React, PostgreSQL. Tối ưu hóa hiệu năng và triển khai CI/CD.",
+            "jobRequirements": "Tối thiểu 3 năm kinh nghiệm với Node.js/NestJS và React. Thành thạo TypeScript, Docker, Git. Khả năng làm việc độc lập và làm việc nhóm tốt.",
+            "fileUrl": "http://host.docker.internal:3001/recruitment/candidates/53703860-9530-4e90-83dc-8466e73b0caa/cv"
+          }
+        }
+      }
+    ]
+  },
   "versionId": "883578ec-0060-4d79-be10-f32692399e55",
   "activeVersionId": "883578ec-0060-4d79-be10-f32692399e55",
   "versionCounter": 21,

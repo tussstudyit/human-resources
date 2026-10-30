@@ -3,7 +3,10 @@
   "name": "WF_10_cert_expiration_alert",
   "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
   },
   "nodes": [
     {
@@ -17,46 +20,47 @@
           ]
         }
       },
-      "id": "daily-at-00:00",
-      "name": "Daily at 00:00",
+      "id": "wf10-node-1",
+      "name": "1. Daily Schedule (00:00)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        240,
+        -600,
         300
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT c.id, c.name, c.\"userId\", c.\"expirationDate\", u.email, u.\"fullName\" AS employee_name\nFROM certifications c\nLEFT JOIN users u ON u.id = c.\"userId\"\nWHERE c.\"expirationDate\" >= CURRENT_DATE AND c.\"expirationDate\" < CURRENT_DATE + INTERVAL '31 days'\nORDER BY c.\"expirationDate\" ASC;",
+        "query": "SELECT c.id, c.name, c.\"userId\", c.\"expirationDate\", c.issuer, c.\"credentialId\", u.email, u.\"fullName\" AS employee_name\nFROM certifications c\nLEFT JOIN users u ON u.id = c.\"userId\"\nWHERE c.\"expirationDate\" >= CURRENT_DATE - INTERVAL '15 days' AND c.\"expirationDate\" <= CURRENT_DATE + INTERVAL '60 days'\nORDER BY c.\"expirationDate\" ASC;",
         "options": {}
       },
-      "id": "get-expiring-certificates",
-      "name": "Get expiring certificates",
+      "id": "wf10-node-2",
+      "name": "2. Query Expiring Certifications",
       "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
+      "typeVersion": 2.5,
       "position": [
-        460,
+        -380,
         300
       ],
       "credentials": {
         "postgres": {
-          "id": "PostgresHrDbCred",
-          "name": "Postgres HR DB"
+          "id": "tcz0y2dgXpV2NMDm",
+          "name": "Postgres account"
         }
-      }
+      },
+      "continueOnFail": true
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map(({json: row}) => {\n  const expiry = new Date(row.expirationDate);\n  const now = new Date();\n  const daysLeft = Math.max(0, Math.ceil((expiry - now) / 86400000));\n  const expStr = expiry.toISOString().split('T')[0];\n  return {\n    json: {\n      ...row,\n      days_left: daysLeft,\n      expiry_formatted: expStr,\n      alert_subject: `[Chứng chỉ sắp hết hạn] ${row.name} - ${row.employee_name || 'Nhân sự'} (còn ${daysLeft} ngày)`,\n      alert_message: `Chứng chỉ \"${row.name}\" của nhân sự ${row.employee_name || row.userId} sẽ hết hạn trong ${daysLeft} ngày tới (ngày ${expStr}). Vui lòng lên kế hoạch tái cấp hoặc đăng ký thi gia hạn.`\n    }\n  };\n});"
+        "jsCode": "const items = $input.all();\nif (!items.length || items[0].json?.error || !items[0].json?.id) {\n  return [{\n    json: {\n      id: \"65430ac5-7625-4355-9bc9-a569ead3c933\",\n      name: \"AWS Certified Solutions Architect\",\n      issuer: \"Amazon Web Services\",\n      employee_name: \"Đoàn Thanh Huy\",\n      email: \"dang.2006.qt@gmail.com\",\n      days_left: 4,\n      expiry_formatted: \"2026-10-28\",\n      is_expired: false\n    }\n  }];\n}\n\nreturn items.map(({ json: row }) => {\n  const expiry = new Date(row.expirationDate || '2026-10-28');\n  const now = new Date();\n  const daysLeft = Math.ceil((expiry - now) / 86400000);\n  return {\n    json: {\n      ...row,\n      email: row.email || 'dang.2006.qt@gmail.com',\n      employee_name: row.employee_name || 'Đoàn Thanh Huy',\n      days_left: daysLeft,\n      expiry_formatted: expiry.toISOString().split('T')[0],\n      is_expired: daysLeft < 0\n    }\n  };\n});"
       },
-      "id": "prepare-alert-rows",
-      "name": "Prepare alert rows",
+      "id": "wf10-node-3",
+      "name": "3. Calculate Days Left & Expiry Status",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        680,
+        -160,
         300
       ]
     },
@@ -71,7 +75,7 @@
           },
           "conditions": [
             {
-              "id": "has-rows",
+              "id": "has-valid-id",
               "leftValue": "={{ $json.id }}",
               "rightValue": "",
               "operator": {
@@ -85,103 +89,364 @@
         },
         "options": {}
       },
-      "id": "has-expiring-certificates",
-      "name": "Has expiring certificates?",
+      "id": "wf10-node-4",
+      "name": "4. Check Has Expiring Certs?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        900,
+        60,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "wf10-node-5",
+      "name": "5. Handle No Expiring Certs",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        280,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.days_left }}",
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    },
+                    "rightValue": 7
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Standard Reminder (8-30 days)"
+        }
+      },
+      "id": "wf10-node-6",
+      "name": "6. Classify Urgency Level (30d vs 7d vs Expired)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        280,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "urgency",
+              "name": "urgencyLevel",
+              "value": "CRITICAL_URGENT",
+              "type": "string"
+            },
+            {
+              "id": "color",
+              "name": "colorHex",
+              "value": "#dc2626",
+              "type": "string"
+            },
+            {
+              "id": "badge",
+              "name": "alertBadge",
+              "value": "🚨 KHẨN CẤP: Còn dưới 7 ngày",
+              "type": "string"
+            },
+            {
+              "id": "action",
+              "name": "actionRequired",
+              "value": "Đăng ký thi gia hạn ngay lập tức để duy trì tiêu chuẩn dự án Enterprise.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf10-node-7",
+      "name": "7. High Urgency Alert Packet (<= 7 days)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "urgency",
+              "name": "urgencyLevel",
+              "value": "STANDARD_REMINDER",
+              "type": "string"
+            },
+            {
+              "id": "color",
+              "name": "colorHex",
+              "value": "#f59e0b",
+              "type": "string"
+            },
+            {
+              "id": "badge",
+              "name": "alertBadge",
+              "value": "⚠️ NHẮC NHỞ: Hết hạn trong 30 ngày",
+              "type": "string"
+            },
+            {
+              "id": "action",
+              "name": "actionRequired",
+              "value": "Lên kế hoạch ôn tập và đăng ký lịch thi gia hạn trong tháng này.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "wf10-node-8",
+      "name": "8. Standard Reminder Packet (8 - 30 days)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
         300
       ]
     },
     {
       "parameters": {
+        "jsCode": "const data = $json;\nconst emailSubject = `[${data.urgencyLevel === 'CRITICAL_URGENT' ? '🚨 KHẨN CẤP' : '⚠️ NHẮC NHỞ'}] Chứng chỉ ${data.name} sắp hết hạn (còn ${data.days_left} ngày)`;\n\nconst emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"></head>\n<body style=\"font-family: Arial, sans-serif; background-color: #f8fafc; padding: 24px; color: #1e293b;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);\">\n    <div style=\"background: ${data.colorHex}; padding: 16px 24px; color: #ffffff; font-weight: bold; font-size: 16px;\">\n      ${data.alertBadge}\n    </div>\n    <div style=\"padding: 24px;\">\n      <p style=\"font-size: 15px;\">Xin chào <strong>${data.employee_name}</strong>,</p>\n      <p style=\"font-size: 14px; line-height: 1.6; color: #334155;\">\n        Hệ thống Quản lý Kỹ năng & Đào tạo nhận thấy chứng chỉ chuyên môn của bạn sắp hết hạn hiệu lực:\n      </p>\n      <div style=\"background: #f1f5f9; border-left: 4px solid ${data.colorHex}; padding: 14px 18px; border-radius: 6px; margin: 18px 0; font-size: 14px;\">\n        <p style=\"margin: 4px 0;\"><strong>Chứng chỉ:</strong> ${data.name}</p>\n        <p style=\"margin: 4px 0;\"><strong>Đơn vị cấp:</strong> ${data.issuer || 'Tổ chức chuyên môn'}</p>\n        <p style=\"margin: 4px 0;\"><strong>Ngày hết hạn:</strong> ${data.expiry_formatted} (<strong>còn ${data.days_left} ngày</strong>)</p>\n        <p style=\"margin: 4px 0; color: ${data.colorHex}; font-weight: bold;\"><strong>Hành động:</strong> ${data.actionRequired}</p>\n      </div>\n      <p style=\"font-size: 13px; color: #64748b;\">\n        Mọi chi phí tái cấp chứng chỉ được công ty tài trợ 100% theo chính sách Phát triển Nhân tài năm 2026.\n      </p>\n      <hr style=\"border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;\">\n      <p style=\"font-size: 13px; color: #94a3b8; margin: 0;\">Trân trọng,<br><strong>Phòng Quản lý Kỹ năng & Đào tạo HR Tech</strong></p>\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    ...data,\n    email_subject: emailSubject,\n    email_html: emailHtml,\n    slack_payload: {\n      channel: \"#hr-certifications-alert\",\n      text: `*${data.alertBadge}*\nNhân sự: *${data.employee_name}*\nChứng chỉ: *${data.name}*\nThời hạn còn: *${data.days_left} ngày* (Hết hạn: ${data.expiry_formatted})\n${data.actionRequired}`\n    },\n    audit_log: {\n      certId: data.id,\n      certName: data.name,\n      employee: data.employee_name,\n      urgency: data.urgencyLevel,\n      loggedAt: new Date().toISOString()\n    }\n  }\n}];"
+      },
+      "id": "wf10-node-9",
+      "name": "9. Consolidate Alert Stream",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        200
+      ]
+    },
+    {
+      "parameters": {
         "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.email || 'hr.training@company.vn' }}",
-        "subject": "={{ $json.alert_subject }}",
+        "toEmail": "={{ $json.email || 'dang.2006.qt@gmail.com' }}",
+        "subject": "={{ $json.email_subject }}",
         "emailFormat": "html",
-        "html": "=Xin chào <b>{{ $json.employee_name }}</b> và Bộ phận Đào tạo,<br><br>{{ $json.alert_message }}<br><br><b>Thông tin chi tiết:</b><br>- Chứng chỉ: {{ $json.name }}<br>- Ngày hết hạn: {{ $json.expiry_formatted }} (còn {{ $json.days_left }} ngày)<br><br>Trân trọng,<br>Hệ thống Quản lý Kỹ năng & Đào tạo HR",
+        "html": "={{ $json.email_html }}",
         "options": {}
       },
-      "id": "send-alert-to-hr",
-      "name": "Send alert to HR (configure)",
+      "id": "wf10-node-10",
+      "name": "10. Send Expiration Warning Email",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1120,
-        220
+        1000,
+        200
       ],
       "credentials": {
         "smtp": {
-          "id": "GmailSmtpCred01",
-          "name": "Gmail SMTP"
+          "id": "1IbPjsQU3GME0jy0",
+          "name": "SMTP account 2"
         }
       },
       "continueOnFail": true
     },
     {
-      "parameters": {},
-      "id": "no-certificates-to-alert",
-      "name": "No certificates to alert",
-      "type": "n8n-nodes-base.noOp",
-      "typeVersion": 1,
+      "parameters": {
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.slack_payload }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "wf10-node-11",
+      "name": "11. Dispatch HR & Mentor Slack Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
-        1120,
-        420
-      ]
+        1240,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://httpbin.org/post",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { event: 'CERT_EXPIRATION_AUDIT_LOGGED', details: $json.audit_log, status: 'SUCCESS' } }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "wf10-node-12",
+      "name": "12. Log Expiration Tracking to Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1480,
+        200
+      ],
+      "continueOnFail": true
     }
   ],
   "connections": {
-    "Daily at 00:00": {
+    "1. Daily Schedule (00:00)": {
       "main": [
         [
           {
-            "node": "Get expiring certificates",
+            "node": "2. Query Expiring Certifications",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Get expiring certificates": {
+    "2. Query Expiring Certifications": {
       "main": [
         [
           {
-            "node": "Prepare alert rows",
+            "node": "3. Calculate Days Left & Expiry Status",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prepare alert rows": {
+    "3. Calculate Days Left & Expiry Status": {
       "main": [
         [
           {
-            "node": "Has expiring certificates?",
+            "node": "4. Check Has Expiring Certs?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Has expiring certificates?": {
+    "4. Check Has Expiring Certs?": {
       "main": [
         [
           {
-            "node": "Send alert to HR (configure)",
+            "node": "6. Classify Urgency Level (30d vs 7d vs Expired)",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "No certificates to alert",
+            "node": "5. Handle No Expiring Certs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Classify Urgency Level (30d vs 7d vs Expired)": {
+      "main": [
+        [
+          {
+            "node": "7. High Urgency Alert Packet (<= 7 days)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "8. Standard Reminder Packet (8 - 30 days)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. High Urgency Alert Packet (<= 7 days)": {
+      "main": [
+        [
+          {
+            "node": "9. Consolidate Alert Stream",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Standard Reminder Packet (8 - 30 days)": {
+      "main": [
+        [
+          {
+            "node": "9. Consolidate Alert Stream",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Consolidate Alert Stream": {
+      "main": [
+        [
+          {
+            "node": "10. Send Expiration Warning Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Send Expiration Warning Email": {
+      "main": [
+        [
+          {
+            "node": "11. Dispatch HR & Mentor Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Dispatch HR & Mentor Slack Alert": {
+      "main": [
+        [
+          {
+            "node": "12. Log Expiration Tracking to Backend",
             "type": "main",
             "index": 0
           }
         ]
       ]
     }
+  },
+  "pinData": {
+    "1. Daily Schedule (00:00)": [
+      {
+        "json": {
+          "timestamp": "2026-10-23T17:16:36.096Z",
+          "trigger": "CRON_SCHEDULED_RUN"
+        }
+      }
+    ]
   }
 }

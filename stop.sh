@@ -10,4 +10,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 docker compose down
 
+cd /home/tuss/.gemini/antigravity/scratch/chatbox 2>/dev/null && docker compose down
+
 echo " Đã tắt toàn bộ dịch vụ an toàn!"

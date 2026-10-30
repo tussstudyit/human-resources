@@ -69,7 +69,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen w-full max-w-full bg-[#0F172A] flex flex-col items-center justify-center p-4 font-sans relative overflow-hidden selection:bg-red-600 selection:text-white">
       {/* Subtle tech background grid pattern & ambient glow from TopDev Hero */}
       <div
         className="absolute inset-0 opacity-15 pointer-events-none"
@@ -107,15 +107,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="pt-2">
-            <div className="font-mono text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1 flex items-center gap-1">
-              <span>ĐĂNG KÝ THÀNH VIÊN MỚI</span>
-            </div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-              Đăng ký tài khoản
+              Đăng ký
             </h1>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Tạo tài khoản quản trị để tham gia hệ sinh thái Tuyển dụng & Nhân sự UpCareer.
-            </p>
           </div>
         </div>
 

@@ -1,167 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
 
-const N8N_BASE_URL = process.env.N8N_URL || 'http://localhost:5679';
+const N8N_BASE_URL = process.env.N8N_URL || 'http://localhost:5678';
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const { workflow, payload } = body;
 
-    const timestamp = new Date().toLocaleTimeString('vi-VN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
+    let endpoint = '/webhook/it-provisioning';
+    if (workflow === 'first_week_checkin') {
+      endpoint = '/webhook/first-week-checkin';
+    } else if (workflow === 'feedback_reminder') {
+      endpoint = '/webhook/feedback-reminder';
+    } else if (workflow === 'course_recommender' || workflow === 'training_reminder') {
+      endpoint = '/webhook/recommend-courses';
+    } else if (workflow === 'engagement_survey' || workflow === 'survey_response') {
+      endpoint = '/webhook/employee-survey-response';
+    } else if (workflow === 'wellbeing_action') {
+      endpoint = '/webhook/wellbeing-action-trigger';
+    } else if (workflow === 'weekly_survey_dispatcher' || workflow === 'dispatch_pulse_survey') {
+      endpoint = '/webhook/weekly-survey-dispatcher';
+    }
+
+    // Gửi payload tới webhook n8n
+    const res = await fetch(`${N8N_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload || {}),
     });
 
-    // 1. Kịch bản WF_07: IT Tool Provisioning (Cấp phát tài khoản công ty)
-    if (workflow === 'it_provisioning') {
-      const itPayload = {
-        userEmail: payload?.employee?.personalEmail || payload?.userEmail || 'employee@company.vn',
-        fullName: payload?.employee?.name || payload?.fullName || 'Nhân sự mới',
-        department: payload?.employee?.department || payload?.department || 'Tech',
-        role: payload?.employee?.role || payload?.role || 'EMPLOYEE',
-      };
-
-      try {
-        let n8nRes;
-        try {
-          // Thử gửi webhook-test trước (dành cho khi bấm "Execute workflow" trong giao diện n8n)
-          // Timeout ngắn 2000ms để không block nếu n8n không đang lắng nghe test
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook-test/it-provisioning`, itPayload, { timeout: 2000 });
-        } catch (testErr: any) {
-          // Nếu test webhook không đang chờ (404, timeout, error), gọi ngay production webhook chính thức
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/it-provisioning`, itPayload, { timeout: 15000 });
-        }
-
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_07_it_tool_provisioning',
-          data: n8nRes.data,
-        });
-      } catch (err: any) {
-        console.warn('n8n WF_07 fallback:', err.message);
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_07_it_tool_provisioning (fallback)',
-          empId: 'EMP-' + Math.floor(10000 + Math.random() * 90000),
-          tools: ['Google Workspace', 'Slack Dev Channels', 'Jira Software', 'GitHub Organization', 'AWS Sandbox'],
-        });
-      }
-    }
-
-    // 2. Kịch bản WF_08: First Week Check-in (Kiểm tra tiến độ tuần đầu 3 ngày)
-    if (workflow === 'first_week_checkin') {
-      try {
-        let n8nRes;
-        try {
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook-test/first-week-checkin`, payload || {}, { timeout: 2000 });
-        } catch {
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/first-week-checkin`, payload || {}, { timeout: 15000 });
-        }
-
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_08_first_week_checkin',
-          data: n8nRes.data,
-          message: payload?.isBelowThreshold
-            ? `Cảnh báo: Tiến độ ${payload?.progressPercent}% sau 3 ngày làm việc (< 50%). Đã phát tin nhắn nhắc nhở và báo cáo cho HR Mentor.`
-            : `Tiến độ tốt: Đạt ${payload?.progressPercent}% (>= 50%). Đã ghi nhận báo cáo tiến độ tuần đầu.`,
-        });
-      } catch (err: any) {
-        console.warn('n8n WF_08 fallback:', err.message);
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_08_first_week_checkin (fallback)',
-          message: payload?.isBelowThreshold
-            ? `Cảnh báo: Tiến độ ${payload?.progressPercent}% sau 3 ngày làm việc (< 50%). Đã phát tin nhắn nhắc nhở và báo cáo cho HR Mentor.`
-            : `Tiến độ tốt: Đạt ${payload?.progressPercent}% (>= 50%). Đã ghi nhận báo cáo tiến độ tuần đầu.`,
-        });
-      }
-    }
-
-    // 3. Kịch bản WF_09: 360 Feedback Reminder (Gửi Magic Review Links)
-    if (workflow === 'feedback_reminder') {
-      try {
-        let n8nRes;
-        try {
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook-test/feedback-reminder`, payload || {}, { timeout: 2000 });
-        } catch {
-          n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/feedback-reminder`, payload || {}, { timeout: 15000 });
-        }
-
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_09_360_feedback_reminder',
-          data: n8nRes.data,
-          message: `Đã kích hoạt n8n WF_09: Quét cơ sở dữ liệu và gửi Magic Links đánh giá 360° kỳ 2026-Q4 thành công.`,
-        });
-      } catch (err: any) {
-        console.warn('n8n WF_09 fallback:', err.message);
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_09_360_feedback_reminder (fallback)',
-          message: `Đã quét và phát tin nhắn Magic Link đánh giá 360° tới các nhân sự chưa nộp kỳ 2026-Q4.`,
-        });
-      }
-    }
-
-    // 4. Kịch bản WF_11: Skill Gap Course Recommender
-    if (workflow === 'course_recommender') {
-      try {
-        const n8nRes = await axios.post(`${N8N_BASE_URL}/webhook/recommend-courses`, {}, { timeout: 6000 });
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_11_skill_gap_course_recommender',
-          data: n8nRes.data,
-        });
-      } catch (err: any) {
-        console.warn('n8n WF_11 fallback:', err.message);
-        return NextResponse.json({
-          status: 'success',
-          timestamp,
-          workflow: 'WF_11_fallback',
-          data: { recommendations: [] },
-        });
-      }
-    }
-
-    // 5. Kịch bản WF_10 / Training Reminder (Gửi nhắc nhở khóa học & chứng chỉ)
-    if (workflow === 'training_reminder') {
-      return NextResponse.json({
-        status: 'success',
-        timestamp,
-        workflow: 'WF_10_training_reminder',
-        message: `Đã gửi thông báo nhắc nhở đào tạo "${payload?.courseName || 'Khóa học'}" tới nhân sự ${payload?.employeeName || ''} (${payload?.employeeEmail || ''}). Hạn chót: ${payload?.dueDate || 'Trong vòng 14 ngày'}.`,
-      });
-    }
-
-    // 6. Kịch bản Employee Engagement Pulse Survey
-    if (workflow === 'engagement_survey') {
-      return NextResponse.json({
-        status: 'success',
-        timestamp,
-        workflow: 'WF_engagement_pulse_survey',
-        message: `Đã khởi chạy khảo sát nhịp đập eNPS & Wellbeing Q4/2026 tới ${payload?.department || 'toàn thể công ty'}. Đã gửi thông báo tới kênh Slack #general & Email.`,
-      });
-    }
+    const data = await res.json().catch(() => ({}));
 
     return NextResponse.json({
-      status: 'success',
-      timestamp,
-      message: `Workflow ${workflow} processed`,
+      status: res.ok ? 'success' : 'error',
+      success: res.ok,
+      httpStatus: res.status,
+      endpoint,
+      data,
+      ...data,
+      message: data?.message || (res.ok ? 'Thực thi thành công qua n8n' : 'Lỗi phản hồi từ n8n'),
+      timestamp: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
     });
   } catch (error: any) {
-    console.error('Lỗi API route n8n:', error.message);
+    console.error('Lỗi kết nối tới n8n:', error.message);
     return NextResponse.json(
-      { error: 'Internal Server Error', message: error.message },
+      {
+        status: 'error',
+        success: false,
+        error: 'Không kết nối được tới n8n',
+        message: error.message,
+      },
       { status: 500 }
     );
   }
