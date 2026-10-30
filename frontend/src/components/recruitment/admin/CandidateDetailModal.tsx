@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import EvaluationPanel from './EvaluationPanel';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   FileText,
@@ -29,6 +30,8 @@ import {
   reEvaluateCandidate,
   scheduleCandidateInterview,
   archiveCandidateTalentPool,
+  getEvaluationHistory,
+  getJobCandidates,
 } from '@/lib/api/recruitment';
 import { useToastStore } from '@/store/useToastStore';
 
@@ -49,7 +52,59 @@ export default function CandidateDetailModal({
   const [reEvaluating, setReEvaluating] = useState(false);
   const [schedulingMeet, setSchedulingMeet] = useState(false);
   const [archivingPool, setArchivingPool] = useState(false);
+  const [deliveryPending, setDeliveryPending] = useState(false);
+  const [deliveryRevision, setDeliveryRevision] = useState(0);
+  const updatedRef = useRef(onCandidateUpdated);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  updatedRef.current = onCandidateUpdated;
   const { showToast } = useToastStore();
+
+  useEffect(() => {
+    if (!candidate?.id) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialogRef.current?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const items = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),summary,[tabindex="0"]') || [])
+        .filter(element => element.getClientRects().length > 0);
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', trapFocus);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener('keydown', trapFocus);
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [candidate?.id]);
+
+  useEffect(() => {
+    if (!candidate?.id || !deliveryPending) return;
+    let active = true;
+    let count = 0;
+    const candidateId = candidate.id;
+    const jobId = candidate.jobId;
+    const timer = setInterval(async () => {
+      try {
+        const [history, candidates] = await Promise.all([getEvaluationHistory(candidateId), getJobCandidates(jobId)]);
+        if (!active) return;
+        const updated = candidates.find(c => c.id === candidateId);
+        if (updated) updatedRef.current?.(updated);
+        setDeliveryRevision(value => value + 1);
+        const waiting = history[0]?.events.some(e => e.type === 'DELIVERY_REQUESTED' && ['PENDING','PROCESSING'].includes(String(e.data.status)));
+        if (!waiting || ++count >= 24) setDeliveryPending(false);
+      } catch {
+        if (++count >= 24 && active) setDeliveryPending(false);
+      }
+    }, 2500);
+    return () => { active = false; clearInterval(timer); };
+  }, [candidate?.id, deliveryPending]);
 
   // Load PDF Blob when candidate changes
   useEffect(() => {
@@ -123,6 +178,8 @@ export default function CandidateDetailModal({
 
   const score = candidate.matchScore ?? 0;
   const isPending = candidate.aiStatus === 'PENDING';
+  const evaluation = parsed && !Array.isArray(parsed) ? parsed.evaluation : undefined;
+  const approved = evaluation?.approvalStatus === 'APPROVED';
 
   const getScoreBadge = (sc: number) => {
     if (sc >= 80) return 'bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]';
@@ -140,7 +197,7 @@ export default function CandidateDetailModal({
         message: res.message || 'AI Agent đang tiến hành chấm lại hồ sơ...',
       });
       if (onCandidateUpdated) {
-        onCandidateUpdated({ ...candidate, aiStatus: 'PENDING' });
+        onCandidateUpdated({ ...candidate, aiStatus: 'PENDING', matchScore: null, parsedSkillsJson: { ...(parsed && !Array.isArray(parsed) ? parsed : {}), evaluation: { id: '', status: 'PENDING', approvalStatus: 'PENDING_HR' } } });
       }
     } catch {
       showToast({
@@ -157,31 +214,15 @@ export default function CandidateDetailModal({
     try {
       setSchedulingMeet(true);
       const res = await scheduleCandidateInterview(candidate.id, 'ONLINE');
+      setDeliveryPending(true);
+      if (!res.success) throw new Error(res.message);
       showToast({
         type: 'success',
-        title: 'Đã thiết lập lịch phỏng vấn',
+        title: 'Đã tiếp nhận yêu cầu phỏng vấn',
         message: res.message || 'Đang tạo sự kiện Google Calendar & link Meet...',
       });
       if (res?.updatedCandidate && onCandidateUpdated) {
         onCandidateUpdated(res.updatedCandidate);
-      } else if (res?.schedule && onCandidateUpdated) {
-        onCandidateUpdated({
-          ...candidate,
-          parsedSkillsJson: {
-            ...(typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { skills: skillsList }),
-            interviewSchedule: {
-              status: 'SCHEDULED',
-              type: 'ONLINE',
-              time: res.schedule.time || '09:30 - 10:30 (Giờ Việt Nam)',
-              location: res.schedule.location,
-              googleMeetUrl: res.schedule.googleMeetUrl,
-              isRealGoogleMeet: res.schedule.isRealGoogleMeet ?? true,
-              googleCalendarEventId: res.schedule.googleCalendarEventId,
-              googleCalendarHtmlLink: res.schedule.googleCalendarHtmlLink,
-              interviewer: res.interviewerPanel,
-            },
-          },
-        });
       }
     } catch (err: any) {
       showToast({
@@ -198,26 +239,15 @@ export default function CandidateDetailModal({
     try {
       setArchivingPool(true);
       const res = await archiveCandidateTalentPool(candidate.id);
+      setDeliveryPending(true);
+      if (!res.success) throw new Error(res.message);
       showToast({
         type: 'success',
-        title: 'Đã lưu vào kho nhân tài',
+        title: 'Đã tiếp nhận yêu cầu phản hồi',
         message: res.message || 'Đã phân bổ hồ sơ vào Kho Nhân Tài & gửi email phản hồi.',
       });
       if (res?.updatedCandidate && onCandidateUpdated) {
         onCandidateUpdated(res.updatedCandidate);
-      } else if (onCandidateUpdated) {
-        onCandidateUpdated({
-          ...candidate,
-          parsedSkillsJson: {
-            ...(typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { skills: skillsList }),
-            talentPool: {
-              tier: res?.tier || 'PRIORITY_TALENT_POOL',
-              status: 'ARCHIVED',
-              emailSent: true,
-              archivedAt: new Date().toISOString(),
-            },
-          },
-        });
       }
     } catch (err: any) {
       showToast({
@@ -253,16 +283,16 @@ export default function CandidateDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="bg-white border border-[#ebebeb] rounded-[12px] w-full max-w-7xl h-[92vh] flex flex-col shadow-[0px_4px_16px_rgba(0,0,0,0.08),0px_16px_32px_-4px_rgba(0,0,0,0.12)] overflow-hidden">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="candidate-details-title" tabIndex={-1} className="bg-white border border-[#ebebeb] rounded-[12px] w-full max-w-7xl h-[92vh] flex flex-col shadow-[0px_4px_16px_rgba(0,0,0,0.08),0px_16px_32px_-4px_rgba(0,0,0,0.12)] overflow-hidden">
         {/* Modal Top Bar */}
-        <div className="px-6 py-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
+        <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 flex flex-wrap gap-3 items-center justify-between bg-white">
           <div className="flex items-center space-x-3.5">
             <div className="h-9 w-9 rounded-lg bg-linear-to-br from-red-600 to-rose-700 text-white flex items-center justify-center font-bold text-sm uppercase shadow-xs">
               {candidate.name[0] || 'C'}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+                <h2 id="candidate-details-title" className="text-sm font-bold text-slate-900 tracking-tight">
                   {candidate.name}
                 </h2>
                 {isPending ? (
@@ -275,7 +305,7 @@ export default function CandidateDetailModal({
                       score
                     )}`}
                   >
-                    MATCH_SCORE: {score}%
+                    {candidate.matchScore == null ? 'CHƯA CÓ ĐIỂM' : `MATCH_SCORE: ${candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}`}
                   </span>
                 )}
               </div>
@@ -297,10 +327,10 @@ export default function CandidateDetailModal({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleScheduleMeet}
-              disabled={schedulingMeet || isPending}
+              disabled={schedulingMeet || isPending || !approved || deliveryPending}
               className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Xếp lịch Google Meet và gửi thư mời cho ứng viên"
             >
@@ -310,7 +340,7 @@ export default function CandidateDetailModal({
 
             <button
               onClick={handleArchivePool}
-              disabled={archivingPool || isPending}
+              disabled={archivingPool || isPending || !approved || deliveryPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Lưu kho nhân tài và gửi email phản hồi"
             >
@@ -350,9 +380,9 @@ export default function CandidateDetailModal({
         </div>
 
         {/* Modal Split View Body */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Left Column: Inline PDF Viewer */}
-          <div className="w-1/2 border-r border-[#ebebeb] flex flex-col bg-[#fafafa]">
+          <div className="w-full lg:w-1/2 h-48 lg:h-auto shrink-0 border-r border-[#ebebeb] flex flex-col bg-[#fafafa]">
             <div className="px-4 py-2 bg-white border-b border-[#ebebeb] flex items-center justify-between text-xs text-[#8f8f8f] font-mono">
               <span className="flex items-center font-medium text-[#171717]">
                 <FileText className="w-3.5 h-3.5 mr-1.5 text-[#0070f3]" />
@@ -387,13 +417,21 @@ export default function CandidateDetailModal({
           </div>
 
           {/* Right Column: AI Analysis & Insights */}
-          <div className="w-1/2 overflow-y-auto p-6 space-y-5 bg-white">
+          <div className="w-full lg:w-1/2 overflow-y-auto p-4 sm:p-6 space-y-5 bg-white">
+            {deliveryPending && <p role="status" className="text-sm text-slate-700">Đang kiểm tra kết quả gửi từ workflow…</p>}
+            <EvaluationPanel candidate={candidate} refreshKey={deliveryRevision} onApproved={(id) => {
+              if (onCandidateUpdated) onCandidateUpdated({ ...candidate, parsedSkillsJson: {
+                ...(parsed && !Array.isArray(parsed) ? parsed : {}), evaluation: {
+                  ...(evaluation || {}), id, status: evaluation?.status || 'DONE', approvalStatus: 'APPROVED'
+                }
+              }});
+            }} />
             {/* AI Match Score Summary Card */}
             <div className="border border-[#ebebeb] rounded-[8px] p-4 bg-[#fafafa] space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    ĐÁNH GIÁ TỪ GEMINI AI
+                    ĐÁNH GIÁ THEO RUBRIC VÀ BẰNG CHỨNG
                   </div>
                   <h3 className="text-xs font-semibold text-[#171717] mt-0.5">
                     Độ Tương Thích Tuyển Dụng
@@ -411,7 +449,7 @@ export default function CandidateDetailModal({
                       score
                     )}`}
                   >
-                    {score}%
+                    {candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}
                   </div>
                 )}
               </div>

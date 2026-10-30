@@ -219,13 +219,13 @@ export default function EngagementPage() {
         ...prev,
         employeeName: prev.employeeName || defaultList[0].name,
         employeeEmail: prev.employeeEmail || defaultList[0].email,
-        department: prev.department || defaultList[0].dept,
+        department: prev.department || defaultList[0].dept || 'Toàn công ty',
       }));
       setWellbeingForm((prev) => ({
         ...prev,
         employeeName: prev.employeeName || defaultList[0].name,
         employeeEmail: prev.employeeEmail || defaultList[0].email,
-        department: prev.department || defaultList[0].dept,
+        department: prev.department || defaultList[0].dept || 'Toàn công ty',
       }));
     }
   }, []);

@@ -123,7 +123,7 @@ describe('TopDevPortalClient', () => {
 
     expect(screen.getAllByText('UP').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('CAREER').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/UpCareer là nền tảng tuyển dụng IT/i)).toBeInTheDocument();
+    expect(screen.getByText(/UpCareer là nền tảng quản trị nhân sự/i)).toBeInTheDocument();
   });
 });
 

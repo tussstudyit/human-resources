@@ -1,95 +1,261 @@
 {
-  "updatedAt": "2026-10-09T14:05:47.000Z",
-  "createdAt": "2026-10-09T12:04:04.509Z",
   "id": "Z8f05InterviewSc",
-  "name": "[HR] WF_05 - \u0110i\u1ec1u Ph\u1ed1i L\u1ecbch Ph\u1ecfng V\u1ea5n & \u0110\u1ed3ng B\u1ed9 Google Calendar",
-  "description": null,
-  "active": true,
-  "isArchived": false,
+  "name": "[HR] WF_05 - Approved INTERVIEW & Verified Delivery",
+  "active": false,
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "schedule-interview",
-        "responseMode": "responseNode",
-        "options": {}
-      },
+      "name": "Receive Approved Action",
+      "id": "000214ef3b056305f52365f0",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        100,
-        300
+        0,
+        0
       ],
-      "id": "wf5-webhook-intake",
-      "name": "Webhook: Intake Candidate (Score >= 80%)",
-      "webhookId": "schedule-interview-webhook"
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "schedule-interview",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "8607d305-cb6f-4467-8af3-031cc974db23",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FAph8kba5iEDxNvF",
+          "name": "Backend API Key"
+        }
+      }
     },
     {
-      "parameters": {
-        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_01';\nconst candidateName = body.name || body.candidateName || '\u0110o\u00e0n Thanh Huy';\nconst candidateEmail = body.email || body.candidateEmail || 'doanthanhhuy130978@gmail.com';\nconst jobTitle = body.jobTitle || 'Senior Fullstack Engineer';\nconst matchScore = Number(body.matchScore || 85);\n\n// Extract rich skills & tech ATS metadata\nconst parsed = typeof body.parsedSkillsJson === 'object' && body.parsedSkillsJson !== null ? body.parsedSkillsJson : {};\nconst combinedFromParsed = (Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0)\n  ? [...parsed.coreSkills, ...(Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : [])]\n  : (Array.isArray(parsed.skills) ? parsed.skills : null);\nconst rawSkills = combinedFromParsed || (Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson : (Array.isArray(body.skills) ? body.skills : ['Software Engineering']));\n\nconst coreSkills = Array.isArray(parsed.coreSkills) && parsed.coreSkills.length > 0 \n  ? parsed.coreSkills \n  : (Array.isArray(body.coreSkills) ? body.coreSkills : rawSkills.slice(0, 3));\nconst secondarySkills = Array.isArray(parsed.secondarySkills) ? parsed.secondarySkills : (Array.isArray(body.secondarySkills) ? body.secondarySkills : rawSkills.slice(3));\nconst systemScaleScore = Number(parsed.systemScaleScore || body.systemScaleScore || 75);\nconst githubUrl = parsed.githubUrl || body.githubUrl || null;\nconst keywordStuffingFlag = Boolean(parsed.keywordStuffingFlag || body.keywordStuffingFlag);\nconst focusPoints = Array.isArray(parsed.interviewFocusPoints)\n  ? parsed.interviewFocusPoints.filter(p => typeof p === 'string' && p.trim().length > 0)\n  : [];\n\n// Fallback Question Pool\nconst fallbackPool = [\n  {\n    question: `Trong d\u1ef1 \u00e1n g\u1ea7n nh\u1ea5t \u1ee9ng d\u1ee5ng ${coreSkills[0] || jobTitle}, b\u1ea1n \u0111\u00e3 thi\u1ebft k\u1ebf ki\u1ebfn tr\u00fac module v\u00e0 t\u1ed1i \u01b0u h\u00f3a hi\u1ec7u n\u0103ng (caching/query optimization) nh\u01b0 th\u1ebf n\u00e0o?`,\n    targetSkill: coreSkills[0] || 'System Architecture',\n    whyAsk: `Th\u1ea9m \u0111\u1ecbnh \u0111\u1ed9 s\u00e2u kinh nghi\u1ec7m th\u1ef1c t\u1ebf v\u1edbi ${coreSkills[0] || 'c\u00f4ng ngh\u1ec7 ch\u00ednh'} v\u00e0 x\u00e1c minh xem \u1ee9ng vi\u00ean tr\u1ef1c ti\u1ebfp thi\u1ebft k\u1ebf hay ch\u1ec9 k\u1ebf th\u1eeba m\u00e3 ngu\u1ed3n.`,\n    goodAnswerSignals: `\u1ee8ng vi\u00ean \u0111\u01b0a ra \u0111\u01b0\u1ee3c s\u1ed1 li\u1ec7u c\u1ee5 th\u1ec3 (latency, QPS), gi\u1ea3i th\u00edch r\u00f5 r\u00e0ng Trade-off v\u00e0 ki\u1ebfn tr\u00fac module h\u1ee3p l\u00fd.`\n  },\n  {\n    question: `Khi h\u1ec7 th\u1ed1ng \u0111\u1ed1i m\u1eb7t v\u1edbi t\u00ecnh tr\u1ea1ng l\u01b0u l\u01b0\u1ee3ng t\u0103ng \u0111\u1ed9t bi\u1ebfn g\u00e2y ngh\u1ebdn c\u01a1 s\u1edf d\u1eef li\u1ec7u ho\u1eb7c tr\u1ec5 ph\u1ea3n h\u1ed3i, b\u1ea1n ti\u1ebfn h\u00e0nh \u0111i\u1ec1u tra v\u00e0 x\u1eed l\u00fd s\u1ef1 c\u1ed1 theo c\u00e1c b\u01b0\u1edbc c\u1ee5 th\u1ec3 n\u00e0o?`,\n    targetSkill: 'High Concurrency & Fault Tolerance',\n    whyAsk: `Ki\u1ec3m tra t\u01b0 duy ph\u1ea3n \u1ee9ng s\u1ef1 c\u1ed1 (Incident Response) v\u00e0 ki\u1ec3m ch\u1ee9ng \u0111i\u1ec3m System Scale (${systemScaleScore}/100) \u0111\u01b0\u1ee3c ghi nh\u1eadn t\u1eeb v\u00f2ng h\u1ed3 s\u01a1.`,\n    goodAnswerSignals: `Tr\u00ecnh b\u00e0y m\u1ea1ch l\u1ea1c v\u1ec1 profiling, slow query log, Redis caching, connection pool, rate limiting ho\u1eb7c queue worker.`\n  },\n  {\n    question: focusPoints[0] || `B\u1ea1n ti\u1ebfp c\u1eadn vi\u1ec7c vi\u1ebft Unit/Integration Tests v\u00e0 thi\u1ebft l\u1eadp quy tr\u00ecnh CI/CD \u0111\u1ec3 \u0111\u1ea3m b\u1ea3o ch\u1ea5t l\u01b0\u1ee3ng ph\u1ea7n m\u1ec1m trong d\u1ef1 \u00e1n th\u1ef1c t\u1ebf nh\u01b0 th\u1ebf n\u00e0o?`,\n    targetSkill: coreSkills[1] || 'Code Quality & Testing',\n    whyAsk: focusPoints[0] ? 'L\u00e0m r\u00f5 \u0111i\u1ec3m tr\u1ecdng t\u00e2m c\u1ea7n ki\u1ec3m ch\u1ee9ng trong h\u1ed3 s\u01a1 theo khuy\u1ebfn ngh\u1ecb c\u1ee7a AI Screener.' : '\u0110\u00e1nh gi\u00e1 t\u00ednh k\u1ef7 lu\u1eadt k\u1ef9 thu\u1eadt v\u00e0 t\u01b0 duy ki\u1ec3m th\u1eed t\u1ef1 \u0111\u1ed9ng c\u1ee7a \u1ee9ng vi\u00ean tr\u01b0\u1edbc khi release s\u1ea3n ph\u1ea9m.',\n    goodAnswerSignals: focusPoints[0] ? 'N\u00eau r\u00f5 b\u1ed1i c\u1ea3nh s\u1ef1 c\u1ed1, ph\u01b0\u01a1ng \u00e1n kh\u1eafc ph\u1ee5c v\u00e0 b\u00e0i h\u1ecdc kinh nghi\u1ec7m sau khi tri\u1ec3n khai l\u00ean m\u00f4i tr\u01b0\u1eddng Production.' : 'N\u1eafm r\u00f5 test pyramid, mocking, automation pipeline (GitHub Actions/GitLab CI) v\u00e0 code coverage th\u1ef1c t\u1ebf.'\n  }\n];\n\nlet interviewKit = Array.isArray(parsed.interviewKit) && parsed.interviewKit.length > 0 ? parsed.interviewKit : fallbackPool;\n\nconst skills = rawSkills;\nconst skillsStr = Array.isArray(skills) ? skills.join(', ') : String(skills);\nconst companyName = body.companyName || 'C\u00f4ng ty C\u1ed5 ph\u1ea7n C\u00f4ng ngh\u1ec7 HR Tech Hub';\n\n// Ph\u00e2n b\u1ed5 Ban Ph\u1ecfng V\u1ea5n th\u00f4ng minh d\u1ef1a tr\u00ean Job Title & K\u1ef9 n\u0103ng\nlet leadInterviewer = {\n  name: '\u0110o\u00e0n Thanh Huy',\n  role: 'AI Recruitment Squad Lead',\n  email: 'doanthanhhuy1309@gmail.com',\n  phone: '0901 234 567'\n};\n\nconst jobLower = (jobTitle + ' ' + skillsStr).toLowerCase();\nif (jobLower.includes('python') || jobLower.includes('backend') || jobLower.includes('c++') || jobLower.includes('security')) {\n  leadInterviewer = {\n    name: 'Nguy\u1ec5n Ho\u00e0ng Nam',\n    role: 'Principal Software Architect & Security Lead',\n    email: 'nam.nguyen@company.com',\n    phone: '0912 345 678'\n  };\n} else if (jobLower.includes('frontend') || jobLower.includes('react') || jobLower.includes('ui') || jobLower.includes('mobile')) {\n  leadInterviewer = {\n    name: 'Tr\u1ea7n Th\u1ecb Mai',\n    role: 'Lead Frontend & Mobile Architect',\n    email: 'mai.tran@company.com',\n    phone: '0983 210 987'\n  };\n} else if (jobLower.includes('test') || jobLower.includes('qa') || jobLower.includes('qc')) {\n  leadInterviewer = {\n    name: 'L\u00ea Qu\u1ed1c Huy',\n    role: 'Head of Quality Assurance & Automation',\n    email: 'huy.le@company.com',\n    phone: '0934 567 890'\n  };\n}\n\n// Thu\u1eadt to\u00e1n t\u00ednh ng\u00e0y l\u00e0m vi\u1ec7c (tr\u00e1nh Th\u1ee9 7 & Ch\u1ee7 Nh\u1eadt)\nlet workingDaysToAdd = 3;\nlet targetDate = new Date();\nwhile (workingDaysToAdd > 0) {\n  targetDate.setDate(targetDate.getDate() + 1);\n  const dayOfWeek = targetDate.getDay();\n  if (dayOfWeek !== 0 && dayOfWeek !== 6) {\n    workingDaysToAdd--;\n  }\n}\ntargetDate.setHours(9, 30, 0, 0);\n\nconst endDate = new Date(targetDate.getTime() + 60 * 60 * 1000);\nconst formattedDate = targetDate.toLocaleDateString('vi-VN', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'numeric',\n  day: 'numeric'\n});\nconst formattedTime = '09:30 - 10:30 (Gi\u1edd Vi\u1ec7t Nam)';\nconst dateTimeFormatted = `${formattedTime}, ${formattedDate}`;\n\nconst deadlineDate = new Date(targetDate);\ndeadlineDate.setDate(deadlineDate.getDate() - 1);\nif (deadlineDate.getDay() === 0) deadlineDate.setDate(deadlineDate.getDate() - 2);\nif (deadlineDate.getDay() === 6) deadlineDate.setDate(deadlineDate.getDate() - 1);\nconst deadlineFormatted = `17:00 ng\u00e0y ${deadlineDate.toLocaleDateString('vi-VN', { year: 'numeric', month: 'numeric', day: 'numeric' })} (24 gi\u1edd tr\u01b0\u1edbc bu\u1ed5i ph\u1ecfng v\u1ea5n)`;\n\nconst interviewType = (body.interviewType || body.type || body.format || 'ONLINE').toUpperCase();\nconst isOnline = !interviewType.includes('OFF') && !interviewType.includes('TR\u1ef0C TI\u1ebeP') && !interviewType.includes('TRUC TIEP') && !interviewType.includes('ONSITE');\n\nconst randomRoomId = Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 5);\nconst fallbackMeetUrl = body.meetingUrl || body.googleMeetUrl || `https://meet.google.com/${randomRoomId}`;\nconst officeAddress = body.address || body.location || 'T\u00f2a nh\u00e0 HR Tech Tower, T\u1ea7ng 8, 123 \u0110\u01b0\u1eddng Nam K\u1ef3 Kh\u1edfi Ngh\u0129a, Qu\u1eadn 1, TP. H\u1ed3 Ch\u00ed Minh';\n\nconst contactPerson = {\n  name: body.contactPersonName || leadInterviewer.name,\n  phone: body.contactPersonPhone || leadInterviewer.phone || '0901 234 567',\n  email: body.contactPersonEmail || leadInterviewer.email || 'recruitment@company.com'\n};\nconst contactText = `${contactPerson.name} - S\u0110T: ${contactPerson.phone} / Email: ${contactPerson.email}`;\n\nconst sender = {\n  name: body.senderName || '\u0110o\u00e0n Thanh Huy',\n  role: body.senderRole || body.senderTitle || 'Tr\u01b0\u1edfng Ban Tuy\u1ec3n D\u1ee5ng & AI Sourcing Lead',\n  company: companyName,\n  contact: body.senderContact || 'Email: doanthanhhuy1309@gmail.com | Hotline: 0901 234 567'\n};\n\nconst calendarSummary = `Ph\u1ecfng v\u1ea5n tuy\u1ec3n d\u1ee5ng ${jobTitle} \u2013 ${candidateName}`;\nconst calendarDescription = `Ph\u1ecfng v\u1ea5n v\u1ecb tr\u00ed ${jobTitle} t\u1ea1i ${companyName}.\\nNg\u01b0\u1eddi ph\u1ecfng v\u1ea5n: ${leadInterviewer.name} (${leadInterviewer.role})\\nNg\u01b0\u1eddi li\u00ean h\u1ec7: ${contactText}`;\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    matchScore,\n    skills,\n    coreSkills,\n    secondarySkills,\n    systemScaleScore,\n    githubUrl,\n    keywordStuffingFlag,\n    interviewKit,\n    companyName,\n    leadInterviewer,\n    targetDate: targetDate.toISOString(),\n    calendarStartTime: targetDate.toISOString(),\n    calendarEndTime: endDate.toISOString(),\n    endDate: endDate.toISOString(),\n    formattedDate,\n    formattedTime,\n    dateTimeFormatted,\n    deadlineFormatted,\n    interviewType,\n    isOnline,\n    fallbackMeetUrl,\n    officeAddress,\n    contactPerson,\n    contactText,\n    sender,\n    calendarSummary,\n    calendarDescription\n  }\n}];\n"
-      },
+      "name": "Validate Request",
+      "id": "a5f7bd4baf44eaa8087c2dbd",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        350,
-        300
+        0,
+        220
       ],
-      "id": "wf5-smart-panel-routing",
-      "name": "Smart Interviewer Panel Routing & Schedule Engine"
+      "parameters": {
+        "jsCode": "const id=$json.body?.evaluationId;return [{json:{evaluationId:id,valid:typeof id==='string'&&/^[0-9a-f-]{36}$/i.test(id)&&typeof $json.headers?.['x-api-key']==='string'}}];"
+      }
     },
     {
+      "name": "Request Valid?",
+      "id": "7df0fc751d16f35a788eebe5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        440
+      ],
       "parameters": {
-        "jsCode": "const data = $json;\n\nconst scorecardRubric = [\n  {\n    pillar: \"Technical Depth & Architecture\",\n    weight: \"40%\",\n    description: \"N\u1eafm v\u1eefng c\u1ed1t l\u00f5i framework, database design, caching, clean code v\u00e0 x\u1eed l\u00fd concurrency.\",\n    scoringLevels: {\n      excellent: \"Hi\u1ec3u s\u00e2u b\u1ea3n ch\u1ea5t, thi\u1ebft k\u1ebf h\u1ec7 th\u1ed1ng t\u1ed1i \u01b0u, b\u1ea3o m\u1eadt cao\",\n      acceptable: \"N\u1eafm v\u1eefng ki\u1ebfn th\u1ee9c c\u01a1 b\u1ea3n \u0111\u1ebfn trung c\u1ea5p, l\u00e0m \u0111\u01b0\u1ee3c d\u1ef1 \u00e1n\",\n      poor: \"Ch\u1ec9 l\u00e0m theo m\u1eabu c\u00f3 s\u1eb5n, kh\u00f4ng hi\u1ec3u s\u00e2u b\u1ea3n ch\u1ea5t k\u1ef9 thu\u1eadt\"\n    }\n  },\n  {\n    pillar: \"Problem Solving & Analytical Thinking\",\n    weight: \"30%\",\n    description: \"T\u01b0 duy b\u1ebb nh\u1ecf b\u00e0i to\u00e1n ph\u1ee9c t\u1ea1p, ph\u00e2n t\u00edch y\u00eau c\u1ea7u, x\u1eed l\u00fd l\u1ed7i v\u00e0 edge case logic.\",\n    scoringLevels: {\n      excellent: \"Gi\u1ea3i quy\u1ebft b\u00e0i to\u00e1n m\u1ea1ch l\u1ea1c, l\u01b0\u1eddng tr\u01b0\u1edbc c\u00e1c edge case v\u00e0 r\u1ee7i ro t\u1ea3i\",\n      acceptable: \"T\u00ecm ra gi\u1ea3i ph\u00e1p sau khi \u0111\u01b0\u1ee3c g\u1ee3i \u00fd \u0111\u1ecbnh h\u01b0\u1edbng\",\n      poor: \"B\u1ebf t\u1eafc khi g\u1eb7p t\u00ecnh hu\u1ed1ng l\u1ea1, t\u01b0 duy r\u1eddi r\u1ea1c\"\n    }\n  },\n  {\n    pillar: \"System Scalability & Production Readiness\",\n    weight: \"20%\",\n    description: \"Hi\u1ec3u bi\u1ebft v\u1ec1 containerization (Docker), CI/CD, logging, monitoring v\u00e0 x\u1eed l\u00fd ch\u1ecbu t\u1ea3i.\",\n    scoringLevels: {\n      excellent: \"C\u00f3 kinh nghi\u1ec7m v\u1eadn h\u00e0nh production th\u1ef1c t\u1ebf, t\u01b0 duy scale t\u1ed1t\",\n      acceptable: \"Bi\u1ebft s\u1eed d\u1ee5ng c\u00f4ng c\u1ee5 c\u01a1 b\u1ea3n\",\n      poor: \"Ch\u01b0a t\u1eebng ti\u1ebfp c\u1eadn m\u00f4i tr\u01b0\u1eddng production th\u1ef1c t\u1ebf\"\n    }\n  },\n  {\n    pillar: \"Culture Fit & Communication\",\n    weight: \"10%\",\n    description: \"Giao ti\u1ebfp k\u1ef9 thu\u1eadt r\u00f5 r\u00e0ng, tinh th\u1ea7n h\u1ee3p t\u00e1c Agile, ownership v\u00e0 th\u00e1i \u0111\u1ed9 h\u1ecdc h\u1ecfi.\",\n    scoringLevels: {\n      excellent: \"Giao ti\u1ebfp t\u1ef1 tin, c\u1edfi m\u1edf, tinh th\u1ea7n tr\u00e1ch nhi\u1ec7m cao\",\n      acceptable: \"Giao ti\u1ebfp \u1ed5n \u0111\u1ecbnh, h\u00f2a \u0111\u1ed3ng\",\n      poor: \"B\u1ea3o th\u1ee7, kh\u00f3 ti\u1ebfp thu ph\u1ea3n h\u1ed3i k\u1ef9 thu\u1eadt\"\n    }\n  }\n];\n\nreturn [{\n  json: {\n    ...data,\n    scorecardRubric\n  }\n}];\n"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject Request",
+      "id": "e169f18ad7a210df51df97aa",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"INVALID_ACTION_REQUEST\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Claim Approved Delivery",
+      "id": "2d83db10ab5f25fec6f4405d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        880
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:3001/recruitment/evaluations/{{ $json.evaluationId }}/delivery/claim",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Receive Approved Action').first().json.headers['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {action:\"INTERVIEW\"} }}",
+        "options": {
+          "timeout": 15000
+        }
       },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "name": "Delivery Claimed?",
+      "id": "ad4ccfa2d4c9887242024560",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        1100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.claimed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Already Handled",
+      "id": "053b6bb8de54196b461e0bf6",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {duplicate:true,status:$json.status} }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "name": "Accept Delivery",
+      "id": "f10d81f12dbc6522016c9c30",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        220
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {evaluationId:$json.evaluationId,status:\"ACCEPTED\"} }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "name": "Plan Interview",
+      "id": "e9bcb601d089150e79613547",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        600,
-        300
+        400,
+        440
       ],
-      "id": "wf5-rubric-builder",
-      "name": "Scorecard Rubric 4 Tr\u1ee5 C\u1ed9t Builder"
-    },
-    {
       "parameters": {
-        "jsCode": "const data = $json;\nconst skills = data.skills || [];\nconst skillsLower = skills.map(s => String(s).toLowerCase());\nconst targetJobLower = (data.jobTitle || '').toLowerCase();\n\nlet miniCodeChallenge;\nif (skillsLower.some(s => s.includes('react') || s.includes('vue') || s.includes('angular') || s.includes('next')) || targetJobLower.includes('frontend')) {\n  miniCodeChallenge = {\n    domain: 'Frontend',\n    title: 'Thi\u1ebft k\u1ebf Data Grid \u1ea3o h\u00f3a (Virtualization) v\u00e0 t\u1ed1i \u01b0u Render',\n    taskDescription: 'Tr\u00ecnh b\u00e0y c\u00e1ch tri\u1ec3n khai danh s\u00e1ch/b\u1ea3ng 10.000 b\u1ea3n ghi tr\u00ean tr\u00ecnh duy\u1ec7t m\u01b0\u1ee3t m\u00e0 (60 FPS), k\u1ebft h\u1ee3p memoization v\u00e0 caching client-side.',\n    suggestedDuration: '30-45 ph\u00fat chu\u1ea9n b\u1ecb / th\u1ea3o lu\u1eadn'\n  };\n} else if (skillsLower.some(s => s.includes('docker') || s.includes('kubernetes') || s.includes('aws') || s.includes('ci/cd')) || targetJobLower.includes('devops')) {\n  miniCodeChallenge = {\n    domain: 'DevOps / Cloud',\n    title: 'Thi\u1ebft k\u1ebf Pipeline CI/CD Zero-Downtime Deployment & Canary Release',\n    taskDescription: 'Tr\u00ecnh b\u00e0y gi\u1ea3i ph\u00e1p rolling update kh\u00f4ng gi\u00e1n \u0111o\u1ea1n d\u1ecbch v\u1ee5, chi\u1ebfn l\u01b0\u1ee3c health check v\u00e0 t\u1ef1 \u0111\u1ed9ng rollback khi t\u1ef7 l\u1ec7 l\u1ed7i > 1%.',\n    suggestedDuration: '30-45 ph\u00fat chu\u1ea9n b\u1ecb / th\u1ea3o lu\u1eadn'\n  };\n} else if (skillsLower.some(s => s.includes('test') || s.includes('qa') || s.includes('selenium') || s.includes('playwright')) || targetJobLower.includes('qa') || targetJobLower.includes('test')) {\n  miniCodeChallenge = {\n    domain: 'QA Automation',\n    title: 'Thi\u1ebft k\u1ebf Framework Ki\u1ec3m Th\u1eed T\u1ef1 \u0110\u1ed9ng & Chi\u1ebfn l\u01b0\u1ee3c Qu\u1ea3n l\u00fd Test Flaky',\n    taskDescription: 'Tr\u00ecnh b\u00e0y gi\u1ea3i ph\u00e1p t\u1ef1 \u0111\u1ed9ng h\u00f3a ki\u1ec3m th\u1eed API v\u00e0 E2E, c\u01a1 ch\u1ebf c\u00e1ch ly flaky test v\u00e0 t\u00edch h\u1ee3p b\u00e1o c\u00e1o ch\u1ea5t l\u01b0\u1ee3ng v\u00e0o PR Gate.',\n    suggestedDuration: '30-45 ph\u00fat chu\u1ea9n b\u1ecb / th\u1ea3o lu\u1eadn'\n  };\n} else {\n  miniCodeChallenge = {\n    domain: 'Backend & System Design',\n    title: 'Thi\u1ebft k\u1ebf H\u1ec7 Th\u1ed1ng Rate Limiter Ph\u00e2n T\u00e1n (Distributed Rate Limiting)',\n    taskDescription: 'Tr\u00ecnh b\u00e0y ki\u1ebfn tr\u00fac gi\u1edbi h\u1ea1n t\u1ed1c \u0111\u1ed9 y\u00eau c\u1ea7u (1.000 requests/gi\u00e2y/user) s\u1eed d\u1ee5ng Redis Token Bucket / Leaky Bucket, \u0111\u1ea3m b\u1ea3o t\u00ednh nh\u1ea5t qu\u00e1n gi\u1eefa c\u00e1c instance.',\n    suggestedDuration: '30-45 ph\u00fat chu\u1ea9n b\u1ecb / th\u1ea3o lu\u1eadn'\n  };\n}\n\nreturn [{\n  json: {\n    ...data,\n    miniCodeChallenge\n  }\n}];\n"
+        "jsCode": "const ctx=$('Claim Approved Delivery').first().json;const type=ctx.options.interviewType||'ONLINE';if(!['ONLINE','OFFLINE'].includes(type))throw Error('INVALID_INTERVIEW_TYPE');\nconst local=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());\nconst date=new Date(local+'T02:30:00.000Z');let days=3;while(days){date.setUTCDate(date.getUTCDate()+1);if(![0,6].includes(date.getUTCDay()))days--;}\nreturn [{json:{ctx,type,start:date.toISOString(),end:new Date(date.getTime()+3600000).toISOString(),online:type==='ONLINE'}}];"
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        850,
-        300
-      ],
-      "id": "wf5-challenge-generator",
-      "name": "Mini Take-home Challenge Generator"
+      "onError": "continueErrorOutput"
     },
     {
+      "name": "Online Interview?",
+      "id": "068d5f6b1216dc4f7d25dc36",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        660
+      ],
       "parameters": {
-        "jsCode": "const data = $json;\nconst candidateId = data.candidateId;\n\nconst rsvpConfirmUrl = `http://localhost:3001/recruitment/candidates/${candidateId}/rsvp?status=CONFIRMED`;\nconst rsvpRescheduleUrl = `http://localhost:3001/recruitment/candidates/${candidateId}/rsvp?status=RESCHEDULE_REQUESTED`;\nconst rsvpStatus = 'PENDING_CONFIRMATION';\n\nreturn [{\n  json: {\n    ...data,\n    rsvpStatus,\n    rsvpConfirmUrl,\n    rsvpRescheduleUrl\n  }\n}];\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1100,
-        300
-      ],
-      "id": "wf5-rsvp-generator",
-      "name": "RSVP Interactive Link Generator"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.online }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     },
     {
+      "name": "Create Google Calendar and Meet",
+      "id": "b1a76ef6aa5cf29047dd5caf",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        880
+      ],
       "parameters": {
         "calendar": {
           "__rl": true,
           "value": "primary",
           "mode": "list"
         },
-        "start": "={{ $json.calendarStartTime }}",
-        "end": "={{ $json.calendarEndTime }}",
+        "start": "={{ $('Plan Interview').first().json.start }}",
+        "end": "={{ $('Plan Interview').first().json.end }}",
         "additionalFields": {
-          "summary": "={{ $json.calendarSummary }}",
-          "description": "={{ $json.calendarDescription }}",
+          "summary": "={{ 'Phỏng vấn ' + $('Plan Interview').first().json.ctx.jobTitle }}",
+          "description": "Phỏng vấn đã được HR duyệt.",
           "attendees": [
-            "={{ $json.candidateEmail }}"
+            "={{ $('Plan Interview').first().json.ctx.candidateEmail }}"
           ],
           "conferenceDataUi": {
             "conferenceDataValues": {
@@ -98,304 +264,386 @@
           }
         }
       },
-      "type": "n8n-nodes-base.googleCalendar",
-      "typeVersion": 1.2,
-      "position": [
-        1350,
-        300
-      ],
-      "id": "wf5-google-calendar-create",
-      "name": "Google Calendar: T\u1ea1o S\u1ef1 Ki\u1ec7n & Meet Th\u1eadt",
       "credentials": {
         "googleCalendarOAuth2Api": {
           "id": "GoogleCalendarOAuth2Cred01",
           "name": "Google Calendar account"
         }
       },
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
-      "parameters": {
-        "jsCode": "const intake = $('RSVP Interactive Link Generator').first()?.json || $('Smart Interviewer Panel Routing & Schedule Engine').first().json;\nconst gcalResult = $json;\n\n// L\u1ea5y link Google Meet th\u1eadt t\u1eeb Google Calendar API n\u1ebfu c\u00f3 k\u1ebft n\u1ed1i\nconst realGoogleMeetUrl = gcalResult?.hangoutLink || \n  (gcalResult?.conferenceData?.entryPoints ? gcalResult.conferenceData.entryPoints[0]?.uri : null) || \n  intake.fallbackMeetUrl;\n\nconst isRealGoogleMeet = !!(gcalResult?.hangoutLink || (gcalResult?.conferenceData?.entryPoints && gcalResult.conferenceData.entryPoints[0]?.uri));\nconst googleCalendarEventId = gcalResult?.id || null;\nconst googleCalendarHtmlLink = gcalResult?.htmlLink || null;\n\nconst isOnline = intake.isOnline;\nconst officeAddress = intake.officeAddress;\nconst candidateName = intake.candidateName;\nconst jobTitle = intake.jobTitle;\nconst companyName = intake.companyName;\nconst dateTimeFormatted = intake.dateTimeFormatted;\nconst deadlineFormatted = intake.deadlineFormatted;\nconst contactText = intake.contactText;\nconst sender = intake.sender;\n\nlet locationText = '';\nlet locationHtml = '';\n\nif (isOnline) {\n  const demoTag = isRealGoogleMeet ? '' : ' (Demo \u2013 link m\u00f4 ph\u1ecfng)';\n  locationText = `Ph\u00f2ng h\u1ecdp tr\u1ef1c tuy\u1ebfn (Google Meet${demoTag}): ${realGoogleMeetUrl}`;\n  locationHtml = `<a href=\"${realGoogleMeetUrl}\" style=\"color: #2563eb; font-weight: 600; text-decoration: underline;\">${realGoogleMeetUrl}</a> (Google Meet${demoTag})`;\n} else {\n  locationText = `Tr\u1ef1c ti\u1ebfp t\u1ea1i v\u0103n ph\u00f2ng: ${officeAddress}`;\n  locationHtml = `<strong>${officeAddress}</strong>`;\n}\n\n// Ti\u00eau \u0111\u1ec1 email chu\u1ea9n theo m\u1eabu: \"Ti\u00eau \u0111\u1ec1: Th\u01b0 m\u1eddi ph\u1ecfng v\u1ea5n \u2013 [T\u00ean c\u00f4ng ty]\"\nconst emailSubject = `Th\u01b0 m\u1eddi ph\u1ecfng v\u1ea5n \u2013 ${companyName}`;\n\n// Sinh n\u1ed9i dung iCalendar .ics t\u01b0\u01a1ng th\u00edch m\u1ecdi \u1ee9ng d\u1ee5ng Calendar\nconst calendarIcsContent = [\n  'BEGIN:VCALENDAR',\n  'VERSION:2.0',\n  'PRODID:-//HR Tech Corp//AI Recruitment Orchestrator//VI',\n  'CALSCALE:GREGORIAN',\n  'METHOD:REQUEST',\n  'BEGIN:VEVENT',\n  `UID:interview-${intake.candidateId}-${Date.now()}@hrtech.platform`,\n  `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,\n  `DTSTART:${new Date(intake.calendarStartTime).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,\n  `DTEND:${new Date(intake.calendarEndTime).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,\n  `SUMMARY:${intake.calendarSummary}`,\n  `DESCRIPTION:${intake.calendarDescription.replace(/\\n/g, '\\\\n')}`,\n  `LOCATION:${isOnline ? realGoogleMeetUrl : officeAddress}`,\n  'STATUS:CONFIRMED',\n  'SEQUENCE:0',\n  'END:VEVENT',\n  'END:VCALENDAR'\n].join('\\r\\n');\n\n\nconst rsvpConfirmUrl = `http://localhost:3001/recruitment/candidates/${intake.candidateId}/rsvp?status=CONFIRMED`;\nconst rsvpRescheduleUrl = `http://localhost:3001/recruitment/candidates/${intake.candidateId}/rsvp?status=RESCHEDULE`;\nconst miniChallenge = intake.miniCodeChallenge || {\n  title: 'Trao \u0111\u1ed5i v\u1ec1 ki\u1ebfn tr\u00fac d\u1ef1 \u00e1n v\u00e0 t\u1ed1i \u01b0u hi\u1ec7u n\u0103ng',\n  taskDescription: 'Chu\u1ea9n b\u1ecb chia s\u1ebb chi ti\u1ebft v\u1ec1 m\u1ed9t b\u00e0i to\u00e1n k\u1ef9 thu\u1eadt ph\u1ee9c t\u1ea1p nh\u1ea5t b\u1ea1n t\u1eebng tr\u1ef1c ti\u1ebfp gi\u1ea3i quy\u1ebft.'\n};\n\nconst rsvpHtmlBlock = `\n  <div style=\"text-align: center; margin: 24px 0 16px 0;\">\n    <a href=\"${rsvpConfirmUrl}\" style=\"display: inline-block; background-color: #16a34a; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 14px; padding: 12px 24px; border-radius: 6px; margin-right: 12px; box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);\">\n      \u2713 X\u00e1c Nh\u1eadn Tham Gia\n    </a>\n    <a href=\"${rsvpRescheduleUrl}\" style=\"display: inline-block; background-color: #f1f5f9; color: #475569; text-decoration: none; font-weight: bold; font-size: 14px; padding: 12px 20px; border-radius: 6px; border: 1px solid #cbd5e1;\">\n      \u27f3 Y\u00eau C\u1ea7u D\u1eddi Gi\u1edd\n    </a>\n  </div>\n`;\n\nconst challengeHtmlBlock = `\n  <div style=\"background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 16px; margin: 20px 0;\">\n    <h4 style=\"margin: 0 0 6px 0; color: #0f172a; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;\">\ud83d\udca1 CH\u1ee6 \u0110\u1ec0 K\u1ef8 THU\u1eacT CHU\u1ea8N B\u1eca TRAO \u0110\u1ed4I (MINI TECH CHALLENGE)</h4>\n    <p style=\"margin: 0 0 4px 0; font-size: 13px; font-weight: bold; color: #2563eb;\">${miniChallenge.title}</p>\n    <p style=\"margin: 0; font-size: 13px; color: #475569; line-height: 1.5;\">${miniChallenge.taskDescription}</p>\n  </div>\n`;\n\n// So\u1ea1n th\u1ea3o th\u01b0 m\u1eddi ph\u1ecfng v\u1ea5n theo \u0111\u00fang c\u1ea5u tr\u00fac chu\u1ea9n c\u1ee7a ng\u01b0\u1eddi d\u00f9ng\nconst candidateEmailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 620px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      \n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">Ch\u00e0o b\u1ea1n ${candidateName},</p>\n      \n      <p style=\"font-size: 14px; color: #334155; margin-bottom: 16px;\">\n        C\u1ea3m \u01a1n b\u1ea1n \u0111\u00e3 quan t\u00e2m \u0111\u1ebfn c\u01a1 h\u1ed9i ngh\u1ec1 nghi\u1ec7p t\u1ea1i <strong>${companyName}</strong>. Ch\u00fang t\u00f4i r\u1ea5t \u1ea5n t\u01b0\u1ee3ng v\u1edbi h\u1ed3 s\u01a1 c\u1ee7a b\u1ea1n v\u00e0 tr\u00e2n tr\u1ecdng m\u1eddi b\u1ea1n tham d\u1ef1 bu\u1ed5i ph\u1ecfng v\u1ea5n cho v\u1ecb tr\u00ed:\n      </p>\n\n      <div style=\"background-color: #f1f5f9; border-left: 4px solid #2563eb; border-radius: 6px; padding: 16px 18px; margin: 20px 0;\">\n        <h3 style=\"margin: 0 0 12px 0; font-size: 16px; color: #0f172a;\">\ud83c\udfaf V\u1ecb tr\u00ed \u1ee9ng tuy\u1ec3n: ${jobTitle}</h3>\n        <table style=\"width: 100%; border-collapse: collapse; font-size: 14px; color: #334155;\">\n          <tr>\n            <td style=\"padding: 6px 0; width: 110px; font-weight: 600; color: #475569;\">\u23f0 Th\u1eddi gian:</td>\n            <td style=\"padding: 6px 0; font-weight: 700; color: #0f172a;\">${dateTimeFormatted}</td>\n          </tr>\n          <tr>\n            <td style=\"padding: 6px 0; font-weight: 600; color: #475569;\">\ud83d\udccd \u0110\u1ecba \u0111i\u1ec3m:</td>\n            <td style=\"padding: 6px 0;\">${locationHtml}</td>\n          </tr>\n        </table>\n      </div>\n      ${rsvpHtmlBlock}\n      ${challengeHtmlBlock}\n          <tr>\n            <td style=\"padding: 6px 0; font-weight: 600; color: #475569;\">\ud83d\udc64 Ng\u01b0\u1eddi PV:</td>\n            <td style=\"padding: 6px 0;\"><strong>${intake.leadInterviewer.name}</strong> (${intake.leadInterviewer.role})</td>\n          </tr>\n        </table>\n      </div>\n\n      <p style=\"font-size: 14px; color: #334155; margin-bottom: 12px;\">\n        Vui l\u00f2ng x\u00e1c nh\u1eadn s\u1ef1 tham gia c\u1ee7a b\u1ea1n tr\u01b0\u1edbc <strong>${deadlineFormatted}</strong> b\u1eb1ng c\u00e1ch ph\u1ea3n h\u1ed3i l\u1ea1i email n\u00e0y.\n      </p>\n\n      <p style=\"font-size: 14px; color: #334155; margin-bottom: 24px;\">\n        N\u1ebfu b\u1ea1n c\u00f3 b\u1ea5t k\u1ef3 c\u00e2u h\u1ecfi n\u00e0o ho\u1eb7c c\u1ea7n thay \u0111\u1ed5i th\u1eddi gian, xin vui l\u00f2ng li\u00ean h\u1ec7 tr\u1ef1c ti\u1ebfp v\u1edbi: <strong>${contactText}</strong>.\n      </p>\n\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 4px 0;\">Tr\u00e2n tr\u1ecdng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${sender.name}</p>\n        <p style=\"margin: 0; color: #64748b; font-size: 13px;\">${sender.role}</p>\n        <p style=\"margin: 2px 0 0 0; color: #0f172a; font-weight: 600;\">${sender.company}</p>\n        <p style=\"margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;\">${sender.contact}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    ...intake,\n    googleMeetUrl: realGoogleMeetUrl,\n    isRealGoogleMeet,\n    googleCalendarEventId,\n    googleCalendarHtmlLink,\n    locationText,\n    locationHtml,\n    emailSubject,\n    candidateEmailHtml,\n    rsvpConfirmUrl,\n    rsvpRescheduleUrl,\n    rsvpStatus: \"PENDING_CONFIRMATION\",\n    calendarIcsContent\n  }\n}];"
-      },
+      "name": "Validate Calendar Result",
+      "id": "14473b8f660ee05d05e9ee59",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1600,
-        300
+        400,
+        1100
       ],
-      "id": "wf5-email-formatter",
-      "name": "So\u1ea1n Th\u01b0 M\u1eddi & T\u1ed5ng H\u1ee3p Packet"
+      "parameters": {
+        "jsCode": "const plan=$('Plan Interview').first().json;const url=$json.hangoutLink||$json.conferenceData?.entryPoints?.find(p=>p.entryPointType==='video')?.uri;\nreturn [{json:{...plan,eventId:$json.id||null,meetUrl:url||null,calendarValid:!!$json.id&&typeof url==='string'&&url.startsWith('https://meet.google.com/')&&/^[a-z0-9-]+$/i.test(url.slice(24))}}];"
+      }
     },
     {
+      "name": "Calendar Confirmed?",
+      "id": "e75ea5f5fc491aae68111b28",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        0
+      ],
       "parameters": {
-        "fromEmail": "doanthanhhuy1309@gmail.com",
-        "toEmail": "={{ $json.candidateEmail }}",
-        "subject": "={{ $json.emailSubject }}",
-        "emailFormat": "html",
-        "html": "={{ $json.candidateEmailHtml }}",
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.calendarValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
         "options": {}
+      }
+    },
+    {
+      "name": "Build Invitation and ICS",
+      "id": "4fdeba3976bdd85b1e37d642",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        220
+      ],
+      "parameters": {
+        "jsCode": "const esc=s=>String(s||'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));const plan=$('Plan Interview').first().json;const ctx=plan.ctx;const result=plan.online?$json:{};const location=plan.online?result.meetUrl:'HR sẽ xác nhận địa điểm phỏng vấn trực tiếp.';\nconst fmt=s=>s.replace(/[-:]/g,'').split('.')[0]+'Z';const slash=String.fromCharCode(92);const clean=s=>String(s).split(slash).join(slash+slash).split(String.fromCharCode(13)).join(' ').split(String.fromCharCode(10)).join(' ').split(',').join(slash+',').split(';').join(slash+';');\nconst ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//HR Tech//Interview//VI','METHOD:REQUEST','BEGIN:VEVENT','UID:'+ctx.evaluationId+'@hrtech', 'DTSTAMP:'+fmt(new Date().toISOString()),'DTSTART:'+fmt(plan.start),'DTEND:'+fmt(plan.end),'SUMMARY:'+clean('Phỏng vấn '+ctx.jobTitle),'LOCATION:'+clean(location),'STATUS:CONFIRMED','SEQUENCE:0','END:VEVENT','END:VCALENDAR'].join(String.fromCharCode(13,10));\nconst binary=await this.helpers.prepareBinaryData(Buffer.from(ics),'interview.ics','text/calendar');\nreturn [{json:{ctx,subject:'Thư mời phỏng vấn – '+ctx.jobTitle,html:'<p>Chào '+esc(ctx.candidateName)+',</p><p>Thời gian: '+esc(new Date(plan.start).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}))+'</p><p>'+esc(location)+'</p><p><a href=\"'+esc(ctx.rsvpUrl)+'\">Xác nhận hoặc đề nghị dời lịch</a></p>',metadata:{time:plan.start,type:plan.type,googleMeetUrl:result.meetUrl||null,isRealGoogleMeet:!!result.meetUrl,googleCalendarEventId:result.eventId||null}},binary:{calendar:binary}}];"
       },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "name": "Send Candidate Email",
+      "id": "71d37e872d64868ed397e077",
       "type": "n8n-nodes-base.emailSend",
       "typeVersion": 2.1,
       "position": [
-        1900,
-        100
+        800,
+        440
       ],
-      "id": "wf5-candidate-email-dispatcher",
-      "name": "Stream 1: Candidate Email Dispatch",
+      "parameters": {
+        "fromEmail": "doanthanhhuy1309@gmail.com",
+        "toEmail": "={{ $json.ctx.candidateEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {
+          "attachments": "calendar"
+        }
+      },
       "credentials": {
         "smtp": {
           "id": "GmailSmtpCred01",
           "name": "Gmail SMTP"
         }
       },
-      "continueOnFail": true
+      "onError": "continueRegularOutput"
     },
     {
-      "parameters": {
-        "jsCode": "const data = $('So\u1ea1n Th\u01b0 M\u1eddi & T\u1ed5ng H\u1ee3p Packet').first().json;\n\nconst kitHtml = Array.isArray(data.interviewKit) ? data.interviewKit.map((item, idx) => `\\n  <div style=\"background: #f8fafc; border-left: 4px solid #2563eb; padding: 12px 16px; margin-bottom: 12px; border-radius: 4px;\">\\n    <p style=\"margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #1e293b;\">C\u00e2u ${idx + 1}: ${item.question}</p>\\n    <p style=\"margin: 0 0 4px 0; font-size: 12px; color: #475569;\">\ud83c\udfaf <strong>K\u1ef9 n\u0103ng nh\u1eafm t\u1edbi:</strong> ${item.targetSkill}</p>\\n    <p style=\"margin: 0 0 4px 0; font-size: 12px; color: #64748b;\">\ud83d\udd0d <strong>L\u00fd do h\u1ecfi (CV Insight):</strong> ${item.whyAsk}</p>\\n    <p style=\"margin: 0; font-size: 12px; color: #16a34a;\">\u2705 <strong>D\u1ea5u hi\u1ec7u c\u00e2u tr\u1ea3 l\u1eddi t\u1ed1t:</strong> ${item.goodAnswerSignals}</p>\\n  </div>`).join('') : '<p>Ch\u01b0a c\u00f3 c\u00e2u h\u1ecfi g\u1ee3i \u00fd.</p>';\n\n\nconst rubricList = Array.isArray(data.scorecardRubric) ? data.scorecardRubric.map((r, i) => `\n  <div style=\"border-bottom: 1px solid #e2e8f0; padding: 8px 0; font-size: 12px;\">\n    <strong>${i + 1}. ${r.pillar} (${r.weight}):</strong> ${r.description}<br>\n    <span style=\"color: #16a34a;\">\u2022 Xu\u1ea5t s\u1eafc: ${r.scoringLevels?.excellent || ''}</span> | \n    <span style=\"color: #dc2626;\">\u2022 D\u01b0\u1edbi chu\u1ea9n: ${r.scoringLevels?.poor || ''}</span>\n  </div>\n`).join('') : '';\n\nconst rubricHtmlSection = `\n  <h3 style=\"color: #1e293b; font-size: 14px; margin: 18px 0 8px 0;\">\ud83c\udfaf TI\u00caU CH\u00cd CH\u1ea4M \u0110I\u1ec2M PH\u1eceNG V\u1ea4N (SCORECARD RUBRIC 4 TR\u1ee4 C\u1ed8T):</h3>\n  <div style=\"background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 16px;\">\n    ${rubricList}\n  </div>\n`;\n\nconst candidateBriefingHtml = `\\n<div style=\"font-family: Arial, sans-serif; max-width: 650px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px;\">\\n  <div style=\"border-bottom: 2px solid #2563eb; padding-bottom: 12px; margin-bottom: 16px;\">\\n    <h2 style=\"margin: 0; color: #0f172a; font-size: 18px;\">\ud83d\udccb H\u1ed2 S\u01a0 T\u00d3M T\u1eaeT & B\u1ed8 C\u00c2U H\u1eceI PH\u1eceNG V\u1ea4N (AI INTERVIEW KIT)</h2>\\n    <p style=\"margin: 4px 0 0 0; font-size: 13px; color: #64748b;\">\u1ee8ng vi\u00ean: <strong>${data.candidateName}</strong> | V\u1ecb tr\u00ed: <strong>${data.jobTitle}</strong> | \u0110\u00e1nh gi\u00e1: <strong>${data.matchScore}%</strong></p>\\n  </div>\\n  \\n  <div style=\"background: #f1f5f9; padding: 14px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; line-height: 1.6;\">\\n    <p style=\"margin: 0 0 6px 0;\"><strong>Th\u1eddi gian:</strong> ${data.dateTimeFormatted}</p>\\n    <p style=\"margin: 0 0 6px 0;\"><strong>Link Meet:</strong> <a href=\"${data.googleMeetUrl}\" style=\"color: #2563eb;\">${data.googleMeetUrl}</a></p>\\n    <p style=\"margin: 0 0 6px 0;\"><strong>Core Skills (Th\u1ef1c chi\u1ebfn):</strong> ${data.coreSkills?.join(', ') || 'N/A'}</p>\\n    <p style=\"margin: 0 0 6px 0;\"><strong>Secondary Skills:</strong> ${data.secondarySkills?.join(', ') || 'N/A'}</p>\\n    <p style=\"margin: 0 0 6px 0;\"><strong>System Scale Score:</strong> ${data.systemScaleScore || 75}/100</p>\\n    <p style=\"margin: 0 0 6px 0;\"><strong>GitHub:</strong> ${data.githubUrl ? `<a href=\"${data.githubUrl}\" style=\"color: #2563eb;\">${data.githubUrl}</a>` : 'Kh\u00f4ng c\u00f3'}</p>\\n    ${data.keywordStuffingFlag ? '<p style=\"margin: 4px 0 0 0; color: #dc2626; font-weight: bold;\">\u26a0\ufe0f C\u1ea3nh b\u00e1o Tech Lead: \u1ee8ng vi\u00ean c\u00f3 d\u1ea5u hi\u1ec7u nh\u1ed3i t\u1eeb kh\u00f3a c\u00f4ng ngh\u1ec7, c\u1ea7n h\u1ecfi k\u1ef9 d\u1ef1 \u00e1n th\u1ef1c t\u1ebf!</p>' : ''}\\n  </div>\\n\\n  <h3 style=\"color: #1e293b; font-size: 15px; margin: 16px 0 10px 0;\">G\u1ee2I \u00dd C\u00c2U H\u1eceI PH\u1eceNG V\u1ea4N T\u00ccNH HU\u1ed0NG (AI GENERATED):</h3>\\n  ${kitHtml}\\n</div>`;\n\nreturn [{\n  json: {\n    channel: 'INTERVIEWER_BRIEFING',\n    recipientInterviewer: data.leadInterviewer.name,\n    recipientEmail: data.leadInterviewer.email,\n    alertTitle: `[BRIEFING] Ph\u1ecfng v\u1ea5n \u1ee9ng vi\u00ean ${data.candidateName} (${data.matchScore}% match)`,\n    candidateSummary: {\n      name: data.candidateName,\n      email: data.candidateEmail,\n      jobTitle: data.jobTitle,\n      matchScore: data.matchScore,\n      coreSkills: data.coreSkills,\n      secondarySkills: data.secondarySkills,\n      systemScaleScore: data.systemScaleScore,\n      githubUrl: data.githubUrl,\n      keywordStuffingFlag: data.keywordStuffingFlag\n    },\n    interviewSchedule: data.dateTimeFormatted,\n    interviewLocation: data.locationText,\n    googleMeetUrl: data.googleMeetUrl,\n    isRealGoogleMeet: data.isRealGoogleMeet,\n    googleCalendarEventId: data.googleCalendarEventId,\n    googleCalendarHtmlLink: data.googleCalendarHtmlLink,\n    technicalFocus: data.skills,\n    interviewKit: data.interviewKit,\n    scorecardRubric: data.scorecardRubric,\n    miniCodeChallenge: data.miniCodeChallenge,\n    candidateBriefingHtml,\n    briefingStatus: 'SENT_TO_INTERVIEWER_PANEL',\n    timestamp: new Date().toISOString()\n  }\n}];"
-      },
+      "name": "Inspect SMTP Outcome",
+      "id": "ffcc8cc61c66111bdbfbb07d",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1900,
-        250
+        800,
+        660
       ],
-      "id": "wf5-panel-briefing-packet",
-      "name": "Stream 2: Interviewer Briefing Packet"
+      "parameters": {
+        "jsCode": "const packet=$('Build Invitation and ICS').first().json;const accepted=$json.accepted;const ok=!$json.error&&Array.isArray(accepted)&&accepted.some(e=>String(e).toLowerCase()===packet.ctx.candidateEmail.toLowerCase());return [{json:{ctx:packet.ctx,status:ok?'SENT':'FAILED',metadata:packet.metadata}}];"
+      }
     },
     {
-      "parameters": {
-        "jsCode": "const data = $json;\nreturn [{\n  json: {\n    success: true,\n    channel: '#interviews-panel-coordination',\n    alertType: 'INTERVIEW_PANEL_DISPATCH',\n    interviewerName: data.leadInterviewer?.name,\n    interviewerEmail: data.leadInterviewer?.email,\n    candidateName: data.candidateName,\n    jobTitle: data.jobTitle,\n    time: data.dateTimeFormatted,\n    meetUrl: data.googleMeetUrl,\n    miniChallenge: data.miniCodeChallenge?.title,\n    rsvpStatus: data.rsvpStatus || 'PENDING_CONFIRMATION',\n    timestamp: new Date().toISOString()\n  }\n}];\n"
-      },
+      "name": "Prepare Delivery Failure",
+      "id": "9019b82194ad5afad289f551",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1900,
-        400
+        800,
+        880
       ],
-      "id": "wf5-slack-panel-alert",
-      "name": "Stream 3: Alert K\u00eanh Ph\u1ecfng V\u1ea5n (Slack / Teams Panel Alert)"
+      "parameters": {
+        "jsCode": "const ctx=$('Claim Approved Delivery').first().json;return [{json:{ctx,status:'FAILED',metadata:{errorCode:'PROVIDER_OR_PROCESSING_FAILED'}}}];"
+      }
     },
     {
+      "name": "Record Actual Delivery",
+      "id": "e3ac34c133c0a082bf55dcfa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        1100
+      ],
       "parameters": {
-        "method": "PATCH",
-        "url": "=http://host.docker.internal:3001/recruitment/candidates/{{ $json.candidateId }}/ai-evaluation",
+        "method": "POST",
+        "url": "=http://host.docker.internal:3001/recruitment/evaluations/{{ $json.ctx.evaluationId }}/delivery",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
               "name": "x-api-key",
-              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+              "value": "={{ $('Receive Approved Action').first().json.headers['x-api-key'] }}"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"matchScore\": {{ $json.matchScore }},\n  \"summary\": {{ JSON.stringify(\"[L\u1ecaCH PH\u1eceNG V\u1ea4N CH\u00cdNH TH\u1ee8C]: \" + $json.dateTimeFormatted + \" - \" + $json.locationText + \". Ng\u01b0\u1eddi li\u00ean h\u1ec7: \" + $json.contactPerson.name + \" (\" + $json.contactPerson.phone + \").\") }},\n  \"parsedSkillsJson\": {\n    \"skills\": {{ JSON.stringify($json.skills) }},\n    \"coreSkills\": {{ JSON.stringify($json.coreSkills || []) }},\n    \"secondarySkills\": {{ JSON.stringify($json.secondarySkills || []) }},\n    \"systemScaleScore\": {{ $json.systemScaleScore || 75 }},\n    \"githubUrl\": {{ JSON.stringify($json.githubUrl || null) }},\n    \"keywordStuffingFlag\": {{ $json.keywordStuffingFlag ? true : false }},\n    \"interviewKit\": {{ JSON.stringify($json.interviewKit || []) }},\n    \"interviewSchedule\": {\n      \"status\": \"SCHEDULED\",\n      \"type\": {{ JSON.stringify($json.interviewType) }},\n      \"time\": {{ JSON.stringify($json.dateTimeFormatted) }},\n      \"location\": {{ JSON.stringify($json.locationText) }},\n      \"googleMeetUrl\": {{ JSON.stringify($json.googleMeetUrl) }},\n      \"isRealGoogleMeet\": {{ $json.isRealGoogleMeet }},\n      \"googleCalendarEventId\": {{ JSON.stringify($json.googleCalendarEventId) }},\n      \"googleCalendarHtmlLink\": {{ JSON.stringify($json.googleCalendarHtmlLink) }},\n      \"interviewer\": {{ JSON.stringify($json.leadInterviewer) }},\n      \"scorecardRubric\": {{ JSON.stringify($json.scorecardRubric || []) }},\n      \"miniCodeChallenge\": {{ JSON.stringify($json.miniCodeChallenge || null) }},\n      \"rsvpStatus\": {{ JSON.stringify($json.rsvpStatus || \"PENDING_CONFIRMATION\") }},\n      \"rsvpConfirmUrl\": {{ JSON.stringify($json.rsvpConfirmUrl) }},\n      \"rsvpRescheduleUrl\": {{ JSON.stringify($json.rsvpRescheduleUrl) }}\n    }\n  }\n}",
-        "options": {}
+        "jsonBody": "={{ {action:\"INTERVIEW\",status:$json.status,metadata:$json.metadata} }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1900,
-        550
-      ],
-      "id": "wf5-backend-sync",
-      "name": "Stream 4: \u0110\u1ed3ng B\u1ed9 L\u1ecbch V\u00e0o Backend NestJS",
-      "continueOnFail": true
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
     },
     {
-      "parameters": {
-        "jsCode": "const packet = $('So\u1ea1n Th\u01b0 M\u1eddi & T\u1ed5ng H\u1ee3p Packet').first().json;\nconst backendSyncResult = $json;\n\nreturn [{\n  json: {\n    success: true,\n    action: packet.isRealGoogleMeet ? \"INTERVIEW_ORCHESTRATED_AND_SYNCED\" : \"INTERVIEW_ORCHESTRATED_SIMULATED_MEET\",\n    candidateId: packet.candidateId,\n    candidateName: packet.candidateName,\n    candidateEmail: packet.candidateEmail,\n    jobTitle: packet.jobTitle,\n    companyName: packet.companyName,\n    interviewType: packet.interviewType,\n    candidateProfile: {\n      coreSkills: packet.coreSkills,\n      secondarySkills: packet.secondarySkills,\n      systemScaleScore: packet.systemScaleScore,\n      githubUrl: packet.githubUrl,\n      keywordStuffingFlag: packet.keywordStuffingFlag\n    },\n    schedule: {\n      time: packet.dateTimeFormatted,\n      location: packet.locationText,\n      googleMeetUrl: packet.googleMeetUrl,\n      isRealGoogleMeet: packet.isRealGoogleMeet,\n      googleCalendarEventId: packet.googleCalendarEventId,\n      googleCalendarHtmlLink: packet.googleCalendarHtmlLink,\n      officeAddress: packet.officeAddress,\n      deadline: packet.deadlineFormatted,\n      calendarIcsAttached: true\n    },\n    interviewerPanel: packet.leadInterviewer,\n    contactPerson: packet.contactPerson,\n    interviewKit: packet.interviewKit,\n    backendSync: {\n      status: backendSyncResult?.id ? \"SYNCED_TO_DATABASE\" : \"STANDALONE_SIMULATED\",\n      updatedCandidateId: backendSyncResult?.id || packet.candidateId\n    },\n    orchestratedAt: new Date().toISOString()\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "name": "Reject Unauthorized or Unavailable",
+      "id": "5b52ed716c21e62ba45abc3d",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
       "position": [
-        2200,
-        300
+        1200,
+        0
       ],
-      "id": "wf5-consolidator",
-      "name": "T\u1ed5ng H\u1ee3p K\u1ebft Qu\u1ea3 & L\u1ecbch Tr\u00ecnh (Consolidator)"
-    },
-    {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        2450,
-        300
-      ],
-      "id": "wf5-response",
-      "name": "Ph\u1ea3n H\u1ed3i Webhook K\u1ebft Qu\u1ea3"
-    },
-    {
-      "parameters": {
-        "content": "## GIAI \u0110O\u1ea0N 1: \u0110I\u1ec0U PH\u1ed0I H\u1ed8I \u0110\u1ed2NG & CHU\u1ea8N H\u00d3A TI\u00caU CH\u00cd (PANEL & RUBRIC)\n- Nh\u1eadn h\u1ed3 s\u01a1 \u1ee9ng vi\u00ean xu\u1ea5t s\u1eafc (\u0110i\u1ec3m >= 80%)\n- T\u1ef1 \u0111\u1ed9ng ph\u00e2n b\u1ed5 Lead / Architect ph\u1ecfng v\u1ea5n theo Tech Stack\n- X\u00e2y d\u1ef1ng ma tr\u1eadn ti\u00eau ch\u00ed ch\u1ea5m \u0111i\u1ec3m Scorecard Rubric 4 tr\u1ee5 c\u1ed9t",
-        "height": 450,
-        "width": 700,
-        "color": 2
-      },
-      "id": "sticky-wf5-p1",
-      "name": "Sticky Note Phase 1",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        50,
-        140
-      ]
-    },
-    {
-      "parameters": {
-        "content": "## GIAI \u0110O\u1ea0N 2: TH\u1ef0C CHI\u1ebeN K\u1ef8 THU\u1eacT & T\u01af\u01a0NG T\u00c1C \u1ee8NG VI\u00caN (CHALLENGE & RSVP)\n- Sinh \u0111\u1ec1 b\u00e0i k\u1ef9 thu\u1eadt th\u1ef1c chi\u1ebfn 30-45 ph\u00fat (Mini Take-home Challenge)\n- T\u1ea1o Link RSVP x\u00e1c nh\u1eadn tham gia 1 ch\u1ea1m (Confirm / Reschedule)\n- T\u1ea1o ph\u00f2ng h\u1ecdp tr\u1ef1c tuy\u1ebfn Google Meet & S\u1ef1 ki\u1ec7n L\u1ecbch",
-        "height": 450,
-        "width": 750,
-        "color": 4
-      },
-      "id": "sticky-wf5-p2",
-      "name": "Sticky Note Phase 2",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        800,
-        140
-      ]
-    },
-    {
-      "parameters": {
-        "content": "## GIAI \u0110O\u1ea0N 3: PH\u00c2N PH\u1ed0I \u0110A K\u00caNH & \u0110\u1ed2NG B\u1ed8 D\u1eee LI\u1ec6U (MULTI-CHANNEL DISPATCH)\n- G\u1eedi email th\u01b0 m\u1eddi ph\u1ecfng v\u1ea5n c\u00f3 n\u00fat b\u1ea5m t\u01b0\u01a1ng t\u00e1c cho \u1ee9ng vi\u00ean\n- Chu\u1ea9n b\u1ecb h\u1ed3 s\u01a1 c\u00e2u h\u1ecfi ph\u1ecfng v\u1ea5n chuy\u00ean s\u00e2u cho h\u1ed9i \u0111\u1ed3ng\n- B\u1eafn Alert k\u00eanh n\u1ed9i b\u1ed9 (Slack/Teams) cho ban ph\u1ecfng v\u1ea5n\n- C\u1eadp nh\u1eadt l\u1ecbch h\u1eb9n & tr\u1ea1ng th\u00e1i RSVP v\u00e0o PostgreSQL qua NestJS",
-        "height": 680,
-        "width": 1150,
-        "color": 3
-      },
-      "id": "sticky-wf5-p3",
-      "name": "Sticky Note Phase 3",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1550,
-        20
-      ]
+        "responseBody": "={{ {error:\"DELIVERY_CLAIM_REJECTED_OR_UNAVAILABLE\"} }}",
+        "options": {
+          "responseCode": 503
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook: Intake Candidate (Score >= 80%)": {
+    "Receive Approved Action": {
       "main": [
         [
           {
-            "node": "Smart Interviewer Panel Routing & Schedule Engine",
+            "node": "Validate Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Smart Interviewer Panel Routing & Schedule Engine": {
+    "Validate Request": {
       "main": [
         [
           {
-            "node": "Scorecard Rubric 4 Tr\u1ee5 C\u1ed9t Builder",
+            "node": "Request Valid?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Scorecard Rubric 4 Tr\u1ee5 C\u1ed9t Builder": {
+    "Request Valid?": {
       "main": [
         [
           {
-            "node": "Mini Take-home Challenge Generator",
+            "node": "Claim Approved Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Mini Take-home Challenge Generator": {
+    "Claim Approved Delivery": {
       "main": [
         [
           {
-            "node": "RSVP Interactive Link Generator",
+            "node": "Delivery Claimed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Unauthorized or Unavailable",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "RSVP Interactive Link Generator": {
+    "Delivery Claimed?": {
       "main": [
         [
           {
-            "node": "Google Calendar: T\u1ea1o S\u1ef1 Ki\u1ec7n & Meet Th\u1eadt",
+            "node": "Accept Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Handled",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Calendar: T\u1ea1o S\u1ef1 Ki\u1ec7n & Meet Th\u1eadt": {
+    "Accept Delivery": {
       "main": [
         [
           {
-            "node": "So\u1ea1n Th\u01b0 M\u1eddi & T\u1ed5ng H\u1ee3p Packet",
+            "node": "Plan Interview",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "So\u1ea1n Th\u01b0 M\u1eddi & T\u1ed5ng H\u1ee3p Packet": {
+    "Plan Interview": {
       "main": [
         [
           {
-            "node": "Stream 1: Candidate Email Dispatch",
+            "node": "Online Interview?",
             "type": "main",
             "index": 0
-          },
+          }
+        ],
+        [
           {
-            "node": "Stream 2: Interviewer Briefing Packet",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Stream 3: Alert K\u00eanh Ph\u1ecfng V\u1ea5n (Slack / Teams Panel Alert)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Stream 4: \u0110\u1ed3ng B\u1ed9 L\u1ecbch V\u00e0o Backend NestJS",
+            "node": "Prepare Delivery Failure",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Stream 4: \u0110\u1ed3ng B\u1ed9 L\u1ecbch V\u00e0o Backend NestJS": {
+    "Online Interview?": {
       "main": [
         [
           {
-            "node": "T\u1ed5ng H\u1ee3p K\u1ebft Qu\u1ea3 & L\u1ecbch Tr\u00ecnh (Consolidator)",
+            "node": "Create Google Calendar and Meet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Invitation and ICS",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "T\u1ed5ng H\u1ee3p K\u1ebft Qu\u1ea3 & L\u1ecbch Tr\u00ecnh (Consolidator)": {
+    "Create Google Calendar and Meet": {
       "main": [
         [
           {
-            "node": "Ph\u1ea3n H\u1ed3i Webhook K\u1ebft Qu\u1ea3",
+            "node": "Validate Calendar Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Calendar Result": {
+      "main": [
+        [
+          {
+            "node": "Calendar Confirmed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Confirmed?": {
+      "main": [
+        [
+          {
+            "node": "Build Invitation and ICS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Delivery Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Invitation and ICS": {
+      "main": [
+        [
+          {
+            "node": "Send Candidate Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Delivery Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Candidate Email": {
+      "main": [
+        [
+          {
+            "node": "Inspect SMTP Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inspect SMTP Outcome": {
+      "main": [
+        [
+          {
+            "node": "Record Actual Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Delivery Failure": {
+      "main": [
+        [
+          {
+            "node": "Record Actual Delivery",
             "type": "main",
             "index": 0
           }
@@ -404,42 +652,11 @@
     }
   },
   "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
-  "meta": {
-    "instanceId": "d513a217739c970f06ba5b7905d56e04f8bf5bbc9d4fc9cc5d08fdd4d8b7ae7b"
-  },
-  "nodeGroups": [],
-  "pinData": {},
-  "versionId": "45e82d68-705b-45c9-a786-2ee5808dab73",
-  "activeVersionId": "45e82d68-705b-45c9-a786-2ee5808dab73",
-  "versionCounter": 7,
-  "triggerCount": 1,
-  "sourceWorkflowId": null,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-10-09T12:04:04.512Z",
-      "createdAt": "2026-10-09T12:04:04.512Z",
-      "role": "workflow:owner",
-      "workflowId": "Z8f05InterviewSc",
-      "projectId": "6fLB1uBc0gD1ogBQ",
-      "project": {
-        "updatedAt": "2026-09-30T14:32:33.272Z",
-        "createdAt": "2026-09-30T13:39:28.905Z",
-        "id": "6fLB1uBc0gD1ogBQ",
-        "name": "\u0110o\u00e0n Huy <doanthanhhuy1309@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "f74528cc-054d-4509-863b-f3ddb16b799d"
-      }
-    }
-  ],
-  "versionMetadata": {
-    "name": null,
-    "description": null
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "executionTimeout": 180
   }
 }

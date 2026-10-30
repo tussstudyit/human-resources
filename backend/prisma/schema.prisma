@@ -59,14 +59,15 @@ enum AiStatus {
 }
 
 model JobPost {
-  id           String      @id @default(uuid())
-  title        String
-  description  String      @db.Text
-  requirements String      @db.Text
-  status       JobStatus   @default(OPEN)
-  candidates   Candidate[]
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id             String             @id @default(uuid())
+  title          String
+  description    String             @db.Text
+  requirements   String             @db.Text
+  status         JobStatus          @default(OPEN)
+  candidates     Candidate[]
+  rubricVersions JobRubricVersion[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@index([status])
   @@map("job_posts")
@@ -88,9 +89,64 @@ model Candidate {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  latestEvaluationId String?
+  evaluations        EvaluationRun[]
+
   @@unique([email, jobId])
   @@index([jobId])
   @@map("candidates")
+}
+
+model JobRubricVersion {
+  id             String    @id @default(uuid())
+  jobId          String
+  job            JobPost   @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  sourceHash     String
+  snapshot       Json
+  requiredSkills Json
+  weights        Json
+  approvedBy     String?
+  approvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([jobId, sourceHash])
+  @@map("job_rubric_versions")
+}
+
+model EvaluationRun {
+  id            String            @id @default(uuid())
+  candidateId   String
+  candidate     Candidate         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  status        String            @default("PENDING")
+  rubricId      String?
+  snapshot      Json
+  report        Json?
+  cvHash        String?
+  modelId       String?
+  promptVersion String            @default("hybrid-v1")
+  errorCode     String?
+  claimToken    String?
+  claimedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime          @default(now())
+  events        EvaluationEvent[]
+
+  @@index([candidateId, createdAt])
+  @@index([status, createdAt])
+  @@map("evaluation_runs")
+}
+
+model EvaluationEvent {
+  id               String        @id @default(uuid())
+  evaluationId     String
+  evaluation       EvaluationRun @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  type             String
+  deduplicationKey String?       @unique
+  data             Json
+  createdAt        DateTime      @default(now())
+
+  @@index([evaluationId, createdAt])
+  @@map("evaluation_events")
 }
 
 model OnboardingTask {

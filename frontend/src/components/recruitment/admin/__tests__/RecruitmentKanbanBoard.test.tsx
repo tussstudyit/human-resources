@@ -67,7 +67,7 @@ describe('RecruitmentKanbanBoard', () => {
     },
   ];
 
-  it('hiển thị đầy đủ 5 cột quy trình tuyển dụng chuẩn hóa', () => {
+  it('hiển thị đầy đủ 6 cột quy trình tuyển dụng chuẩn hóa', () => {
     render(
       <RecruitmentKanbanBoard
         candidates={[]}
@@ -76,10 +76,11 @@ describe('RecruitmentKanbanBoard', () => {
     );
 
     expect(screen.getByText('Chờ AI Thẩm Định')).toBeInTheDocument();
+    expect(screen.getByText('Cần HR xem xét')).toBeInTheDocument();
     expect(screen.getByText('AI Đã Đánh Giá')).toBeInTheDocument();
     expect(screen.getByText('Lịch Phỏng Vấn (Meet)')).toBeInTheDocument();
     expect(screen.getByText('Kho Nhân Tài (Pool)')).toBeInTheDocument();
-    expect(screen.getByText('Không Phù Hợp')).toBeInTheDocument();
+    expect(screen.getByText('Lỗi xử lý / Cần kiểm tra')).toBeInTheDocument();
   });
 
   it('phân loại đúng ứng viên vào các cột tương ứng theo trạng thái và dữ liệu AI', () => {

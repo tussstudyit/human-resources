@@ -107,9 +107,9 @@ export default function RecruitmentAdminClient() {
     }
   }, [selectedJobId, fetchCandidates]);
 
+  const hasPending = candidates.some((c) => c.aiStatus === 'PENDING');
   // Auto-polling theo thời gian thực khi có hồ sơ đang ở trạng thái PENDING (AI đang chấm)
   useEffect(() => {
-    const hasPending = candidates.some((c) => c.aiStatus === 'PENDING');
     if (!hasPending || !selectedJobId) return;
 
     let pollCount = 0;
@@ -125,7 +125,7 @@ export default function RecruitmentAdminClient() {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [candidates, selectedJobId, fetchCandidates]);
+  }, [hasPending, selectedJobId, fetchCandidates]);
 
   const currentJob = jobs.find((j) => j.id === selectedJobId);
 

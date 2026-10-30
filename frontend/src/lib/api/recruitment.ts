@@ -8,6 +8,7 @@ import {
   ApplyApiError,
   CreateJobDto,
   RecruitmentDashboardStats,
+  EvaluationHistory,
 } from '@/types/recruitment';
 
 /**
@@ -24,6 +25,23 @@ export function getBaseApiUrl(): string {
     );
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+}
+
+export async function getEvaluationHistory(candidateId: string): Promise<EvaluationHistory[]> {
+  return (await api.get(`/recruitment/candidates/${candidateId}/evaluations`)).data;
+}
+export async function getJobRubric(jobId: string): Promise<{
+  suggestedSkills: string[];
+  defaultWeights: Record<string, number>;
+  approved: {id:string;requiredSkills:string[];weights:Record<string,number>;approvedAt:string} | null;
+}> {
+  return (await api.get(`/recruitment/jobs/${jobId}/rubric`)).data;
+}
+export async function approveJobRubric(jobId: string, requiredSkills: string[], weights: Record<string,number>) {
+  return (await api.post(`/recruitment/jobs/${jobId}/rubric/approve`, {requiredSkills,weights})).data;
+}
+export async function approveEvaluation(evaluationId: string) {
+  return (await api.post(`/recruitment/evaluations/${evaluationId}/approve`)).data;
 }
 
 /**

@@ -83,6 +83,15 @@ export interface TalentPoolInfo {
 }
 
 export interface ParsedSkillsData {
+  evaluation?: {
+    id: string;
+    status: string;
+    approvalStatus: string;
+    recommendation?: string;
+    reviewReasons?: string[];
+    evidenceCoverage?: number;
+    criteria?: EvaluationCriterion[];
+  };
   skills?: string[];
   coreSkills?: string[];
   secondarySkills?: string[];
@@ -102,6 +111,30 @@ export interface ParsedSkillsData {
     whyAsk: string;
     goodAnswerSignals: string;
   }>;
+}
+
+export interface EvaluationCriterion {
+  id: string;
+  weight: number;
+  level: number;
+  points: number;
+  rule: string;
+  evidence: Array<{quote: string; segmentId: string}>;
+}
+export interface EvaluationHistory {
+  id: string;
+  status: string;
+  errorCode?: string;
+  modelId?: string;
+  createdAt: string;
+  report?: {
+    matchScore: number | null;
+    approvalStatus: string;
+    summary?: string;
+    reviewReasons?: string[];
+    criteria?: EvaluationCriterion[];
+  };
+  events: Array<{id:string;type:string;data:Record<string,unknown>;createdAt:string}>;
 }
 
 export type CandidateSkills = string[] | ParsedSkillsData | null;

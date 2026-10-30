@@ -43,6 +43,7 @@ export default function RecruitmentKanbanBoard({
   // Categorize candidates into 5 columns
   const pendingCol: Candidate[] = [];
   const evaluatedCol: Candidate[] = [];
+  const reviewCol: Candidate[] = [];
   const interviewCol: Candidate[] = [];
   const talentPoolCol: Candidate[] = [];
   const rejectedCol: Candidate[] = [];
@@ -52,12 +53,14 @@ export default function RecruitmentKanbanBoard({
 
     if (c.aiStatus === 'PENDING') {
       pendingCol.push(c);
-    } else if (interviewSchedule && interviewSchedule.googleMeetUrl) {
+    } else if (c.aiStatus === 'FAILED') {
+      rejectedCol.push(c);
+    } else if (c.parsedSkillsJson && !Array.isArray(c.parsedSkillsJson) && c.parsedSkillsJson.evaluation?.status === 'NEEDS_REVIEW') {
+      reviewCol.push(c);
+    } else if (interviewSchedule && (interviewSchedule.googleMeetUrl || interviewSchedule.status === 'SCHEDULED')) {
       interviewCol.push(c);
     } else if (talentPool && talentPool.tier) {
       talentPoolCol.push(c);
-    } else if (c.aiStatus === 'FAILED') {
-      rejectedCol.push(c);
     } else {
       evaluatedCol.push(c);
     }
@@ -71,6 +74,7 @@ export default function RecruitmentKanbanBoard({
       count: pendingCol.length,
       items: pendingCol,
     },
+    {id: 'review', title: 'Cần HR xem xét', icon: Clock, count: reviewCol.length, items: reviewCol},
     {
       id: 'evaluated',
       title: 'AI Đã Đánh Giá',
@@ -94,7 +98,7 @@ export default function RecruitmentKanbanBoard({
     },
     {
       id: 'rejected',
-      title: 'Không Phù Hợp',
+      title: 'Lỗi xử lý / Cần kiểm tra',
       icon: XCircle,
       count: rejectedCol.length,
       items: rejectedCol,
@@ -112,7 +116,7 @@ export default function RecruitmentKanbanBoard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5 h-full min-h-[600px] select-none font-sans">
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3.5 h-full min-h-[600px] select-none font-sans">
       {columns.map((col) => {
         const IconComponent = col.icon;
         return (
@@ -160,7 +164,7 @@ export default function RecruitmentKanbanBoard({
                         }
                       }}
                       className="group p-3 rounded-[8px] bg-white border border-[#ebebeb] hover:border-red-400/60 cursor-pointer transition-all shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover:shadow-md hover-lift focus-ring space-y-2"
-                      aria-label={`Xem chi tiết hồ sơ ${candidate.name}, điểm tương thích ${score}%`}
+                      aria-label={`Xem chi tiết hồ sơ ${candidate.name}, ${candidate.matchScore == null ? 'chưa có điểm' : `điểm tương thích ${candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}`}`}
                     >
                       {/* Name & Score */}
                       <div className="flex items-start justify-between gap-2">
@@ -185,7 +189,7 @@ export default function RecruitmentKanbanBoard({
                               score
                             )}`}
                           >
-                            {score}%
+                            {candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}
                           </span>
                         ) : null}
                       </div>

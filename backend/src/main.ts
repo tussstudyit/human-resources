@@ -1,16 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module.js';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // On Day 8 deployment behind Nginx reverse proxy, enable trust proxy for rate limiting & client IP:
   // (app.getHttpAdapter().getInstance() as any).set('trust proxy', 1);
 
+  app.useBodyParser('json', { limit: '1mb' });
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
