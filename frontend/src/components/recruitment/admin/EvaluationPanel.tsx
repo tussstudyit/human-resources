@@ -17,6 +17,11 @@ const reasons: Record<string,string> = {
   POSSIBLE_PROMPT_INJECTION:'Tài liệu có nội dung chỉ dẫn bất thường.',
   JD_CHANGED_DURING_EVALUATION:'JD đã đổi trong lúc chấm. Cần đánh giá lại.',
   PROCESSING_TIMEOUT:'Quá thời gian xử lý. Kiểm tra dịch vụ rồi chấm lại.',
+  JD_ANALYSIS_FAILED:'Dịch vụ AI không phân tích được JD. Chờ một lúc rồi chấm lại; rubric đã duyệt vẫn được giữ.',
+  AI_RATE_LIMITED:'Dịch vụ AI đang giới hạn yêu cầu. Chờ ít phút rồi bấm Chấm lại, tránh bấm liên tục.',
+  AI_PROVIDER_UNAVAILABLE:'Dịch vụ AI đang quá tải hoặc tạm ngừng. Vui lòng chấm lại sau.',
+  AI_AUTH_FAILED:'Dịch vụ AI từ chối xác thực. Quản trị viên cần kiểm tra cấu hình kết nối.',
+  AI_REQUEST_FAILED:'Không gọi được dịch vụ AI. Quản trị viên cần kiểm tra kết nối và lịch sử workflow.',
 };
 export default function EvaluationPanel({candidate,onApproved,refreshKey=0}:{candidate:Candidate;onApproved?:(id:string)=>void;refreshKey?:number}) {
   const isHr=useAuthStore(s=>s.user?.role==='HR');

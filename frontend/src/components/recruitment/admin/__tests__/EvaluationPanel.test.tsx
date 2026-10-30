@@ -12,6 +12,12 @@ beforeEach(()=>{
   vi.mocked(getEvaluationHistory).mockResolvedValue([]);
 });
 describe('Evidence review panel',()=>{
+ it('explains rate limiting without offering approval for an unscored run',async()=>{
+  vi.mocked(getEvaluationHistory).mockResolvedValue([{id:'evaluation',status:'NEEDS_REVIEW',errorCode:'AI_RATE_LIMITED',createdAt:'2026-10-30',events:[],report:{matchScore:null,approvalStatus:'PENDING_HR',reviewReasons:['AI_RATE_LIMITED']}}]);
+  render(<EvaluationPanel candidate={candidate}/>);
+  await screen.findByText(/Dịch vụ AI đang giới hạn yêu cầu/);
+  expect(screen.queryByText('Duyệt kết quả sau khi xem bằng chứng')).not.toBeInTheDocument();
+ });
  it('explains missing history and prevents approving an empty rubric',async()=>{
   render(<EvaluationPanel candidate={candidate}/>);
   await screen.findByDisplayValue('Node.js');

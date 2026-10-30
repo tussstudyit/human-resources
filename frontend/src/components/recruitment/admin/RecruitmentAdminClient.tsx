@@ -113,7 +113,9 @@ export default function RecruitmentAdminClient() {
     if (!hasPending || !selectedJobId) return;
 
     let pollCount = 0;
-    const maxPolls = 24; // 24 * 2.5s = 60s tối đa
+    // AI retries can exceed a minute. Keep refreshing through the backend's
+    // 15-minute watchdog, including its next reconciliation tick.
+    const maxPolls = 384; // 16 minutes at 2.5 seconds per poll
 
     const interval = setInterval(async () => {
       pollCount++;

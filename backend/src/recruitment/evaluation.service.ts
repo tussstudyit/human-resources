@@ -26,9 +26,10 @@ import {
   DeliveryResultDto,
 } from './dto/evaluation.dto.js';
 import { signAction, verifyAction } from './action-links.js';
+import { cleanJsonText } from './document-text.js';
 
 const asJson = (value: unknown) =>
-  JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+  cleanJsonText(value) as Prisma.InputJsonValue;
 const object = (value: unknown): Record<string, any> =>
   value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, any>)
@@ -232,6 +233,7 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
   }
 
   async complete(id: string, dto: EvaluationResultDto) {
+    dto = cleanJsonText(dto);
     return this.prisma.$transaction(async (tx) => {
       const original = await tx.evaluationRun.findUnique({ where: { id } });
       if (!original) throw new NotFoundException('Evaluation not found');

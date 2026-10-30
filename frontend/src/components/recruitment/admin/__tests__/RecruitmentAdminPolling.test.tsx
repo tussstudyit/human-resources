@@ -1,0 +1,28 @@
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+import RecruitmentAdminClient from '../RecruitmentAdminClient';
+import { getAdminJobs, getJobCandidates } from '@/lib/api/recruitment';
+const { showToast }=vi.hoisted(()=>({showToast:vi.fn()}));
+vi.mock('@/store/useToastStore',()=>({useToastStore:()=>({showToast})}));
+vi.mock('@/lib/api/recruitment',()=>({getAdminJobs:vi.fn(),getJobCandidates:vi.fn(),updateJob:vi.fn()}));
+vi.mock('../CandidateDetailModal',()=>({default:()=>null}));
+vi.mock('../JobManageModal',()=>({default:()=>null}));
+vi.mock('../RecruitmentKanbanBoard',()=>({default:({candidates}:{candidates:{aiStatus:string;matchScore:number|null}[]})=><div data-testid="candidate-result">{candidates.map(c=>`${c.aiStatus}:${c.matchScore??'pending'}`).join(',')}</div>}));
+afterEach(()=>{vi.useRealTimers();vi.clearAllMocks();});
+it('refreshes a scoring result arriving after one minute and stops when complete',async()=>{
+ vi.useFakeTimers();
+ const pending={id:'test',name:'TEST',email:'test@example.invalid',jobId:'job',aiStatus:'PENDING',matchScore:null,createdAt:'2026-10-30'};
+ vi.mocked(getAdminJobs).mockResolvedValue([{id:'job',title:'TEST',status:'OPEN',_count:{candidates:1}}] as never);
+ vi.mocked(getJobCandidates).mockResolvedValue([pending] as never);
+ await act(async()=>{render(<RecruitmentAdminClient/>);});
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent('PENDING:pending');
+ await act(async()=>{await vi.advanceTimersByTimeAsync(65000);});
+ const calls=vi.mocked(getJobCandidates).mock.calls.length;
+ vi.mocked(getJobCandidates).mockResolvedValue([{...pending,aiStatus:'DONE',matchScore:65}] as never);
+ await act(async()=>{await vi.advanceTimersByTimeAsync(2500);});
+ expect(vi.mocked(getJobCandidates).mock.calls.length).toBeGreaterThan(calls);
+ expect(screen.getByTestId('candidate-result')).toHaveTextContent('DONE:65');
+ const doneCalls=vi.mocked(getJobCandidates).mock.calls.length;
+ await act(async()=>{await vi.advanceTimersByTimeAsync(10000);});
+ expect(vi.mocked(getJobCandidates).mock.calls.length).toBe(doneCalls);
+});

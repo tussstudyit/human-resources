@@ -20,11 +20,14 @@ try {
  await assert.rejects(service.complete(first.id,{claimToken:'wrong',status:'DONE'}));
  const second=await service.start(candidate.id),secondCtx=await service.claim(second.id);
  const extraction={claims:[{criterion:'skills',skill:'NodeJS',quote:'Developed a NodeJS application.',segmentId:'s1'}],employmentIntervals:[],missingInformation:[]};
- const segments=[{id:'s1',text:'Developed a NodeJS application.'}];
+ // The source PDF may contain NUL; both evidence verification and persistence must survive it.
+ const segments=[{id:'s1',text:'Developed a NodeJS application.\u0000'}];
  const finish=c=>({claimToken:c.claimToken,status:'DONE',cvHash:c.cvHash,extraction,segments,modelId:'synthetic-fixture'});
  assert.equal((await service.complete(first.id,finish(ctx))).projectionUpdated,false,'older callback cannot overwrite latest run');
  await assert.rejects(service.approve(first.id,'synthetic-test-reviewer'));
  const completed=await service.complete(second.id,finish(secondCtx));assert.equal(completed.matchScore,40);
+ const cleanRun=await db.evaluationRun.findUniqueOrThrow({where:{id:second.id}});
+ assert.ok(!JSON.stringify(cleanRun.report).includes('\\u0000'),'PostgreSQL report must be free of NUL');
  assert.equal((await service.complete(second.id,finish(secondCtx))).duplicate,true);
  const stored=await db.candidate.findUniqueOrThrow({where:{id:candidate.id}});
  assert.equal(stored.parsedSkillsJson.interviewSchedule.status,'EXISTING_TEST_METADATA');assert.equal(stored.parsedSkillsJson.talentPool.tag,'preserve-test-metadata');

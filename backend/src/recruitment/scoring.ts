@@ -131,11 +131,17 @@ export function validateExtraction(value: unknown): Extraction {
     missingInformation: d.missingInformation,
   };
 }
+export function cleanDocumentText(value: string): string {
+  return value.replace(/\u0000/g, '').replace(
+    /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g,
+    '\uFFFD',
+  );
+}
 export function segmentDocument(
   text: string,
 ): Array<{ id: string; text: string }> {
   // Preserve source text. Whitespace is normalized only for comparison, not to invent evidence.
-  const clean = text.replace(/\r\n/g, '\n').trim();
+  const clean = cleanDocumentText(text).replace(/\r\n/g, '\n').trim();
   const segments: Array<{ id: string; text: string }> = [];
   for (let offset = 0; offset < clean.length; offset += 1800) {
     segments.push({

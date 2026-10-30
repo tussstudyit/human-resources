@@ -35,6 +35,29 @@ test('document evidence drives score; repair and initial validation use the same
  const scored=await run(wf,'Compute Deterministic Rubric',{ctx,extraction,segments:[{id:'s1',text:'Developed a NodeJS application.'}]});
  assert.equal(scored.json.report.matchScore,40);
 });
+test('JD enrichment failure uses only the approved rubric, without inventing skills',async()=>{
+ const ctx={rubric:{id:'approved',requiredSkills:['Flutter','Dart']}};
+ const out=await run(wf,'Validate JD Analysis',{error:{status:503}},{'Canonical Context':{ctx}});
+ assert.equal(out.json.valid,true);assert.deepEqual(Array.from(out.json.jdAnalysis.requiredSkills),ctx.rubric.requiredSkills);
+ assert.equal(out.json.jdAnalysisWarning,'JD_ENRICHMENT_UNAVAILABLE');
+ const missing=await run(wf,'Validate JD Analysis',{error:{status:429}},{'Canonical Context':{ctx:{}}});
+ assert.equal(missing.json.valid,false);
+ const fenced=await run(wf,'Validate JD Analysis',{candidates:[{finishReason:'STOP',content:{parts:[{text:'```json\n{"requiredSkills":["NodeJS"]}\n```'}]}}]},{'Canonical Context':{ctx}});
+ assert.equal(fenced.json.jdAnalysis.requiredSkills[0],'NodeJS');assert.equal(fenced.json.jdAnalysisWarning,null);
+});
+test('provider failures are classified and never sent to schema repair or scoring',async()=>{
+ for(const [status,code] of [[429,'AI_RATE_LIMITED'],[503,'AI_PROVIDER_UNAVAILABLE'],[403,'AI_AUTH_FAILED']]){
+  const out=await run(wf,'Validate AI Extraction',{error:{status}},{'Canonical Context':{ctx:{}}});
+  assert.equal(out.json.valid,false);assert.equal(out.json.errorCode,code);
+ }
+ const check=wf.nodes.find(n=>n.name==='Extraction Provider Available?');
+ assert.ok(check.parameters.conditions.conditions[0].leftValue.includes('AI_RATE_LIMITED'));
+ assert.equal(wf.connections['Extraction Provider Available?'].main[1][0].node,'Prepare Human Review');
+});
+test('PDF NUL bytes never reach the evidence segments sent to the provider or callback',async()=>{
+ const out=await run(wf,'Prepare Evidence Segments',{ctx:{},text:'Developed Node\u0000JS applications. Ứng dụng 😀.'});
+ assert.equal(out.json.segments[0].text,'Developed NodeJS applications. Ứng dụng 😀.');
+});
 test('invitation contains real calendar link and actual CRLF ICS attachment',async()=>{
  const ctx={candidateName:'<script>',candidateEmail:'synthetic@example.invalid',jobTitle:'Node.js',evaluationId:'synthetic',rsvpUrl:'https://example.invalid/rsvp?token=x'};
  const plan={ctx,online:true,type:'ONLINE',start:'2026-11-04T02:30:00.000Z',end:'2026-11-04T03:30:00.000Z'};

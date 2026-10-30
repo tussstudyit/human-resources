@@ -85,7 +85,7 @@ RSVP/CX: GET chỉ hiện form, POST mới ghi dữ liệu; link có HMAC, hết
 - `N8N_API_KEY`: backend và service handshake.
 - `JWT_SECRET`: bắt buộc ít nhất 32 ký tự; không có fallback hardcode.
 - `N8N_CV_WEBHOOK`, `N8N_SCHEDULE_WEBHOOK`, `N8N_REJECTION_WEBHOOK`: production webhooks của hr_n8n, cổng host 5679.
-- `GEMINI_MODEL`: mặc định `gemini-3.5-flash`, đã kiểm tra gọi được qua credential hiện có. `gemini-2.5-flash` được liệt kê nhưng đã trả NOT_FOUND khi generate trong môi trường kiểm tra.
+- `GEMINI_MODEL`: fallback trong source là `gemini-3.5-flash`; production hiện pin `gemini-3.1-flash-lite` sau khi model 3.5 trả 429/503. Flash Lite đã chấm CV mẫu và hồ sơ thật thành công. `gemini-2.5-flash` được liệt kê nhưng đã trả NOT_FOUND khi generate trong môi trường kiểm tra. Xem [báo cáo sửa lỗi production 31/10/2026](PRODUCTION_RECRUITMENT_CHECK_2026-10-31.md).
 - `PUBLIC_BACKEND_URL`: URL mà ứng viên thực sự truy cập được; localhost chỉ phù hợp demo cùng máy.
 - Credential n8n: Gemini HTTP Header Auth, Google Calendar OAuth2 và SMTP được giữ bằng tham chiếu; không xuất credential đã giải mã.
 - URL nội bộ từ n8n tới API hiện là `http://host.docker.internal:3001`, tương thích extra_hosts trong Compose.

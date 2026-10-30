@@ -9,6 +9,9 @@ import {
 } from './scoring.js';
 
 describe('Hybrid scoring safety and evidence', () => {
+  it('removes PDF NUL bytes before creating source segments without altering valid text',()=>{
+    expect(segmentDocument('Developed Node\u0000JS ứng dụng 😀.')[0].text).toBe('Developed NodeJS ứng dụng 😀.');
+  });
   const score = (claims: any[], text: string, intervals: any[] = []) =>
     scoreExtraction(
       validateExtraction({
