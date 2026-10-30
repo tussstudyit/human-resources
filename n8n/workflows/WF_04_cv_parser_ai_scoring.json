@@ -1632,10 +1632,10 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "saveDataErrorExecution": "none",
-    "saveDataSuccessExecution": "none",
-    "saveManualExecutions": false,
-    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
     "executionTimeout": 600
   },
   "meta": {

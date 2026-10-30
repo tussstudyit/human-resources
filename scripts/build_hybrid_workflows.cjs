@@ -114,7 +114,7 @@ edge('Commit Evaluation','Normalize Failure',1);edge('Normalize Failure','Persis
 // Recover unexpected errors in every post-accept Code node, not only HTTP failures.
 for(const n of nodes){if(n.type.endsWith('.code') && !['Validate Envelope','Canonical Context','Normalize Failure'].includes(n.name) && !n.onError){n.onError='continueErrorOutput';edge(n.name,'Normalize Failure',1);}}
 const workflow={id:old.id,name:'[HR] WF_04 - Hybrid CV Scoring & Evidence Verification',active:false,nodes,connections,
- settings:{executionOrder:'v1',saveDataErrorExecution:'none',saveDataSuccessExecution:'none',saveManualExecutions:false,saveExecutionProgress:false,executionTimeout:600},
+ settings:{executionOrder:'v1',saveDataErrorExecution:'all',saveDataSuccessExecution:'all',saveManualExecutions:true,saveExecutionProgress:true,executionTimeout:600},
  meta:{scoringVersion:'hybrid-v1',authentication:'Backend claim verifies incoming x-api-key before file access or AI calls'}};
 for(const folder of ['n8n/workflows','workflows'])fs.writeFileSync(path.join(root,folder,'WF_04_cv_parser_ai_scoring.json'),JSON.stringify(workflow,null,2)+'\n');
 console.log(`Generated WF_04: ${nodes.length} executable nodes (no Sticky Notes)`);

@@ -60,7 +60,7 @@ return [{json:{ctx,subject:'Phản hồi hồ sơ ứng tuyển – '+ctx.jobTit
  } else edge('Accept Delivery',build);
  edge(build,'Send Candidate Email');edge('Send Candidate Email','Inspect SMTP Outcome');edge('Inspect SMTP Outcome','Record Actual Delivery');edge('Prepare Delivery Failure','Record Actual Delivery');
  const wf={id:old.id,name:`[HR] WF_0${number} - Approved ${action} & Verified Delivery`,active:false,nodes,connections,
-  settings:{executionOrder:'v1',saveDataErrorExecution:'none',saveDataSuccessExecution:'none',saveManualExecutions:false,saveExecutionProgress:false,executionTimeout:180}};
+  settings:{executionOrder:'v1',saveDataErrorExecution:'all',saveDataSuccessExecution:'all',saveManualExecutions:true,saveExecutionProgress:true,executionTimeout:180}};
  for(const folder of ['n8n/workflows','workflows'])fs.writeFileSync(path.join(root,folder,file),JSON.stringify(wf,null,2)+'\n');
  console.log(`Generated WF_0${number}: ${nodes.length} nodes`);
 }
