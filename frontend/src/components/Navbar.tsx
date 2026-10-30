@@ -22,23 +22,25 @@ export default function Navbar() {
   const getRoleBadge = (role?: string) => {
     switch (role) {
       case 'HR':
-        return 'bg-red-50 text-red-700 border-red-200 font-semibold';
+        return { label: 'Quản Trị HR', className: 'bg-red-50 text-red-700 border-red-200 font-semibold' };
       case 'MANAGER':
-        return 'bg-sky-50 text-sky-700 border-sky-200 font-medium';
+        return { label: 'Quản Lý', className: 'bg-sky-50 text-sky-700 border-sky-200 font-medium' };
       default:
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+        return { label: 'Nhân Viên', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-medium' };
     }
   };
+
+  const badgeInfo = getRoleBadge(user?.role);
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30 font-sans">
       <div className="flex items-center space-x-3">
         <h1 className="text-xs font-bold text-slate-900 tracking-tight uppercase font-mono">
-          <span className="text-red-600">UPCAREER</span> HR Management Console
+          <span className="text-red-600">UPCAREER</span> Cổng Quản Trị Nhân Sự
         </h1>
         <span className="text-slate-300 font-mono text-xs">/</span>
         <span className="text-xs text-slate-400 font-mono">
-          Enterprise Cloud
+          Hệ Thống Doanh Nghiệp
         </span>
       </div>
 
@@ -64,11 +66,9 @@ export default function Navbar() {
                 {user.fullName}
               </span>
               <span
-                className={`font-mono text-[10px] px-1.5 py-0.2 rounded-[4px] border ${getRoleBadge(
-                  user.role
-                )}`}
+                className={`font-mono text-[10px] px-1.5 py-0.2 rounded-[4px] border ${badgeInfo.className}`}
               >
-                {user.role}
+                {badgeInfo.label}
               </span>
             </div>
           </div>

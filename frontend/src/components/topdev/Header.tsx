@@ -21,7 +21,8 @@ import {
   Sparkles, 
   ShieldCheck,
   Compass,
-  Heart
+  Heart,
+  UserCheck
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { SalaryCalculatorModal } from './SalaryCalculatorModal';
@@ -162,18 +163,31 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const getRoleBadgeColor = (role?: string) => {
+  const isHR = Boolean(isAuthenticated && user && (user.role === 'HR' || user.role === 'MANAGER'));
+  const isEmployee = Boolean(isAuthenticated && user && user.role === 'EMPLOYEE');
+
+  const getRoleBadgeInfo = (role?: string) => {
     switch (role) {
       case 'HR':
-        return 'bg-red-50 text-red-700 border-red-200';
+        return { label: 'Quản Trị HR', badgeClass: 'bg-red-50 text-red-700 border-red-200' };
       case 'MANAGER':
-        return 'bg-sky-50 text-sky-700 border-sky-200';
+        return { label: 'Quản Lý', badgeClass: 'bg-sky-50 text-sky-700 border-sky-200' };
+      case 'EMPLOYEE':
+        return { label: 'Nhân Viên', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
       default:
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return { label: 'Ứng Viên', badgeClass: 'bg-slate-100 text-slate-700 border-slate-200' };
     }
   };
 
-  const isHRPage = ['/dashboard', '/recruitment', '/onboarding', '/performance', '/training', '/engagement'].some(
+  const getRoleBadgeColor = (role?: string) => {
+    return getRoleBadgeInfo(role).badgeClass;
+  };
+
+  const isHRPage = ['/dashboard', '/recruitment'].some(
+    p => pathname === p || pathname.startsWith(p + '/')
+  );
+
+  const isEmployeePage = ['/onboarding', '/training', '/engagement', '/performance', '/bieu-mau-danh-gia-360'].some(
     p => pathname === p || pathname.startsWith(p + '/')
   );
 
@@ -199,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="text-slate-900">CAREER</span>
                   </div>
                   <span className="text-[8px] sm:text-[10px] font-semibold text-slate-500 tracking-wider uppercase leading-tight mt-0.5 truncate max-w-[120px] sm:max-w-none">
-                    Vietnam IT Jobs & HR Tech
+                    Việc Làm IT & Công Nghệ Nhân Sự
                   </span>
                 </div>
               </Link>
@@ -217,91 +231,171 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Việc làm IT</span>
               </Link>
 
-              {/* AI HR Agents Dropdown */}
-              <div className="relative" ref={hrDropdownRef}>
-                <button
-                  ref={hrDropdownButtonRef}
-                  id="hr-agents-trigger"
-                  aria-expanded={hrDropdownOpen}
-                  aria-controls="hr-agents-menu"
-                  onClick={() => setHrDropdownOpen((open) => !open)}
-                  className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
-                    isHRPage ? 'text-red-600 font-bold' : ''
-                  }`}
-                >
-                  <LayoutDashboard className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isHRPage ? 'text-red-600' : 'text-slate-400'}`} />
-                  <span>Cổng Quản Trị HR</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${hrDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {hrDropdownOpen && (
-                  <div
-                    id="hr-agents-menu"
-                    className="absolute left-0 mt-2 w-72 max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
+              {/* HR Portal Dropdown: Only visible for HR & Manager roles */}
+              {isHR && (
+                <div className="relative" ref={hrDropdownRef}>
+                  <button
+                    ref={hrDropdownButtonRef}
+                    id="hr-agents-trigger"
+                    aria-expanded={hrDropdownOpen}
+                    aria-controls="hr-agents-menu"
+                    onClick={() => setHrDropdownOpen((open) => !open)}
+                    className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
+                      isHRPage ? 'text-red-600 font-bold' : ''
+                    }`}
                   >
-                    <Link
-                      href="/dashboard"
-                      onClick={() => setHrDropdownOpen(false)}
-                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                        pathname === '/dashboard' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                      }`}
+                    <LayoutDashboard className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isHRPage ? 'text-red-600' : 'text-slate-400'}`} />
+                    <span>Cổng Quản Trị HR</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${hrDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {hrDropdownOpen && (
+                    <div
+                      id="hr-agents-menu"
+                      className="absolute left-0 mt-2 w-72 max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
                     >
-                      <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Bảng Điều Khiển Tổng Quan</span>
-                    </Link>
-                    <Link
-                      href="/recruitment"
-                      onClick={() => setHrDropdownOpen(false)}
-                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                        pathname === '/recruitment' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                      }`}
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/dashboard' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Bảng Điều Khiển Tổng Quan</span>
+                      </Link>
+                      <Link
+                        href="/recruitment"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/recruitment' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <Briefcase className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Tuyển Dụng & Ứng Viên (ATS)</span>
+                      </Link>
+                      <Link
+                        href="/onboarding"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/onboarding' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <Compass className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Tiếp Nhận & Hội Nhập Nhân Sự</span>
+                      </Link>
+                      <Link
+                        href="/performance"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/performance' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <TrendingUp className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Quản Trị Hiệu Suất 360°</span>
+                      </Link>
+                      <Link
+                        href="/training"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/training' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <GraduationCap className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Đào Tạo & Phát Triển Kỹ Năng</span>
+                      </Link>
+                      <Link
+                        href="/engagement"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/engagement' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <Heart className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Khảo Sát Gắn Kết & Phúc Lợi</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Employee Space Dropdown: Only visible for Employee role */}
+              {isEmployee && (
+                <div className="relative" ref={hrDropdownRef}>
+                  <button
+                    ref={hrDropdownButtonRef}
+                    id="employee-space-trigger"
+                    aria-expanded={hrDropdownOpen}
+                    aria-controls="employee-space-menu"
+                    onClick={() => setHrDropdownOpen((open) => !open)}
+                    className={`hover:text-red-600 transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 py-1.5 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 rounded-md ${
+                      isEmployeePage ? 'text-red-600 font-bold' : ''
+                    }`}
+                  >
+                    <UserCheck className={`w-3.5 h-3.5 xl:w-4 xl:h-4 ${isEmployeePage ? 'text-red-600' : 'text-slate-400'}`} />
+                    <span>Không Gian Nhân Viên</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${hrDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {hrDropdownOpen && (
+                    <div
+                      id="employee-space-menu"
+                      className="absolute left-0 mt-2 w-72 max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50"
                     >
-                      <Briefcase className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Tuyển Dụng & Ứng Viên (ATS)</span>
-                    </Link>
-                    <Link
-                      href="/onboarding"
-                      onClick={() => setHrDropdownOpen(false)}
-                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                        pathname === '/onboarding' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                      }`}
-                    >
-                      <Compass className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Tiếp Nhận & Hội Nhập Nhân Sự</span>
-                    </Link>
-                    <Link
-                      href="/performance"
-                      onClick={() => setHrDropdownOpen(false)}
-                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                        pathname === '/performance' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                      }`}
-                    >
-                      <TrendingUp className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Quản Trị Hiệu Suất 360°</span>
-                    </Link>
-                    <Link
-                      href="/training"
-                      onClick={() => setHrDropdownOpen(false)}
-                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                        pathname === '/training' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                      }`}
-                    >
-                      <GraduationCap className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Đào Tạo & Phát Triển Kỹ Năng</span>
-                    </Link>
-                    <Link
-                      href="/engagement"
-                      onClick={() => setHrDropdownOpen(false)}
-                      className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                        pathname === '/engagement' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                      }`}
-                    >
-                      <Heart className="w-4 h-4 text-slate-400" />
-                      <span className="leading-tight">Khảo Sát Gắn Kết & Phúc Lợi</span>
-                    </Link>
-                  </div>
-                )}
-              </div>
+                      <Link
+                        href="/onboarding"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/onboarding' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <Compass className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Hội Nhập & Nhận Việc</span>
+                      </Link>
+                      <Link
+                        href="/training"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/training' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <GraduationCap className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Lộ Trình Đào Tạo & Kỹ Năng</span>
+                      </Link>
+                      <Link
+                        href="/engagement"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/engagement' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <Heart className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Khảo Sát Ý Kiến & Phúc Lợi</span>
+                      </Link>
+                      <Link
+                        href="/performance"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/performance' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <TrendingUp className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Quản Trị Hiệu Suất 360°</span>
+                      </Link>
+                      <Link
+                        href="/bieu-mau-danh-gia-360"
+                        onClick={() => setHrDropdownOpen(false)}
+                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
+                          pathname === '/bieu-mau-danh-gia-360' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
+                        }`}
+                      >
+                        <FileText className="w-4 h-4 text-slate-400" />
+                        <span className="leading-tight">Biểu Mẫu Đánh Giá 360°</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 onClick={() => handleNavClick('companies-section')}
@@ -396,8 +490,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <span className="text-xs font-bold text-slate-900 leading-tight max-w-[130px] truncate">
                         {user.fullName}
                       </span>
-                      <span className="text-[10px] font-semibold text-red-600 tracking-wide uppercase">
-                        {user.role}
+                      <span className={`text-[10px] font-bold tracking-wide uppercase ${
+                        user.role === 'EMPLOYEE' ? 'text-emerald-700' : 'text-red-600'
+                      }`}>
+                        {getRoleBadgeInfo(user.role).label}
                       </span>
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
@@ -418,70 +514,121 @@ export const Header: React.FC<HeaderProps> = ({
                           </div>
                         </div>
                         <div className="mt-2 flex items-center gap-1.5">
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${getRoleBadgeColor(user.role)} uppercase`}>
-                            {user.role}
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${getRoleBadgeInfo(user.role).badgeClass} uppercase`}>
+                            {getRoleBadgeInfo(user.role).label}
                           </span>
                           <span className="text-[10px] text-slate-400 font-medium">
-                            {user.department?.name || 'Hệ thống HR Tech'}
+                            {user.department?.name || 'Hệ sinh thái UpCareer'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Navigation Links */}
+                      {/* Navigation Links: Role-based separation */}
                       <div className="py-1 text-xs font-semibold text-slate-700">
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                        >
-                          <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                          <span>Bảng Điều Khiển Tổng Quan</span>
-                        </Link>
+                        {isHR ? (
+                          <>
+                            <Link
+                              href="/dashboard"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                              <span>Bảng Điều Khiển Tổng Quan</span>
+                            </Link>
 
-                        <Link
-                          href="/recruitment"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                        >
-                          <Briefcase className="w-4 h-4 text-slate-400" />
-                          <span>Tuyển Dụng & Ứng Viên (ATS)</span>
-                        </Link>
+                            <Link
+                              href="/recruitment"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <Briefcase className="w-4 h-4 text-slate-400" />
+                              <span>Tuyển Dụng & Ứng Viên (ATS)</span>
+                            </Link>
 
-                        <Link
-                          href="/onboarding"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                        >
-                          <Compass className="w-4 h-4 text-slate-400" />
-                          <span>Tiếp Nhận & Hội Nhập Nhân Sự</span>
-                        </Link>
+                            <Link
+                              href="/onboarding"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <Compass className="w-4 h-4 text-slate-400" />
+                              <span>Tiếp Nhận & Hội Nhập Nhân Sự</span>
+                            </Link>
 
-                        <Link
-                          href="/performance"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                        >
-                          <TrendingUp className="w-4 h-4 text-slate-400" />
-                          <span>Quản Trị Hiệu Suất & Đánh Giá 360°</span>
-                        </Link>
+                            <Link
+                              href="/performance"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <TrendingUp className="w-4 h-4 text-slate-400" />
+                              <span>Quản Trị Hiệu Suất 360°</span>
+                            </Link>
 
-                        <Link
-                          href="/training"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                        >
-                          <GraduationCap className="w-4 h-4 text-slate-400" />
-                          <span>Đào Tạo & Phát Triển Kỹ Năng</span>
-                        </Link>
+                            <Link
+                              href="/training"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <GraduationCap className="w-4 h-4 text-slate-400" />
+                              <span>Đào Tạo & Phát Triển Kỹ Năng</span>
+                            </Link>
 
-                        <Link
-                          href="/engagement"
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                        >
-                          <Heart className="w-4 h-4 text-slate-400" />
-                          <span>Khảo Sát Gắn Kết & Phúc Lợi</span>
-                        </Link>
+                            <Link
+                              href="/engagement"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <Heart className="w-4 h-4 text-slate-400" />
+                              <span>Khảo Sát Gắn Kết & Phúc Lợi</span>
+                            </Link>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href="/onboarding"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <Compass className="w-4 h-4 text-slate-400" />
+                              <span>Hội Nhập & Nhận Việc</span>
+                            </Link>
+
+                            <Link
+                              href="/training"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <GraduationCap className="w-4 h-4 text-slate-400" />
+                              <span>Lộ Trình Đào Tạo & Kỹ Năng</span>
+                            </Link>
+
+                            <Link
+                              href="/engagement"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <Heart className="w-4 h-4 text-slate-400" />
+                              <span>Khảo Sát Ý Kiến & Phúc Lợi</span>
+                            </Link>
+
+                            <Link
+                              href="/performance"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <TrendingUp className="w-4 h-4 text-slate-400" />
+                              <span>Quản Trị Hiệu Suất 360°</span>
+                            </Link>
+
+                            <Link
+                              href="/bieu-mau-danh-gia-360"
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
+                            >
+                              <FileText className="w-4 h-4 text-slate-400" />
+                              <span>Biểu Mẫu Đánh Giá 360°</span>
+                            </Link>
+                          </>
+                        )}
                       </div>
 
                       {/* Logout Button */}
@@ -547,8 +694,8 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-900">{user.fullName}</p>
-                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${getRoleBadgeColor(user.role)} uppercase`}>
-                      {user.role}
+                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${getRoleBadgeInfo(user.role).badgeClass} uppercase`}>
+                      {getRoleBadgeInfo(user.role).label}
                     </span>
                   </div>
                 </div>
@@ -575,59 +722,111 @@ export const Header: React.FC<HeaderProps> = ({
               Việc làm IT
             </Link>
 
-            <Link
-              href="/dashboard"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-            >
-              <LayoutDashboard className="w-4 h-4 text-slate-500" />
-              Bảng Điều Khiển Tổng Quan
-            </Link>
+            {/* Mobile links based on role */}
+            {isHR ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <LayoutDashboard className="w-4 h-4 text-slate-500" />
+                  Bảng Điều Khiển Tổng Quan
+                </Link>
 
-            <Link
-              href="/recruitment"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-            >
-              <Briefcase className="w-4 h-4 text-slate-500" />
-              Tuyển Dụng & Ứng Viên (ATS)
-            </Link>
+                <Link
+                  href="/recruitment"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <Briefcase className="w-4 h-4 text-slate-500" />
+                  Tuyển Dụng & Ứng Viên (ATS)
+                </Link>
 
-            <Link
-              href="/onboarding"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-            >
-              <Compass className="w-4 h-4 text-slate-500" />
-              Tiếp Nhận & Hội Nhập Nhân Sự
-            </Link>
+                <Link
+                  href="/onboarding"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <Compass className="w-4 h-4 text-slate-500" />
+                  Tiếp Nhận & Hội Nhập Nhân Sự
+                </Link>
 
-            <Link
-              href="/performance"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-            >
-              <TrendingUp className="w-4 h-4 text-slate-500" />
-              Quản Trị Hiệu Suất & Đánh Giá 360°
-            </Link>
+                <Link
+                  href="/performance"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <TrendingUp className="w-4 h-4 text-slate-500" />
+                  Quản Trị Hiệu Suất & Đánh Giá 360°
+                </Link>
 
-            <Link
-              href="/training"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-            >
-              <GraduationCap className="w-4 h-4 text-slate-500" />
-              Đào Tạo & Phát Triển Kỹ Năng
-            </Link>
+                <Link
+                  href="/training"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <GraduationCap className="w-4 h-4 text-slate-500" />
+                  Đào Tạo & Phát Triển Kỹ Năng
+                </Link>
 
-            <Link
-              href="/engagement"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-            >
-              <Heart className="w-4 h-4 text-slate-500" />
-              Khảo Sát Gắn Kết & Phúc Lợi
-            </Link>
+                <Link
+                  href="/engagement"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <Heart className="w-4 h-4 text-slate-500" />
+                  Khảo Sát Gắn Kết & Phúc Lợi
+                </Link>
+              </>
+            ) : isEmployee ? (
+              <>
+                <Link
+                  href="/onboarding"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <Compass className="w-4 h-4 text-slate-500" />
+                  Hội Nhập & Nhận Việc
+                </Link>
+
+                <Link
+                  href="/training"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <GraduationCap className="w-4 h-4 text-slate-500" />
+                  Lộ Trình Đào Tạo & Kỹ Năng
+                </Link>
+
+                <Link
+                  href="/engagement"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <Heart className="w-4 h-4 text-slate-500" />
+                  Khảo Sát Ý Kiến & Phúc Lợi
+                </Link>
+
+                <Link
+                  href="/performance"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <TrendingUp className="w-4 h-4 text-slate-500" />
+                  Quản Trị Hiệu Suất & Đánh Giá 360°
+                </Link>
+
+                <Link
+                  href="/bieu-mau-danh-gia-360"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  Biểu Mẫu Đánh Giá 360°
+                </Link>
+              </>
+            ) : null}
 
             <button
               onClick={() => { setMobileMenuOpen(false); handleReportModalClick(); }}
@@ -652,13 +851,21 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <div className="pt-2 border-t border-slate-100 space-y-2">
-              {isAuthenticated && user ? (
+              {isHR ? (
                 <Link
                   href="/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-center py-2.5 px-3 bg-red-600 text-white font-bold rounded-lg block cursor-pointer"
                 >
                   Vào Bảng Điều Khiển HR
+                </Link>
+              ) : isEmployee ? (
+                <Link
+                  href="/onboarding"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center py-2.5 px-3 bg-emerald-600 text-white font-bold rounded-lg block cursor-pointer"
+                >
+                  Vào Không Gian Nhân Viên
                 </Link>
               ) : (
                 <>
