@@ -47,9 +47,26 @@ const mockJob: TopDevJob = {
   },
 };
 
+function fillApplicant() {
+  fireEvent.change(screen.getByLabelText(/Họ và tên/),{target:{value:'Đoàn Thanh Huy'}});
+  fireEvent.change(screen.getByLabelText(/Email liên hệ/),{target:{value:'huy.dev@gmail.com'}});
+  fireEvent.change(screen.getByLabelText(/Số điện thoại/),{target:{value:'0912345678'}});
+}
+
 describe('ApplicationModal Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  it('keeps the draft when returning to the JD and clears it for a different job',()=>{
+    const onClose=vi.fn();
+    const {rerender}=render(<ApplicationModal job={mockJob} isOpen={true} onClose={onClose}/>);
+    fillApplicant();
+    fireEvent.click(screen.getByRole('button',{name:'Xem lại mô tả công việc'}));
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText(/Họ và tên/)).toHaveValue('Đoàn Thanh Huy');
+    expect(recruitmentApi.applyJob).not.toHaveBeenCalled();
+    rerender(<ApplicationModal job={{...mockJob,id:'other-job'}} isOpen={true} onClose={onClose}/>);
+    for(const field of screen.getAllByRole('textbox'))expect(field).toHaveValue('');
   });
 
   it('không render khi isOpen = false', () => {
@@ -72,11 +89,11 @@ describe('ApplicationModal Component', () => {
       />
     );
 
-    expect(screen.getByText('Ứng Tuyển Nhanh')).toBeInTheDocument();
+    expect(screen.getByText('Ứng tuyển vị trí này')).toBeInTheDocument();
     expect(screen.getByText('Lead System Security Engineer')).toBeInTheDocument();
     expect(screen.getByText(/CyberLogitec Vietnam/i)).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Đoàn Thanh Huy')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('huy.dev@gmail.com')).toBeInTheDocument();
+    for (const field of screen.getAllByRole('textbox')) expect(field).toHaveValue('');
+    expect(screen.getByRole('region', {name:'Biểu mẫu ứng tuyển'})).not.toHaveClass('fixed');
     expect(screen.getByText('Đính kèm hồ sơ CV')).toBeInTheDocument();
   });
 
@@ -89,6 +106,7 @@ describe('ApplicationModal Component', () => {
       />
     );
 
+    fillApplicant();
     // Thử submit form khi chưa upload file
     const submitBtn = screen.getByRole('button', { name: /Gửi hồ sơ ứng tuyển/i });
     fireEvent.click(submitBtn);
@@ -121,6 +139,7 @@ describe('ApplicationModal Component', () => {
       />
     );
 
+    fillApplicant();
     // Upload file PDF hợp lệ bằng userEvent.upload
     const validPdf = new File(['%PDF-1.4 mock content'], 'CV_DoanThanhHuy.pdf', { type: 'application/pdf' });
     await userEvent.upload(screen.getByLabelText(/Tải lên tệp CV PDF/i), validPdf);

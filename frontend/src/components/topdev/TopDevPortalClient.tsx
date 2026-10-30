@@ -61,7 +61,6 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
     }
     return null;
   });
-  const [isApplicationModalOpen, setIsApplicationModalOpen] = useState(false);
 
   // Interactive Saved Jobs state
   const [savedJobIds, setSavedJobIds] = useState<string[]>([]);
@@ -101,12 +100,9 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
   }, [initialSelectedJobId, allJobs]);
 
   // Open Job Detail and push history state so browser Back button works
-  const handleSelectJob = (job: Job, openApplyModal = false) => {
+  const handleSelectJob = (job: Job) => {
     setCurrentJob(job);
     setViewMode('detail');
-    if (openApplyModal) {
-      setIsApplicationModalOpen(true);
-    }
     if (typeof window !== 'undefined') {
       window.history.pushState({ jobId: job.id, view: 'detail' }, '', `/jobs/${job.id}`);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -150,7 +146,6 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
       // If path is root or /careers or not a valid job detail, return to list mode
       setViewMode('list');
       setCurrentJob(null);
-      setIsApplicationModalOpen(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -324,10 +319,18 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
         <TopDevJobDetailView
           job={currentJob}
           allJobs={allJobs}
-          onApplyClick={() => setIsApplicationModalOpen(true)}
+          onApplyClick={() => {
+            const form = document.getElementById('job-application');
+            form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            form?.focus({ preventScroll: true });
+          }}
+          applicationForm={<ApplicationModal key={currentJob.id} job={currentJob} isOpen={true}
+            onClose={() => document.getElementById('job-detail-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            onSuccess={(candidateName, jobTitle, appId) => showToast(`Hồ sơ #${appId} của ${candidateName} đã được nộp thành công cho vị trí ${jobTitle}!`)}
+          />}
           onBack={handleBackToList}
           onSelectRelatedJob={(relatedJob) => {
-            handleSelectJob(relatedJob, false);
+            handleSelectJob(relatedJob);
             showToast(`Đã chuyển sang xem vị trí: ${relatedJob.title}`);
           }}
           onOpenProfileIncomplete={() => setIsAuthModalOpen(true)}
@@ -529,8 +532,8 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
                 job={job}
                 isSaved={savedJobIds.includes(job.id)}
                 onToggleSave={handleToggleSave}
-                onSelectJob={(j) => handleSelectJob(j, false)}
-                onQuickApply={(j) => handleSelectJob(j, true)}
+                onSelectJob={(j) => handleSelectJob(j)}
+                onQuickApply={(j) => handleSelectJob(j)}
                 onSelectSkill={(skill) => setSelectedSkill(skill)}
               />
             ))}
@@ -583,20 +586,6 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
       />
 
       {/* --- ALL MODALS & DRAWERS --- */}
-
-      {/* TopDev Application Modal (Real Backend Integration) */}
-      {currentJob && (
-        <ApplicationModal
-          job={currentJob}
-          isOpen={isApplicationModalOpen}
-          onClose={() => setIsApplicationModalOpen(false)}
-          onSuccess={(candidateName, jobTitle, appId) => {
-            showToast(
-              `Hồ sơ ${appId ? `#${appId} ` : ''}của ${candidateName} đã được nộp thành công cho vị trí ${jobTitle}!`
-            );
-          }}
-        />
-      )}
 
       {/* IT Market Report Modal */}
       <ITReportModal
@@ -655,7 +644,7 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
                       <h4 
                         onClick={() => {
                           setIsSavedJobsModalOpen(false);
-                          handleSelectJob(j, false);
+                          handleSelectJob(j);
                         }}
                         className="text-sm font-bold text-slate-900 hover:text-red-600 transition-colors cursor-pointer truncate"
                       >
@@ -670,7 +659,7 @@ export const UpCareerPortalClient: React.FC<UpCareerPortalClientProps> = ({
                       <button
                         onClick={() => {
                           setIsSavedJobsModalOpen(false);
-                          handleSelectJob(j, true);
+                          handleSelectJob(j);
                         }}
                         className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer"
                       >
