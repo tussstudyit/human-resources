@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
   Briefcase,
@@ -27,7 +27,8 @@ import { useToastStore } from '@/store/useToastStore';
 
 export default function RecruitmentAdminClient() {
   const [jobs, setJobs] = useState<JobPost[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>('');
+  const [selectedJobId, setSelectedJobId] = useState<string>('ALL');
+  const candidateRequest = useRef(0);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [scoreFilter, setScoreFilter] = useState<'ALL' | 'TOP' | 'MEDIUM' | 'LOW'>('ALL');
@@ -48,9 +49,7 @@ export default function RecruitmentAdminClient() {
       setLoadingJobs(true);
       const data = await getAdminJobs();
       setJobs(data);
-      if (data.length > 0 && !selectedJobId) {
-        setSelectedJobId(data[0].id);
-      }
+      setSelectedJobId(current => current === 'ALL' || data.some(job => job.id === current) ? current : 'ALL');
     } catch (err: any) {
       console.error('Lỗi tải danh sách việc làm:', err);
       showToast({
@@ -61,10 +60,11 @@ export default function RecruitmentAdminClient() {
     } finally {
       setLoadingJobs(false);
     }
-  }, [showToast, selectedJobId]);
+  }, [showToast]);
 
   // Load Candidates for Selected Job
   const fetchCandidates = useCallback(async (jobId: string, silent = false) => {
+    const request = ++candidateRequest.current;
     if (!jobId) {
       setCandidates([]);
       return;
@@ -73,7 +73,11 @@ export default function RecruitmentAdminClient() {
       if (!silent) {
         setLoadingCandidates(true);
       }
-      const data = await getJobCandidates(jobId);
+      const data = jobId === 'ALL'
+        ? (await Promise.all(jobs.map(job => getJobCandidates(job.id)))).flat()
+          .sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1))
+        : await getJobCandidates(jobId);
+      if (request !== candidateRequest.current) return;
       setCandidates(data);
       // Cập nhật cả modal chi tiết nếu đang mở ứng viên đó
       setSelectedCandidate((curr) => {
@@ -82,7 +86,8 @@ export default function RecruitmentAdminClient() {
         return found || curr;
       });
     } catch (err: any) {
-      if (!silent) {
+      if (request !== candidateRequest.current) return;
+      if (!silent && request === candidateRequest.current) {
         console.error('Lỗi tải danh sách ứng viên:', err);
         showToast({
           type: 'error',
@@ -91,11 +96,11 @@ export default function RecruitmentAdminClient() {
         });
       }
     } finally {
-      if (!silent) {
+      if (request === candidateRequest.current) {
         setLoadingCandidates(false);
       }
     }
-  }, [showToast]);
+  }, [jobs, showToast]);
 
   useEffect(() => {
     fetchJobs();
@@ -107,13 +112,15 @@ export default function RecruitmentAdminClient() {
     }
   }, [selectedJobId, fetchCandidates]);
 
+  const hasPending = candidates.some((c) => c.aiStatus === 'PENDING');
   // Auto-polling theo thời gian thực khi có hồ sơ đang ở trạng thái PENDING (AI đang chấm)
   useEffect(() => {
-    const hasPending = candidates.some((c) => c.aiStatus === 'PENDING');
     if (!hasPending || !selectedJobId) return;
 
     let pollCount = 0;
-    const maxPolls = 24; // 24 * 2.5s = 60s tối đa
+    // AI retries can exceed a minute. Keep refreshing through the backend's
+    // 15-minute watchdog, including its next reconciliation tick.
+    const maxPolls = 384; // 16 minutes at 2.5 seconds per poll
 
     const interval = setInterval(async () => {
       pollCount++;
@@ -125,9 +132,10 @@ export default function RecruitmentAdminClient() {
     }, 2500);
 
     return () => clearInterval(interval);
-  }, [candidates, selectedJobId, fetchCandidates]);
+  }, [hasPending, selectedJobId, fetchCandidates]);
 
   const currentJob = jobs.find((j) => j.id === selectedJobId);
+  const jobTitles = useMemo(() => Object.fromEntries(jobs.map(job => [job.id, job.title])), [jobs]);
 
   // Toggle Job status OPEN / CLOSED
   const handleToggleJobStatus = async () => {
@@ -191,7 +199,7 @@ export default function RecruitmentAdminClient() {
 
   // Xuất dữ liệu ứng viên ra định dạng CSV chuẩn UTF-8 BOM cho Excel
   const handleExportCsv = () => {
-    if (!currentJob || filteredCandidates.length === 0) {
+    if (filteredCandidates.length === 0) {
       showToast({
         type: 'warning',
         title: 'Chưa có dữ liệu',
@@ -226,7 +234,7 @@ export default function RecruitmentAdminClient() {
         `"${c.name.replace(/"/g, '""')}"`,
         `"${c.email}"`,
         `"${c.phone || ''}"`,
-        `"${currentJob.title.replace(/"/g, '""')}"`,
+        `"${(jobTitles[c.jobId] || '').replace(/"/g, '""')}"`,
         c.matchScore ?? 0,
         c.aiStatus,
         c.experienceYears !== null && c.experienceYears !== undefined ? c.experienceYears : '',
@@ -240,7 +248,7 @@ export default function RecruitmentAdminClient() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `ung_vien_${currentJob.title.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute('download', `ung_vien_${(currentJob?.title || 'tat_ca_vi_tri').replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -376,12 +384,24 @@ export default function RecruitmentAdminClient() {
               <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
                 {/* Segmented Job Pills */}
                 <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full py-0.5">
+                  <button
+                    type="button"
+                    aria-pressed={selectedJobId === 'ALL'}
+                    onClick={() => setSelectedJobId('ALL')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-2 shrink-0 cursor-pointer ${selectedJobId === 'ALL' ? 'bg-red-600 text-white shadow-xs font-semibold' : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'}`}
+                  >
+                    <span>Tất cả vị trí</span>
+                    <span className={`px-1.5 py-0.2 rounded font-mono text-[10px] ${selectedJobId === 'ALL' ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      {jobs.reduce((total, job) => total + (job._count?.candidates ?? 0), 0)} CV
+                    </span>
+                  </button>
                   {jobs.map((job) => {
                     const isSelected = job.id === selectedJobId;
                     return (
                       <button
                         key={job.id}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => setSelectedJobId(job.id)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center space-x-2 shrink-0 cursor-pointer ${
                           isSelected
@@ -646,6 +666,7 @@ export default function RecruitmentAdminClient() {
         ) : (
           <RecruitmentKanbanBoard
             candidates={filteredCandidates}
+            jobTitles={selectedJobId === 'ALL' ? jobTitles : undefined}
             onSelectCandidate={(cand) => setSelectedCandidate(cand)}
           />
         )}
@@ -656,6 +677,13 @@ export default function RecruitmentAdminClient() {
         candidate={selectedCandidate}
         onClose={() => setSelectedCandidate(null)}
         onCandidateUpdated={handleCandidateUpdated}
+        onCandidateDeleted={(id) => {
+          candidateRequest.current++;
+          setCandidates(current=>current.filter(candidate=>candidate.id!==id));
+          setSelectedCandidate(null);
+          setLoadingCandidates(false);
+          fetchJobs();
+        }}
       />
 
       {/* Create / Edit Job Modal */}

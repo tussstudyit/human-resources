@@ -34,7 +34,7 @@ export default function RecruitmentAdminPage() {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !user || !['HR', 'MANAGER'].includes(user.role)) {
     return (
       <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-6 text-center text-[#171717] font-sans">
         <div className="w-12 h-12 rounded-[6px] bg-white border border-[#ebebeb] flex items-center justify-center text-[#171717] mb-4 shadow-[0px_1px_1px_rgba(0,0,0,0.04)]">

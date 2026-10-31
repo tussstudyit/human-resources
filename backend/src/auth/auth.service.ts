@@ -34,7 +34,7 @@ export class AuthService {
         email: dto.email.toLowerCase(),
         password: hashedPassword,
         fullName: dto.fullName,
-        role: dto.role || 'EMPLOYEE',
+        role: 'EMPLOYEE',
         departmentId: dto.departmentId || null,
       },
       include: {

@@ -77,16 +77,23 @@ describe('TopDevPortalClient', () => {
     });
   });
 
-  it('mở modal ứng tuyển khi click "Ứng tuyển ngay"', async () => {
+  it('mở chi tiết và form trong trang khi click "Ứng tuyển ngay"', async () => {
     render(<TopDevPortalClient initialRealJobs={mockBackendJobs} />);
 
     const applyButtons = screen.getAllByText('Ứng tuyển ngay');
     fireEvent.click(applyButtons[0]);
 
     await waitFor(() => {
-      expect(screen.getByText('Ứng Tuyển Nhanh')).toBeInTheDocument();
+      expect(screen.getByText('Mô tả công việc')).toBeInTheDocument();
+      expect(screen.getByRole('region',{name:'Biểu mẫu ứng tuyển'})).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/Họ và tên/)).toHaveValue('');
       expect(screen.getByText('Đính kèm hồ sơ CV')).toBeInTheDocument();
     });
+    fireEvent.click(screen.getAllByRole('button',{name:/^Ứng tuyển ngay$/i})[0]);
+    expect(screen.getByRole('region',{name:'Biểu mẫu ứng tuyển'})).toHaveFocus();
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({behavior:'smooth',block:'start'});
+    expect(screen.getByText('Mô tả công việc')).toBeInTheDocument();
   });
 
   it('đẩy history.pushState khi xem chi tiết JD và quay lại khi nhận sự kiện popstate của trình duyệt', async () => {
@@ -123,7 +130,7 @@ describe('TopDevPortalClient', () => {
 
     expect(screen.getAllByText('UP').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('CAREER').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/UpCareer là nền tảng tuyển dụng IT/i)).toBeInTheDocument();
+    expect(screen.getByText(/UpCareer là nền tảng quản trị nhân sự/i)).toBeInTheDocument();
   });
 });
 

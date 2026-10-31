@@ -187,7 +187,7 @@ export default function PerformancePage() {
       });
 
       setEmployees(employees.map(emp => !emp.completed ? { ...emp, reminded: true, status: 'Đã gửi Magic Link' } : emp));
-      
+
       const emailList = pendingList.map(e => e.email).join(', ');
       setNotification({
         type: 'success',
@@ -227,7 +227,7 @@ export default function PerformancePage() {
       });
 
       setEmployees(employees.map(e => (e.id === empId || e.userId === empId) ? { ...e, reminded: true, status: 'Đã gửi Magic Link' } : e));
-      
+
       setNotification({
         type: 'success',
         message: `Đã phát Magic Link đánh giá 360° thành công tới ${emp.name} (${emp.email})`
@@ -292,15 +292,15 @@ export default function PerformancePage() {
           {/* Notification Banner */}
           {notification && (
             <div className={`p-4 rounded-xl flex items-center justify-between gap-3 text-xs md:text-sm font-semibold border shadow-sm transition-all animate-in fade-in slide-in-from-top-2 ${
-              notification.type === 'success' 
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+              notification.type === 'success'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : 'bg-red-50 text-red-800 border-red-200'
             }`}>
               <div className="flex items-center gap-2.5">
                 <CheckCircle2 className={`w-4 h-4 shrink-0 ${notification.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`} />
                 <span>{notification.message}</span>
               </div>
-              <button 
+              <button
                 onClick={() => setNotification(null)}
                 className="text-slate-400 hover:text-slate-700 px-2 py-1 rounded cursor-pointer"
                 title="Đóng thông báo"
@@ -389,7 +389,7 @@ export default function PerformancePage() {
                       </div>
 
                       <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full rounded-full transition-all duration-500 ${
                             item.actual >= item.target ? 'bg-gradient-to-r from-purple-600 to-emerald-500' : 'bg-amber-500'
                           }`}
@@ -429,7 +429,7 @@ export default function PerformancePage() {
 
                 <div className="space-y-3">
                   {employees.map(emp => (
-                    <div 
+                    <div
                       key={emp.id}
                       className="p-3.5 bg-white border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 transition-all shadow-xs"
                     >

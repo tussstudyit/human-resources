@@ -24,6 +24,7 @@ interface TopDevJobDetailViewProps {
   job: Job;
   allJobs?: Job[];
   onApplyClick: () => void;
+  applicationForm?: React.ReactNode;
   onBack?: () => void;
   onSelectRelatedJob?: (job: Job) => void;
   onOpenProfileIncomplete?: () => void;
@@ -33,6 +34,7 @@ export const TopDevJobDetailView: React.FC<TopDevJobDetailViewProps> = ({
   job,
   allJobs = [],
   onApplyClick,
+  applicationForm,
   onBack,
   onSelectRelatedJob,
   onOpenProfileIncomplete,
@@ -80,7 +82,7 @@ export const TopDevJobDetailView: React.FC<TopDevJobDetailViewProps> = ({
   ];
 
   return (
-    <div className="bg-[#F4F5F8] min-h-screen py-6 sm:py-8 text-[#1E293B]">
+    <div id="job-detail-overview" className="scroll-mt-24 bg-[#F4F5F8] min-h-screen py-6 sm:py-8 text-[#1E293B]">
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Breadcrumb & Back Navigation */}
@@ -323,6 +325,7 @@ export const TopDevJobDetailView: React.FC<TopDevJobDetailViewProps> = ({
               </div>
             </div>
 
+            {applicationForm}
           </div>
 
           {/* ================= RIGHT COLUMN: Company Profile & Related Jobs (4/12 cols) ================= */}

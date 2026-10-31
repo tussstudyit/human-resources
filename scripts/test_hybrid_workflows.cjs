@@ -1,0 +1,114 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const read=f=>JSON.parse(fs.readFileSync(`n8n/workflows/${f}`,'utf8'));
+const wf=read('WF_04_cv_parser_ai_scoring.json'),interview=read('WF_05_interview_scheduler.json'),reject=read('WF_06_rejection_notification.json');
+async function run(w,name,input,previous={},helpers={}){
+ const source=w.nodes.find(n=>n.name===name).parameters.jsCode;
+ const context={$json:input,$input:{first:()=>input.json?input:{json:input},all:()=>[{json:input}]},
+  $:name=>({first:()=>({json:previous[name]})}),Buffer,URL};
+ return (await vm.runInNewContext('(async function(){'+source+'}).call(thisArg)',{...context,thisArg:{helpers}},{timeout:1000}))[0];
+}
+test('exports contain executable, connected nodes and no literal API keys',()=>{
+ for(const w of [wf,interview,reject]){
+  const names=new Set(w.nodes.map(n=>n.name));assert.equal(names.size,w.nodes.length);
+  for(const n of w.nodes){
+   if(n.type.endsWith('.code'))new (Object.getPrototypeOf(async function(){}).constructor)(n.parameters.jsCode);
+   if(n.type.endsWith('.webhook'))assert.ok(n.webhookId,'Stable production webhook path requires webhookId');
+   for(const p of n.parameters.headerParameters?.parameters||[])if(p.name==='x-api-key')assert.ok(p.value.startsWith('='));
+   if(n.parameters.url?.includes('{{'))assert.ok(n.parameters.url.startsWith('='));
+  }
+  for(const [source,outs] of Object.entries(w.connections)){assert.ok(names.has(source));for(const edges of Object.values(outs).flat())for(const e of edges)assert.ok(names.has(e.node));}
+ }
+ assert.ok(wf.nodes.length>=45&&wf.nodes.length<=55);assert.ok(!wf.nodes.some(n=>n.type.endsWith('.stickyNote')));
+});
+test('WF04 accepts any valid versioned rubric, without requiring HR approval',()=>{
+ const gate=wf.nodes.find(n=>n.name==='Rubric Available?');
+ assert.ok(gate);const condition=gate.parameters.conditions.conditions[0].leftValue;
+ assert.ok(condition.includes('requiredSkills'));assert.ok(!condition.includes('approvedAt'));
+ assert.ok(!JSON.stringify(wf).includes('RUBRIC_APPROVAL_REQUIRED'));
+ assert.ok(wf.nodes.find(n=>n.name==='Missing Rubric Review').parameters.jsCode.includes('JD_REQUIREMENTS_REQUIRED'));
+});
+test('upstream error and truncated AI output never become valid scored extractions',async()=>{
+ const previous={'Canonical Context':{ctx:{evaluationId:'synthetic'}}};
+ for(const response of [{error:'rate limited'},{candidates:[{finishReason:'MAX_TOKENS',content:{parts:[{text:'{}'}]}}]},
+  {candidates:[{finishReason:'STOP',content:{parts:[{text:'{"matchScore":95}'}]}}]}]){
+  const output=await run(wf,'Validate AI Extraction',response,previous);assert.equal(output.json.valid,false);assert.equal(output.json.matchScore,undefined);
+ }
+});
+test('document evidence drives score; repair and initial validation use the same schema',async()=>{
+ const ctx={evaluationId:'synthetic',rubric:{requiredSkills:['Node.js'],weights:{skills:40,projects:30,production:20,discipline:10}},referenceDate:'2026-10-30'};
+ const extraction={claims:[{criterion:'skills',skill:'NodeJS',quote:'Developed a NodeJS application.',segmentId:'s1'}],employmentIntervals:[],missingInformation:[]};
+ const response={candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(extraction)}]}}]};
+ for(const name of ['Validate AI Extraction','Validate Repaired Extraction'])assert.equal((await run(wf,name,response,{'Canonical Context':{ctx}})).json.valid,true);
+ const scored=await run(wf,'Compute Deterministic Rubric',{ctx,extraction,segments:[{id:'s1',text:'Developed a NodeJS application.'}]});
+ assert.equal(scored.json.report.matchScore,40);
+});
+test('JD enrichment failure uses only the approved rubric, without inventing skills',async()=>{
+ const ctx={rubric:{id:'approved',requiredSkills:['Flutter','Dart']}};
+ const out=await run(wf,'Validate JD Analysis',{error:{status:503}},{'Canonical Context':{ctx}});
+ assert.equal(out.json.valid,true);assert.deepEqual(Array.from(out.json.jdAnalysis.requiredSkills),ctx.rubric.requiredSkills);
+ assert.equal(out.json.jdAnalysisWarning,'JD_ENRICHMENT_UNAVAILABLE');
+ const missing=await run(wf,'Validate JD Analysis',{error:{status:429}},{'Canonical Context':{ctx:{}}});
+ assert.equal(missing.json.valid,false);
+ const fenced=await run(wf,'Validate JD Analysis',{candidates:[{finishReason:'STOP',content:{parts:[{text:'```json\n{"requiredSkills":["NodeJS"]}\n```'}]}}]},{'Canonical Context':{ctx}});
+ assert.equal(fenced.json.jdAnalysis.requiredSkills[0],'NodeJS');assert.equal(fenced.json.jdAnalysisWarning,null);
+});
+test('provider failures are classified and never sent to schema repair or scoring',async()=>{
+ for(const [status,code] of [[429,'AI_RATE_LIMITED'],[503,'AI_PROVIDER_UNAVAILABLE'],[403,'AI_AUTH_FAILED']]){
+  const out=await run(wf,'Validate AI Extraction',{error:{status}},{'Canonical Context':{ctx:{}}});
+  assert.equal(out.json.valid,false);assert.equal(out.json.errorCode,code);
+ }
+ const check=wf.nodes.find(n=>n.name==='Extraction Provider Available?');
+ assert.ok(check.parameters.conditions.conditions[0].leftValue.includes('AI_RATE_LIMITED'));
+ assert.equal(wf.connections['Extraction Provider Available?'].main[1][0].node,'Prepare Human Review');
+});
+test('PDF NUL bytes never reach the evidence segments sent to the provider or callback',async()=>{
+ const out=await run(wf,'Prepare Evidence Segments',{ctx:{},text:'Developed Node\u0000JS applications. Ứng dụng 😀.'});
+ assert.equal(out.json.segments[0].text,'Developed NodeJS applications. Ứng dụng 😀.');
+});
+test('invitation contains real calendar link and actual CRLF ICS attachment',async()=>{
+ const ctx={candidateName:'<script>',candidateEmail:'synthetic@example.invalid',jobTitle:'Node.js',evaluationId:'synthetic',rsvpUrl:'https://example.invalid/rsvp?token=x'};
+ const plan={ctx,online:true,type:'ONLINE',start:'2026-11-04T02:30:00.000Z',end:'2026-11-04T03:30:00.000Z'};
+ let content;
+ const out=await run(interview,'Build Invitation and ICS',{meetUrl:'https://meet.google.com/abc-defg-hij',eventId:'real-event'},
+  {'Plan Interview':plan},{prepareBinaryData:async buffer=>{content=buffer.toString();return {data:'test'};}});
+ assert.ok(content.includes('\r\n'));assert.ok(!content.includes('\\r\\n'));assert.ok(out.binary.calendar);
+ assert.ok(out.json.html.includes('&lt;script&gt;'));assert.equal(out.json.metadata.isRealGoogleMeet,true);
+});
+test('SMTP failure is persisted instead of reported as sent',async()=>{
+ const ctx={candidateEmail:'synthetic@example.invalid'};
+ for(const w of [interview,reject]){
+  const name=w===interview?'Build Invitation and ICS':'Build Talent Pool Feedback';
+  const previous={[name]:{ctx,metadata:{}}};
+  assert.equal((await run(w,'Inspect SMTP Outcome',{error:'SMTP refused'},previous)).json.status,'FAILED');
+  assert.equal((await run(w,'Inspect SMTP Outcome',{accepted:['synthetic@example.invalid']},previous)).json.status,'SENT');
+ }
+});
+test('interview wording is factual and uses the actual schedule for online and office interviews',async()=>{
+ const ctx={candidateName:'Anh <Huy>',candidateEmail:'test@example.invalid',jobTitle:'Backend & API',evaluationId:'test',rsvpUrl:'https://example.invalid/rsvp?token=x'};
+ for(const online of [true,false]){
+  const plan={ctx,online,type:online?'ONLINE':'OFFLINE',start:'2026-11-04T07:00:00.000Z',end:'2026-11-04T08:00:00.000Z'};
+  const out=await run(interview,'Build Invitation and ICS',online?{meetUrl:'https://meet.google.com/abc-defg-hij',eventId:'test'}:{},{'Plan Interview':plan},{prepareBinaryData:async()=>({data:'test'})});
+  assert.ok(out.json.subject.startsWith('[UpCareer] Thư mời phỏng vấn | '));
+  for(const text of ['Kính gửi Anh/Chị','Bộ phận Tuyển dụng UpCareer','14:00 – 15:00','UTC+7','Anh &lt;Huy&gt;','Backend &amp; API','upcareercvresources@gmail.com'])assert.ok(out.json.html.includes(text),text);
+  assert.ok(!out.json.html.includes('rất ấn tượng'));assert.ok(!out.json.html.includes('Hệ thống Quản lý Tuyển dụng AI'));
+  assert.equal(out.json.html.includes('kiểm tra camera'),online);
+  assert.ok(out.binary.calendar);assert.equal(out.json.metadata.isRealGoogleMeet,online);
+ }
+});
+test('feedback addresses the actual recruitment stage without unsupported praise or retention promises',async()=>{
+ const stages={CV_SCREENING:'đã gửi hồ sơ',POST_INTERVIEW:'tham gia buổi phỏng vấn',TECHNICAL_TEST:'bài đánh giá chuyên môn',CULTURE_FIT:'cách thức làm việc',TOP_TALENT:'tham gia quy trình tuyển dụng'};
+ for(const [stage,thanks] of Object.entries(stages)){
+  const ctx={candidateName:'<Huy>',jobTitle:'Backend & API',options:{stage},cxUrl:'https://example.invalid/cx?token=x'};
+  const out=await run(reject,'Build Talent Pool Feedback',{}, {'Claim Approved Delivery':ctx});
+  assert.equal(out.json.metadata.scenario,stage);assert.ok(out.json.metadata.reEngagementDate);
+  for(const text of [thanks,'Kính gửi Anh/Chị','&lt;Huy&gt;','Bộ phận Tuyển dụng UpCareer','hoàn toàn tự nguyện','upcareercvresources@gmail.com'])assert.ok(out.json.html.includes(text),text);
+  for(const text of ['180 ngày','đầu tiên','đánh giá rất cao','30 giây'])assert.ok(!out.json.html.includes(text),text);
+  assert.ok(out.json.subject.startsWith('[UpCareer] Thông báo kết quả ứng tuyển | '));
+ }
+});
+test('explicit rejection uses WF06 without talent-pool metadata or a future-contact promise',async()=>{
+ const ctx={candidateName:'TEST',jobTitle:'TEST Role',options:{stage:'CV_SCREENING',decision:'REJECT'},cxUrl:'https://example.invalid/cx'};
+ const out=await run(reject,'Build Talent Pool Feedback',{}, {'Claim Approved Delivery':ctx});
+ assert.equal(out.json.metadata.status,'REJECTED');assert.equal(out.json.metadata.tier,undefined);assert.equal(out.json.metadata.reEngagementDate,undefined);
+ assert.ok(out.json.html.includes('Thông tin hỗ trợ'));assert.ok(!out.json.html.includes('mong có cơ hội kết nối'));
+});

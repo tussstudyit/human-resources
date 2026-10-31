@@ -8,6 +8,7 @@ import {
   ApplyApiError,
   CreateJobDto,
   RecruitmentDashboardStats,
+  EvaluationHistory,
 } from '@/types/recruitment';
 
 /**
@@ -24,6 +25,25 @@ export function getBaseApiUrl(): string {
     );
   }
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+}
+
+export async function getEvaluationHistory(candidateId: string): Promise<EvaluationHistory[]> {
+  return (await api.get(`/recruitment/candidates/${candidateId}/evaluations`)).data;
+}
+export async function getJobRubric(jobId: string): Promise<{
+  suggestedSkills: string[];
+  defaultWeights: Record<string, number>;
+  approved: {id:string;requiredSkills:string[];weights:Record<string,number>;approvedAt:string} | null;
+  active?: {id:string;requiredSkills:string[];weights:Record<string,number>;approvedAt:string|null} | null;
+  source?: 'HR' | 'AUTOMATIC' | null;
+}> {
+  return (await api.get(`/recruitment/jobs/${jobId}/rubric`)).data;
+}
+export async function approveJobRubric(jobId: string, requiredSkills: string[], weights: Record<string,number>) {
+  return (await api.post(`/recruitment/jobs/${jobId}/rubric/approve`, {requiredSkills,weights})).data;
+}
+export async function approveEvaluation(evaluationId: string) {
+  return (await api.post(`/recruitment/evaluations/${evaluationId}/approve`)).data;
 }
 
 /**
@@ -173,6 +193,10 @@ export async function reEvaluateCandidate(
   return res.data;
 }
 
+export async function deleteCandidate(candidateId: string): Promise<{success:boolean;id:string;fileCleanupPending:boolean}> {
+  return (await api.delete(`/recruitment/candidates/${candidateId}`)).data;
+}
+
 /**
  * Tải CV PDF của ứng viên dưới dạng Blob an toàn (gắn header Bearer Token)
  */
@@ -226,5 +250,9 @@ export async function archiveCandidateTalentPool(
     scenario,
   });
   return res.data;
+}
+
+export async function rejectCandidate(candidateId: string, scenario = 'CV_SCREENING'): Promise<{success:boolean;message:string}> {
+  return (await api.post(`/recruitment/candidates/${candidateId}/reject`,{scenario})).data;
 }
 

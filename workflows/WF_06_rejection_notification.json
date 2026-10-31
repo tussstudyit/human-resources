@@ -1,191 +1,432 @@
 {
-  "updatedAt": "2026-10-09T14:23:10.000Z",
-  "createdAt": "2026-10-09T12:04:22.336Z",
   "id": "Z8f06RejectNotif",
-  "name": "[HR] WF_06 - Polite Rejection Notification & Talent Pool Retention (Score < 80%)",
-  "description": null,
-  "active": true,
-  "isArchived": false,
+  "name": "[HR] WF_06 - Approved TALENT_POOL & Verified Delivery",
+  "active": false,
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "rejection-notification",
-        "responseMode": "responseNode",
-        "options": {}
-      },
+      "name": "Receive Approved Action",
+      "id": "000214ef3b056305f52365f0",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [
-        -560,
-        144
-      ],
-      "id": "88f325cb-16ce-4853-a5ad-d8822ad1e12f",
-      "name": "Webhook: Tiếp Nhận Hồ Sơ",
-      "webhookId": "rejection-notification-webhook"
-    },
-    {
-      "parameters": {
-        "jsCode": "const body = $json.body || $json;\n\nconst candidateId = body.candidateId || 'cand_demo_reject';\nconst candidateName = body.name || body.candidateName || 'Ứng viên';\nconst candidateEmail = body.email || body.candidateEmail || 'doanthanhhuy130978@gmail.com';\nconst jobTitle = body.jobTitle || 'Chuyên viên Công nghệ';\nconst matchScore = Number(body.matchScore !== undefined ? body.matchScore : 45);\nconst skills = Array.isArray(body.parsedSkillsJson) ? body.parsedSkillsJson : ['Kỹ năng chuyên môn'];\nconst skillsStr = Array.isArray(skills) ? skills.join(', ') : String(skills);\nconst companyName = body.companyName || 'Công ty Cổ phần Công nghệ HR Tech Hub';\n\nconst senderName = body.senderName || 'Bộ phận Thu hút & Phát triển Nhân tài';\nconst senderPhone = body.senderPhone || '0901 234 567';\nconst senderEmail = body.senderEmail || 'recruitment@company.com';\n\n// 1. Phân loại kịch bản từ chối (3 Kịch bản thực tế của người dùng)\n// - Scenario 1 (CV_SCREENING): Loại ở vòng duyệt hồ sơ (< 50%)\n// - Scenario 2 (POST_INTERVIEW): Đã tham gia phỏng vấn/bài test nhưng chưa đạt (50% - 69%)\n// - Scenario 3 (TOP_TALENT): Ứng viên ấn tượng cao nhưng hết chỉ tiêu (70% - 79%)\nlet scenarioCode = (body.rejectionType || body.stage || '').toUpperCase();\n\nif (!scenarioCode) {\n  if (matchScore >= 70) {\n    scenarioCode = 'TOP_TALENT';\n  } else if (matchScore >= 50) {\n    scenarioCode = 'POST_INTERVIEW';\n  } else {\n    scenarioCode = 'CV_SCREENING';\n  }\n}\n\nlet emailSubject = '';\nlet emailHtml = '';\nlet scenarioTitle = '';\nlet talentPoolTier = '';\nlet summaryForBackend = '';\n\nconst archivedAt = new Date().toISOString();\n\nif (scenarioCode === 'CV_SCREENING') {\n  scenarioTitle = 'Từ chối vòng duyệt hồ sơ (Screening)';\n  talentPoolTier = 'GENERAL_TALENT_POOL';\n  emailSubject = `Thư phản hồi hồ sơ ứng tuyển vị trí ${jobTitle} – ${companyName}`;\n  \n  const paragraphs = `\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Chúng tôi thuộc bộ phận nhân sự thuộc công ty <strong>${companyName}</strong> nhận được hồ sơ ứng tuyển của bạn. Rất cám ơn vì sự quan tâm của bạn đối với vị trí việc làm <strong>${jobTitle}</strong>.\n    </p>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Tuy nhiên, sau khi xem xét các hồ sơ, chúng tôi nhận thấy bạn chưa phù hợp để chọn vào vòng phỏng vấn.\n    </p>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 24px;\">\n      Chúc bạn may mắn trong quá trình tìm việc sau đó và hi vọng sẽ có cơ hội được hợp tác với bạn trong tương lai.\n    </p>\n  `;\n\n  emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #334155 0%, #475569 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">Thân gửi ${candidateName},</p>\n      ${paragraphs}\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${senderName}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${companyName}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  summaryForBackend = `[TỪ CHỐI VÒNG HỒ SƠ]: Đã gửi thư từ chối vòng hồ sơ lịch thiệp cho ứng viên ${candidateName}. Lưu vào General Talent Pool.`;\n\n} else if (scenarioCode === 'POST_INTERVIEW') {\n  scenarioTitle = 'Từ chối sau vòng phỏng vấn/bài test & Lưu hồ sơ';\n  talentPoolTier = 'RETAINED_TALENT_POOL';\n  emailSubject = `Thư phản hồi kết quả phỏng vấn vị trí ${jobTitle} – ${companyName}`;\n\n  const paragraphs = `\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Một lần nữa cám ơn bạn đã tham gia buổi phỏng vấn cho vị trí việc làm <strong>${jobTitle}</strong> tại <strong>${companyName}</strong>. Với sự cố gắng và nhiệt tình của bạn cùng với những sẻ chia và cam kết sẽ đóng góp của bạn đã được chúng tôi đánh giá rất cao trong buổi phỏng vấn này. Song, sau khi xem xét và bàn bạc lại, chúng tôi chỉ quyết định lựa chọn một số ứng viên ấn tượng hơn để tiếp tục đồng hành cùng chúng tôi.\n    </p>\n    <div style=\"background-color: #f8fafc; border-left: 4px solid #64748b; border-radius: 6px; padding: 16px 18px; margin: 20px 0; font-size: 14px; color: #334155;\">\n      Và chúng tôi sẽ giữ lại hồ sơ của bạn để có thể tiếp tục liên hệ lại với bạn nếu công ty có nhu cầu tuyển dụng mới và phù hợp trong thời gian tới.\n    </div>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 24px;\">\n      Trân trọng và chúc bạn luôn gặp nhiều may mắn và thành công trong quá trình tìm việc.\n    </p>\n  `;\n\n  emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #1e293b 0%, #334155 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">Mến gửi ${candidateName},</p>\n      ${paragraphs}\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${senderName}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${companyName}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  summaryForBackend = `[TỪ CHỐI SAU PHỎNG VẤN]: Đã gửi thư cảm ơn & thông báo lưu giữ hồ sơ vào Retained Talent Pool cho ứng viên ${candidateName}.`;\n\n} else { // TOP_TALENT\n  scenarioTitle = 'Ứng viên tiềm năng cao (hết chỉ tiêu) & Ưu tiên liên hệ';\n  talentPoolTier = 'PRIORITY_TALENT_POOL';\n  emailSubject = `Thư phản hồi & Cảm ơn ứng viên vị trí ${jobTitle} – ${companyName}`;\n\n  const paragraphs = `\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 16px;\">\n      Chúng tôi rất cám ơn bạn đã dành nhiều thời gian để tham gia ứng tuyển với vị trí <strong>${jobTitle}</strong> tại <strong>${companyName}</strong>. Có thể nói ngay từ đầu chúng tôi cũng rất ấn tượng với hồ sơ của bạn và tất cả những điều mà bạn đã thể hiện trong quá trình phỏng vấn. Tuy nhiên, một số ứng viên đã được ban tuyển dụng quyết định chọn lựa trên cơ sở cân nhắc rất kỹ lưỡng và thấu đáo.\n    </p>\n    <div style=\"background-color: #f1f5f9; border-left: 4px solid #2563eb; border-radius: 6px; padding: 16px 18px; margin: 20px 0; font-size: 14px; color: #1e293b;\">\n      Một lần nữa xin cám ơn những ý kiến của bạn đối với doanh nghiệp chúng tôi. Và hãy giữ liên hệ với chúng tôi vì trong tương lai, chúng tôi vẫn còn có nhu cầu tuyển dụng trở lại. Nếu có vấn đề gì thắc mắc bạn liên hệ với chúng tôi qua số <strong>${senderPhone}</strong> hoặc email <strong>${senderEmail}</strong>.\n    </div>\n    <p style=\"font-size: 15px; color: #334155; margin-bottom: 24px;\">\n      Chúc bạn thành công.\n    </p>\n  `;\n\n  emailHtml = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"></head>\n<body style=\"font-family: Arial, 'Segoe UI', Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #1e293b; line-height: 1.6;\">\n  <div style=\"max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);\">\n    <div style=\"background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%); height: 8px; width: 100%;\"></div>\n    <div style=\"padding: 32px 28px;\">\n      <p style=\"margin-top: 0; font-size: 15px; font-weight: 600; color: #0f172a;\">${candidateName} thân mến!</p>\n      ${paragraphs}\n      <div style=\"font-size: 14px; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;\">\n        <p style=\"margin: 0 0 6px 0;\">Trân trọng,</p>\n        <p style=\"margin: 0; font-weight: 700; color: #0f172a;\">${senderName}</p>\n        <p style=\"margin: 0; color: #0f172a; font-weight: 600;\">${companyName}</p>\n        <p style=\"margin: 4px 0 0 0; font-size: 13px; color: #64748b;\">Hotline: ${senderPhone} | Email: ${senderEmail}</p>\n      </div>\n    </div>\n  </div>\n</body>\n</html>`;\n\n  summaryForBackend = `[PRIORITY TALENT POOL]: Ứng viên ấn tượng cao ${candidateName} (${matchScore}%). Đã gửi thư cảm ơn trân trọng & lưu trữ ưu tiên liên hệ lại.`;\n}\n\nreturn [{\n  json: {\n    candidateId,\n    candidateName,\n    candidateEmail,\n    jobTitle,\n    companyName,\n    matchScore,\n    skills,\n    scenarioCode,\n    scenarioTitle,\n    talentPoolTier,\n    emailSubject,\n    emailHtml,\n    senderName,\n    senderPhone,\n    senderEmail,\n    summaryForBackend,\n    archivedAt\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -304,
-        144
-      ],
-      "id": "350e389c-70c0-4492-8e32-bc22942d1cfe",
-      "name": "Phân Loại Kịch Bản & Soạn Thư Từ Chối"
-    },
-    {
-      "parameters": {
-        "fromEmail": "tatcoolngau@gmail.com",
-        "toEmail": "={{ $json.candidateEmail || \"dang.2006.qt@gmail.com\" }}",
-        "subject": "={{ $json.emailSubject }}",
-        "emailFormat": "html",
-        "html": "={{ $json.emailHtml }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
       "position": [
         0,
         0
       ],
-      "id": "8700c34d-0fe9-41aa-ad51-107867f46ff2",
-      "name": "Stream 1: Gửi Email Thật Qua Gmail SMTP",
-      "webhookId": "d8527d67-fe04-4b9f-a386-c8ec2da753cc",
-      "credentials": {
-        "smtp": {
-          "id": "1IbPjsQU3GME0jy0",
-          "name": "SMTP account 2"
-        }
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rejection-notification",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
       },
-      "continueOnFail": true
+      "webhookId": "4c41a4c1-c88d-448a-b062-5ee178a1723d",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "FAph8kba5iEDxNvF",
+          "name": "Backend API Key"
+        }
+      }
     },
     {
-      "parameters": {
-        "jsCode": "const data = $('Phân Loại Kịch Bản & Soạn Thư Từ Chối').first().json;\n\nreturn [{\n  json: {\n    channel: 'HR_TALENT_POOL_REGISTRY',\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    scenario: data.scenarioCode,\n    scenarioTitle: data.scenarioTitle,\n    talentPoolTier: data.talentPoolTier,\n    archivedAt: data.archivedAt,\n    retentionPolicy: data.scenarioCode === 'TOP_TALENT' ? 'Ưu tiên liên hệ lại ngay khi có đợt tuyển dụng mới' : 'Lưu trữ hồ sơ dự phòng',\n    status: 'RECORDED_IN_TALENT_POOL'\n  }\n}];"
-      },
+      "name": "Validate Request",
+      "id": "a5f7bd4baf44eaa8087c2dbd",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         0,
-        288
+        220
       ],
-      "id": "41744a37-b17b-49a3-ac1d-e2e47abbee42",
-      "name": "Stream 2: Gói Báo Cáo Phân Loại Cho HR Squad"
+      "parameters": {
+        "jsCode": "const id=$json.body?.evaluationId;return [{json:{evaluationId:id,valid:typeof id==='string'&&/^[0-9a-f-]{36}$/i.test(id)&&typeof $json.headers?.['x-api-key']==='string'}}];"
+      }
     },
     {
+      "name": "Request Valid?",
+      "id": "7df0fc751d16f35a788eebe5",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        440
+      ],
       "parameters": {
-        "method": "PATCH",
-        "url": "=http://host.docker.internal:3001/recruitment/candidates/{{ $json.candidateId }}/ai-evaluation",
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Reject Request",
+      "id": "e169f18ad7a210df51df97aa",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        660
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"INVALID_ACTION_REQUEST\"} }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "name": "Claim Approved Delivery",
+      "id": "2d83db10ab5f25fec6f4405d",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        880
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:3001/recruitment/evaluations/{{ $json.evaluationId }}/delivery/claim",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
               "name": "x-api-key",
-              "value": "750845dc3e9ed5275635283ee9a5d186e94aba1dec18590dd3dd92ff14c39b71"
+              "value": "={{ $('Receive Approved Action').first().json.headers['x-api-key'] }}"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"matchScore\": {{ $json.matchScore }},\n  \"summary\": {{ JSON.stringify($json.summaryForBackend) }},\n  \"parsedSkillsJson\": {\n    \"skills\": {{ JSON.stringify($json.skills) }},\n    \"talentPool\": {\n      \"status\": \"ARCHIVED\",\n      \"scenario\": {{ JSON.stringify($json.scenarioCode) }},\n      \"tier\": {{ JSON.stringify($json.talentPoolTier) }},\n      \"archivedAt\": {{ JSON.stringify($json.archivedAt) }},\n      \"emailSent\": true\n    }\n  }\n}",
-        "options": {}
+        "jsonBody": "={{ {action:\"TALENT_POOL\"} }}",
+        "options": {
+          "timeout": 15000
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        304,
-        144
-      ],
-      "id": "ff27be88-9923-4377-a7b3-9f753657e594",
-      "name": "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend",
-      "continueOnFail": true
+      "onError": "continueErrorOutput"
     },
     {
+      "name": "Delivery Claimed?",
+      "id": "ad4ccfa2d4c9887242024560",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        1100
+      ],
       "parameters": {
-        "jsCode": "const data = $('Phân Loại Kịch Bản & Soạn Thư Từ Chối').first().json;\nconst backendSyncResult = $json;\n\nreturn [{\n  json: {\n    success: true,\n    action: \"CANDIDATE_REJECTION_AND_TALENT_POOL_ARCHIVED\",\n    candidateId: data.candidateId,\n    candidateName: data.candidateName,\n    candidateEmail: data.candidateEmail,\n    jobTitle: data.jobTitle,\n    matchScore: data.matchScore,\n    scenario: {\n      code: data.scenarioCode,\n      title: data.scenarioTitle,\n      tier: data.talentPoolTier\n    },\n    emailDelivery: {\n      recipient: data.candidateEmail,\n      subject: data.emailSubject,\n      smtpStatus: \"DISPATCHED\"\n    },\n    backendSync: {\n      status: backendSyncResult?.id ? \"SYNCED_TO_DATABASE\" : \"STANDALONE_SIMULATED\",\n      updatedCandidateId: backendSyncResult?.id || data.candidateId\n    },\n    archivedAt: data.archivedAt\n  }\n}];"
-      },
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.claimed === true }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "name": "Already Handled",
+      "id": "053b6bb8de54196b461e0bf6",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {duplicate:true,status:$json.status} }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "name": "Accept Delivery",
+      "id": "f10d81f12dbc6522016c9c30",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        220
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {evaluationId:$json.evaluationId,status:\"ACCEPTED\"} }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "name": "Build Talent Pool Feedback",
+      "id": "89905f83ad1bed842e0f0ae5",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        592,
-        144
+        400,
+        440
       ],
-      "id": "18dddfee-e6c2-487b-a441-7244754385ed",
-      "name": "Tổng Hợp Kết Quả (Consolidator)"
+      "parameters": {
+        "jsCode": "const esc=s=>String(s||'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[c]));const ctx=$('Claim Approved Delivery').first().json;const allowed=['CV_SCREENING','POST_INTERVIEW','TECHNICAL_TEST','CULTURE_FIT','TOP_TALENT'];const scenario=allowed.includes(ctx.options.stage)?ctx.options.stage:'CV_SCREENING';const reEngagementDate=new Date(Date.now()+180*86400000).toISOString().slice(0,10);\nconst isRejection=ctx.options.decision==='REJECT';\nconst futureTitle=isRejection?'Thông tin hỗ trợ':'Cơ hội kết nối trong tương lai';\nconst futureText=(isRejection?'':'Chúng tôi mong có cơ hội kết nối với Anh/Chị khi có vị trí phù hợp trong tương lai. ')+'Nếu có yêu cầu liên quan đến việc lưu giữ, cập nhật hoặc xóa hồ sơ, Anh/Chị vui lòng liên hệ upcareercvresources@gmail.com để được hỗ trợ.';\nconst stageThanks={\n CV_SCREENING:'Cảm ơn Anh/Chị đã gửi hồ sơ và quan tâm đến cơ hội làm việc cùng chúng tôi.',\n POST_INTERVIEW:'Cảm ơn Anh/Chị đã dành thời gian tham gia buổi phỏng vấn và trao đổi cùng đội ngũ tuyển dụng.',\n TECHNICAL_TEST:'Cảm ơn Anh/Chị đã dành thời gian tham gia bài đánh giá chuyên môn trong quy trình tuyển dụng.',\n CULTURE_FIT:'Cảm ơn Anh/Chị đã dành thời gian trao đổi về cách thức làm việc và định hướng nghề nghiệp.',\n TOP_TALENT:'Cảm ơn Anh/Chị đã quan tâm và tham gia quy trình tuyển dụng của chúng tôi.'\n}[scenario];\nconst html='<div style=\"font-family:-apple-system,BlinkMacSystemFont,\\'Segoe UI\\',Roboto,Helvetica,Arial,sans-serif;max-width:620px;margin:0 auto;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);\">'\n  +'<div style=\"background:linear-gradient(135deg,#0f172a 0%,#334155 100%);padding:36px 24px;text-align:center;color:#ffffff;\">'\n  +'<div style=\"display:inline-block;padding:4px 14px;background:rgba(148,163,184,0.2);border:1px solid rgba(148,163,184,0.4);border-radius:9999px;font-size:11px;font-weight:700;letter-spacing:1px;color:#cbd5e1;text-transform:uppercase;margin-bottom:12px;\">UPCAREER</div>'\n  +'<h1 style=\"margin:0;font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1.3;\">THÔNG BÁO KẾT QUẢ ỨNG TUYỂN</h1>'\n  +'<p style=\"margin:8px 0 0 0;font-size:14px;color:#94a3b8;\">Vị trí ứng tuyển: <strong style=\"color:#f8fafc;\">'+esc(ctx.jobTitle)+'</strong></p>'\n  +'</div>'\n  +'<div style=\"padding:32px 28px;color:#1e293b;line-height:1.6;\">'\n  +'<p style=\"font-size:15px;margin:0 0 16px 0;\">Kính gửi Anh/Chị <strong>'+esc(ctx.candidateName)+'</strong>,</p>'\n  +'<p style=\"font-size:14px;color:#334155;margin:0 0 16px 0;\">'+esc(stageThanks)+'</p>'\n  +'<p style=\"font-size:14px;color:#334155;margin:0 0 20px 0;\">Sau khi xem xét theo yêu cầu tuyển dụng hiện tại, chúng tôi rất tiếc chưa thể tiếp tục quy trình ứng tuyển của Anh/Chị cho vị trí này. Kết quả được đưa ra trong phạm vi đợt tuyển dụng và không phải là đánh giá tổng thể về năng lực của Anh/Chị.</p>'\n  +'<div style=\"background:#fefce8;border:1px solid #fef08a;border-radius:12px;padding:18px 20px;margin-bottom:24px;\">'\n  +'<div style=\"font-weight:700;font-size:13px;color:#854d0e;margin-bottom:6px;\">' +esc(futureTitle)+'</div>'\n  +'<p style=\"margin:0;font-size:13px;color:#713f12;line-height:1.5;\">' +esc(futureText)+'</p>'\n  +'</div>'\n  +'<div style=\"text-align:center;margin:28px 0 24px 0;\">'\n  +'<a href=\"'+esc(ctx.cxUrl)+'\" style=\"display:inline-block;background:linear-gradient(135deg,#059669 0%,#047857 100%);color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:14px 32px;border-radius:8px;box-shadow:0 4px 6px -1px rgba(5,150,105,0.3);\">Chia sẻ trải nghiệm tuyển dụng</a>'\n  +'<p style=\"margin:10px 0 0 0;font-size:12px;color:#64748b;\">Phản hồi là hoàn toàn tự nguyện và giúp chúng tôi cải thiện quy trình tuyển dụng.</p>'\n  +'</div>'\n  +'<p style=\"font-size:14px;color:#334155;margin:0 0 4px 0;\">Trân trọng,</p>'\n  +'<p style=\"font-size:14px;font-weight:700;color:#0f172a;margin:0;\">Bộ phận Tuyển dụng UpCareer</p>'\n  +'<p style=\"font-size:12px;color:#64748b;margin:2px 0 0 0;\">cvresources.tech</p>'\n  +'</div>'\n  +'<div style=\"background:#f1f5f9;padding:16px 24px;text-align:center;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;\">'\n  +'Cảm ơn Anh/Chị. Kính chúc Anh/Chị nhiều thành công trong công việc và định hướng nghề nghiệp.'\n  +'</div></div>';\nreturn [{json:{ctx,subject:'[UpCareer] Thông báo kết quả ứng tuyển | '+ctx.jobTitle,html,metadata:{scenario,...(isRejection?{status:'REJECTED'}:{tier:'RETAINED_TALENT_POOL',reEngagementDate})}}}];"
+      }
     },
     {
+      "name": "Send Candidate Email",
+      "id": "71d37e872d64868ed397e077",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        660
+      ],
       "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
+        "fromEmail": "doanthanhhuy1309@gmail.com",
+        "toEmail": "={{ $json.ctx.candidateEmail }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
         "options": {}
       },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
+      "credentials": {
+        "smtp": {
+          "id": "GmailSmtpCred01",
+          "name": "Gmail SMTP"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "name": "Inspect SMTP Outcome",
+      "id": "ffcc8cc61c66111bdbfbb07d",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        848,
-        144
+        400,
+        880
       ],
-      "id": "320adbab-eebd-4cfd-8d1c-ce0c84998f60",
-      "name": "Phản Hồi Webhook Kết Quả"
+      "parameters": {
+        "jsCode": "const packet=$('Build Talent Pool Feedback').first().json;const accepted=$json.accepted;const ok=!$json.error&&Array.isArray(accepted)&&accepted.some(e=>String(e).toLowerCase()===packet.ctx.candidateEmail.toLowerCase());return [{json:{ctx:packet.ctx,status:ok?'SENT':'FAILED',metadata:packet.metadata}}];"
+      }
+    },
+    {
+      "name": "Prepare Delivery Failure",
+      "id": "9019b82194ad5afad289f551",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        1100
+      ],
+      "parameters": {
+        "jsCode": "const ctx=$('Claim Approved Delivery').first().json;return [{json:{ctx,status:'FAILED',metadata:{errorCode:'PROVIDER_OR_PROCESSING_FAILED'}}}];"
+      }
+    },
+    {
+      "name": "Record Actual Delivery",
+      "id": "e3ac34c133c0a082bf55dcfa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:3001/recruitment/evaluations/{{ $json.ctx.evaluationId }}/delivery",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $('Receive Approved Action').first().json.headers['x-api-key'] }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {action:\"TALENT_POOL\",status:$json.status,metadata:$json.metadata} }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "name": "Reject Unauthorized or Unavailable",
+      "id": "5b52ed716c21e62ba45abc3d",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        800,
+        220
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {error:\"DELIVERY_CLAIM_REJECTED_OR_UNAVAILABLE\"} }}",
+        "options": {
+          "responseCode": 503
+        }
+      }
     }
   ],
   "connections": {
-    "Webhook: Tiếp Nhận Hồ Sơ": {
+    "Receive Approved Action": {
       "main": [
         [
           {
-            "node": "Phân Loại Kịch Bản & Soạn Thư Từ Chối",
+            "node": "Validate Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Phân Loại Kịch Bản & Soạn Thư Từ Chối": {
+    "Validate Request": {
       "main": [
         [
           {
-            "node": "Stream 1: Gửi Email Thật Qua Gmail SMTP",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Stream 2: Gói Báo Cáo Phân Loại Cho HR Squad",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend",
+            "node": "Request Valid?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend": {
+    "Request Valid?": {
       "main": [
         [
           {
-            "node": "Tổng Hợp Kết Quả (Consolidator)",
+            "node": "Claim Approved Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Tổng Hợp Kết Quả (Consolidator)": {
+    "Claim Approved Delivery": {
       "main": [
         [
           {
-            "node": "Phản Hồi Webhook Kết Quả",
+            "node": "Delivery Claimed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject Unauthorized or Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delivery Claimed?": {
+      "main": [
+        [
+          {
+            "node": "Accept Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Handled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accept Delivery": {
+      "main": [
+        [
+          {
+            "node": "Build Talent Pool Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Talent Pool Feedback": {
+      "main": [
+        [
+          {
+            "node": "Send Candidate Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Candidate Email": {
+      "main": [
+        [
+          {
+            "node": "Inspect SMTP Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inspect SMTP Outcome": {
+      "main": [
+        [
+          {
+            "node": "Record Actual Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Delivery Failure": {
+      "main": [
+        [
+          {
+            "node": "Record Actual Delivery",
             "type": "main",
             "index": 0
           }
@@ -195,75 +436,10 @@
   },
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
     "saveManualExecutions": true,
-    "saveExecutionProgress": true
-  },
-  "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
-  "pinData": {
-    "Webhook: Tiếp Nhận Hồ Sơ": [
-      {
-        "json": {
-          "headers": {
-            "host": "localhost:5678",
-            "content-type": "application/json"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "candidateId": "53703860-9530-4e90-83dc-8466e73b0caa",
-            "name": "Nguyễn Văn A",
-            "candidateName": "Nguyễn Văn A",
-            "email": "dang.2006.qt@gmail.com",
-            "candidateEmail": "dang.2006.qt@gmail.com",
-            "jobTitle": "Senior Fullstack Engineer",
-            "matchScore": 72,
-            "parsedSkillsJson": [
-              "NestJS",
-              "React",
-              "TypeScript",
-              "Docker",
-              "PostgreSQL"
-            ],
-            "companyName": "Công ty Cổ phần Công nghệ HR Tech Hub",
-            "senderName": "Ban Tuyển Dụng & Phát Triển Nhân Tài HR Tech",
-            "senderPhone": "0901 234 567",
-            "senderEmail": "tatcoolngau@gmail.com"
-          }
-        }
-      }
-    ]
-  },
-  "versionId": "85b9dab2-ff90-4ac6-a1ed-9e9fc25321c6",
-  "activeVersionId": "85b9dab2-ff90-4ac6-a1ed-9e9fc25321c6",
-  "versionCounter": 5,
-  "triggerCount": 1,
-  "sourceWorkflowId": null,
-  "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-10-09T12:04:22.338Z",
-      "createdAt": "2026-10-09T12:04:22.338Z",
-      "role": "workflow:owner",
-      "workflowId": "Z8f06RejectNotif",
-      "projectId": "6fLB1uBc0gD1ogBQ",
-      "project": {
-        "updatedAt": "2026-09-30T14:32:33.272Z",
-        "createdAt": "2026-09-30T13:39:28.905Z",
-        "id": "6fLB1uBc0gD1ogBQ",
-        "name": "Đoàn Huy <doanthanhhuy1309@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "customTelemetryTags": [],
-        "creatorId": "f74528cc-054d-4509-863b-f3ddb16b799d"
-      }
-    }
-  ],
-  "versionMetadata": {
-    "name": null,
-    "description": null
+    "saveExecutionProgress": true,
+    "executionTimeout": 180
   }
 }

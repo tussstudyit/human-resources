@@ -1,0 +1,50 @@
+[
+  {
+    "title": "AI / Machine Learning Engineer (LLM & RAG)",
+    "description": "Địa điểm: Hà Nội. Hình thức làm việc: Hybrid.\nPhát triển ứng dụng AI tạo sinh và hệ thống tìm kiếm tăng cường truy xuất RAG cho nền tảng nhân sự.\nXây dựng pipeline xử lý tài liệu, tạo embedding và đánh giá chất lượng truy xuất.\nTriển khai mô hình thành API, theo dõi độ chính xác, độ trễ và chi phí sử dụng.\nPhối hợp với backend và data team để bảo vệ dữ liệu, kiểm thử và giám sát hệ thống.\nThu nhập, lịch làm việc chi tiết và phạm vi dự án trao đổi trong quá trình phỏng vấn.",
+    "requirements": "Python\nPyTorch\nLLM\nRAG\nVector Database\nREST API\nGit\nDocker",
+    "status": "OPEN"
+  },
+  {
+    "title": "Senior Data Engineer (Python / Spark)",
+    "description": "Địa điểm: Hà Nội. Hình thức làm việc: Hybrid.\nThiết kế pipeline thu thập, làm sạch và tổng hợp dữ liệu phục vụ báo cáo và ứng dụng AI.\nPhát triển luồng ETL/ELT, mô hình dữ liệu và cơ chế kiểm tra chất lượng dữ liệu.\nTối ưu xử lý dữ liệu phân tán và truy vấn, theo dõi lịch chạy và xử lý sự cố pipeline.\nPhối hợp với các nhóm nghiệp vụ để xây dựng dữ liệu có thể truy vết và kiểm soát quyền truy cập.\nThu nhập và yêu cầu thâm niên cụ thể trao đổi trong quá trình phỏng vấn.",
+    "requirements": "Python\nSQL\nApache Spark\nApache Airflow\nPostgreSQL\nETL\nData Modeling\nGit",
+    "status": "OPEN"
+  },
+  {
+    "title": "Cloud DevOps / SRE Engineer (AWS / Kubernetes)",
+    "description": "Địa điểm: Đà Nẵng. Hình thức làm việc: Remote.\nXây dựng và vận hành hạ tầng cloud cho các dịch vụ web và dữ liệu.\nTự động hóa cấu hình hạ tầng bằng Terraform và triển khai ứng dụng trên Kubernetes.\nPhát triển pipeline CI/CD, giám sát log, metric và cảnh báo.\nThiết lập sao lưu, khôi phục và quy trình xử lý sự cố; phối hợp cải thiện độ ổn định và bảo mật.\nPhạm vi trực vận hành, thu nhập và lịch làm việc được thống nhất khi phỏng vấn.",
+    "requirements": "AWS\nKubernetes\nTerraform\nDocker\nLinux\nCI/CD\nPrometheus\nGrafana",
+    "status": "OPEN"
+  },
+  {
+    "title": "Senior Golang Backend Engineer (Microservices)",
+    "description": "Địa điểm: TP. Hồ Chí Minh.\nPhát triển dịch vụ lõi và API có khả năng mở rộng bằng Golang.\nThiết kế giao tiếp giữa các microservice, xử lý sự kiện và cơ chế bảo đảm tính nhất quán dữ liệu.\nTối ưu truy vấn, bộ nhớ đệm và hiệu năng dưới tải; viết kiểm thử và theo dõi dịch vụ khi vận hành.\nTham gia thiết kế kỹ thuật, review code và phối hợp cùng frontend, QA và DevOps.\nThu nhập và yêu cầu thâm niên cụ thể trao đổi trong quá trình phỏng vấn.",
+    "requirements": "Golang\nMicroservices\nPostgreSQL\nRedis\nKafka\ngRPC\nDocker\nUnit Testing",
+    "status": "OPEN"
+  },
+  {
+    "title": "Senior Java Backend Engineer (Spring Boot / Kafka)",
+    "description": "Địa điểm: Hà Nội.\nPhát triển hệ thống backend và các dịch vụ nghiệp vụ bằng Java và Spring Boot.\nThiết kế REST API, xử lý sự kiện qua Kafka và tích hợp dữ liệu giữa các dịch vụ.\nTối ưu truy vấn và giao dịch, triển khai kiểm thử tự động và kiểm soát chất lượng mã nguồn.\nPhối hợp với các nhóm sản phẩm và vận hành để phân tích, theo dõi và xử lý lỗi hệ thống.\nThu nhập và yêu cầu thâm niên cụ thể trao đổi trong quá trình phỏng vấn.",
+    "requirements": "Java\nSpring Boot\nKafka\nMicroservices\nPostgreSQL\nRedis\nJUnit\nDocker",
+    "status": "OPEN"
+  },
+  {
+    "title": "Frontend Engineer (React / Next.js / TypeScript)",
+    "description": "Địa điểm: TP. Hồ Chí Minh.\nPhát triển giao diện web và cổng quản trị bằng React, Next.js và TypeScript.\nChuyển thiết kế thành component tái sử dụng, đáp ứng nhiều kích thước màn hình và hỗ trợ truy cập.\nTích hợp API, quản lý trạng thái, kiểm tra biểu mẫu và xử lý các trạng thái tải hoặc lỗi.\nTối ưu tốc độ hiển thị, bổ sung kiểm thử giao diện và phối hợp cùng backend, UI/UX và QA.\nThu nhập và cấp bậc cụ thể trao đổi trong quá trình phỏng vấn.",
+    "requirements": "React\nNext.js\nTypeScript\nHTML\nCSS\nREST API\nGit\nFrontend Testing",
+    "status": "OPEN"
+  },
+  {
+    "title": "React Native Mobile Engineer (iOS / Android)",
+    "description": "Địa điểm: Đà Nẵng.\nPhát triển ứng dụng di động đa nền tảng bằng React Native cho iOS và Android.\nXây dựng màn hình, điều hướng và quản lý trạng thái; tích hợp API, thông báo và lưu trữ cục bộ.\nKiểm tra hiệu năng, xử lý lỗi theo thiết bị và cải thiện trải nghiệm người dùng.\nPhối hợp với backend, thiết kế và QA trong quy trình kiểm thử và phát hành ứng dụng.\nThu nhập và cấp bậc cụ thể trao đổi trong quá trình phỏng vấn.",
+    "requirements": "React Native\nReact\nTypeScript\niOS\nAndroid\nREST API\nGit\nMobile Testing",
+    "status": "OPEN"
+  },
+  {
+    "title": "QA Automation Engineer (Playwright / Selenium)",
+    "description": "Địa điểm: TP. Hồ Chí Minh. Hình thức làm việc: Remote.\nXây dựng chiến lược và bộ kiểm thử tự động cho nền tảng web và API.\nPhát triển test chức năng, tích hợp và hồi quy bằng Playwright hoặc Selenium.\nTích hợp test vào CI/CD, quản lý dữ liệu kiểm thử và phân tích các ca kiểm thử không ổn định.\nTheo dõi lỗi, xác minh bản sửa và phối hợp với nhóm phát triển để cải thiện độ tin cậy phần mềm.\nThu nhập và cấp bậc cụ thể trao đổi trong quá trình phỏng vấn.",
+    "requirements": "Playwright\nSelenium\nTypeScript\nAPI Testing\nCI/CD\nTest Design\nPerformance Testing\nGit",
+    "status": "OPEN"
+  }
+]

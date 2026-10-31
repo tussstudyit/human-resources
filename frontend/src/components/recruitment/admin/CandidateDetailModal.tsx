@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import EvaluationPanel from './EvaluationPanel';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   FileText,
@@ -19,6 +20,11 @@ import {
   Briefcase,
   AlertCircle,
   Archive,
+  DollarSign,
+  Code2,
+  Zap,
+  Trash2,
+  XCircle,
 } from 'lucide-react';
 import { Candidate, InterviewScheduleInfo, TalentPoolInfo } from '@/types/recruitment';
 import {
@@ -26,19 +32,26 @@ import {
   reEvaluateCandidate,
   scheduleCandidateInterview,
   archiveCandidateTalentPool,
+  getEvaluationHistory,
+  getJobCandidates,
+  deleteCandidate,
+  rejectCandidate,
 } from '@/lib/api/recruitment';
 import { useToastStore } from '@/store/useToastStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface CandidateDetailModalProps {
   candidate: Candidate | null;
   onClose: () => void;
   onCandidateUpdated?: (updated: Candidate) => void;
+  onCandidateDeleted?: (id: string) => void;
 }
 
 export default function CandidateDetailModal({
   candidate,
   onClose,
   onCandidateUpdated,
+  onCandidateDeleted,
 }: CandidateDetailModalProps) {
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [loadingPdf, setLoadingPdf] = useState(false);
@@ -46,7 +59,62 @@ export default function CandidateDetailModal({
   const [reEvaluating, setReEvaluating] = useState(false);
   const [schedulingMeet, setSchedulingMeet] = useState(false);
   const [archivingPool, setArchivingPool] = useState(false);
+  const [deliveryPending, setDeliveryPending] = useState(false);
+  const [deliveryRevision, setDeliveryRevision] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const canDelete = useAuthStore(s => s.user?.role === 'HR' || s.user?.role === 'MANAGER');
+  const updatedRef = useRef(onCandidateUpdated);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  updatedRef.current = onCandidateUpdated;
   const { showToast } = useToastStore();
+
+  useEffect(() => {
+    if (!candidate?.id) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialogRef.current?.focus();
+    const trapFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const items = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),summary,[tabindex="0"]') || [])
+        .filter(element => element.getClientRects().length > 0);
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    };
+    document.addEventListener('keydown', trapFocus);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener('keydown', trapFocus);
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [candidate?.id]);
+
+  useEffect(() => {
+    if (!candidate?.id || !deliveryPending) return;
+    let active = true;
+    let count = 0;
+    const candidateId = candidate.id;
+    const jobId = candidate.jobId;
+    const timer = setInterval(async () => {
+      try {
+        const [history, candidates] = await Promise.all([getEvaluationHistory(candidateId), getJobCandidates(jobId)]);
+        if (!active) return;
+        const updated = candidates.find(c => c.id === candidateId);
+        if (updated) updatedRef.current?.(updated);
+        setDeliveryRevision(value => value + 1);
+        const waiting = history[0]?.events.some(e => e.type === 'DELIVERY_REQUESTED' && ['PENDING','PROCESSING'].includes(String(e.data.status)));
+        if (!waiting || ++count >= 24) setDeliveryPending(false);
+      } catch {
+        if (++count >= 24 && active) setDeliveryPending(false);
+      }
+    }, 2500);
+    return () => { active = false; clearInterval(timer); };
+  }, [candidate?.id, deliveryPending]);
 
   // Load PDF Blob when candidate changes
   useEffect(() => {
@@ -114,8 +182,15 @@ export default function CandidateDetailModal({
     }
   }
 
+  const salaryBenchmark = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? (parsed as any).salaryBenchmark : undefined;
+  const practicalScore = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? (parsed as any).practicalProjectScore : undefined;
+  const practicalHighlights = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? (parsed as any).practicalProjectHighlights : undefined;
+
   const score = candidate.matchScore ?? 0;
   const isPending = candidate.aiStatus === 'PENDING';
+  const evaluation = parsed && !Array.isArray(parsed) ? parsed.evaluation : undefined;
+  const approved = evaluation?.approvalStatus === 'APPROVED';
+  const rejected = parsed && !Array.isArray(parsed) && parsed.rejection?.status === 'REJECTED';
 
   const getScoreBadge = (sc: number) => {
     if (sc >= 80) return 'bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]';
@@ -133,7 +208,7 @@ export default function CandidateDetailModal({
         message: res.message || 'AI Agent đang tiến hành chấm lại hồ sơ...',
       });
       if (onCandidateUpdated) {
-        onCandidateUpdated({ ...candidate, aiStatus: 'PENDING' });
+        onCandidateUpdated({ ...candidate, aiStatus: 'PENDING', matchScore: null, parsedSkillsJson: { ...(parsed && !Array.isArray(parsed) ? parsed : {}), evaluation: { id: '', status: 'PENDING', approvalStatus: 'PENDING_HR' } } });
       }
     } catch {
       showToast({
@@ -150,31 +225,15 @@ export default function CandidateDetailModal({
     try {
       setSchedulingMeet(true);
       const res = await scheduleCandidateInterview(candidate.id, 'ONLINE');
+      setDeliveryPending(true);
+      if (!res.success) throw new Error(res.message);
       showToast({
         type: 'success',
-        title: 'Đã thiết lập lịch phỏng vấn',
+        title: 'Đã tiếp nhận yêu cầu phỏng vấn',
         message: res.message || 'Đang tạo sự kiện Google Calendar & link Meet...',
       });
       if (res?.updatedCandidate && onCandidateUpdated) {
         onCandidateUpdated(res.updatedCandidate);
-      } else if (res?.schedule && onCandidateUpdated) {
-        onCandidateUpdated({
-          ...candidate,
-          parsedSkillsJson: {
-            ...(typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { skills: skillsList }),
-            interviewSchedule: {
-              status: 'SCHEDULED',
-              type: 'ONLINE',
-              time: res.schedule.time || '09:30 - 10:30 (Giờ Việt Nam)',
-              location: res.schedule.location,
-              googleMeetUrl: res.schedule.googleMeetUrl,
-              isRealGoogleMeet: res.schedule.isRealGoogleMeet ?? true,
-              googleCalendarEventId: res.schedule.googleCalendarEventId,
-              googleCalendarHtmlLink: res.schedule.googleCalendarHtmlLink,
-              interviewer: res.interviewerPanel,
-            },
-          },
-        });
       }
     } catch (err: any) {
       showToast({
@@ -191,26 +250,15 @@ export default function CandidateDetailModal({
     try {
       setArchivingPool(true);
       const res = await archiveCandidateTalentPool(candidate.id);
+      setDeliveryPending(true);
+      if (!res.success) throw new Error(res.message);
       showToast({
         type: 'success',
-        title: 'Đã lưu vào kho nhân tài',
+        title: 'Đã tiếp nhận yêu cầu phản hồi',
         message: res.message || 'Đã phân bổ hồ sơ vào Kho Nhân Tài & gửi email phản hồi.',
       });
       if (res?.updatedCandidate && onCandidateUpdated) {
         onCandidateUpdated(res.updatedCandidate);
-      } else if (onCandidateUpdated) {
-        onCandidateUpdated({
-          ...candidate,
-          parsedSkillsJson: {
-            ...(typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { skills: skillsList }),
-            talentPool: {
-              tier: res?.tier || 'PRIORITY_TALENT_POOL',
-              status: 'ARCHIVED',
-              emailSent: true,
-              archivedAt: new Date().toISOString(),
-            },
-          },
-        });
       }
     } catch (err: any) {
       showToast({
@@ -221,6 +269,18 @@ export default function CandidateDetailModal({
     } finally {
       setArchivingPool(false);
     }
+  };
+
+  const handleReject = async () => {
+    if(!window.confirm(`Gửi thư từ chối ứng tuyển đến ${candidate.email} cho hồ sơ ${candidate.name}?\nWF_06 sẽ gửi email phản hồi và chuyển hồ sơ sang Đã từ chối sau khi xác nhận gửi thành công. Hồ sơ không được tự lưu vào Talent Pool.`))return;
+    setRejecting(true);
+    try{
+      const response=await rejectCandidate(candidate.id);
+      if(!response.success)throw new Error(response.message);
+      setDeliveryPending(true);
+      showToast({type:'info',title:'Đã tiếp nhận yêu cầu từ chối',message:'WF_06 đang xử lý thư phản hồi. Trạng thái gửi sẽ cập nhật trong lịch sử.'});
+    }catch(error:any){showToast({type:'error',title:'Chưa gửi được thư từ chối',message:error?.response?.data?.message||error?.message||'Vui lòng kiểm tra lịch sử và thử lại.'});}
+    finally{setRejecting(false);}
   };
 
   const handleDownload = () => {
@@ -244,18 +304,31 @@ export default function CandidateDetailModal({
     });
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(`Xóa hồ sơ của ${candidate.name}?\nThông tin ứng viên, CV và lịch sử đánh giá sẽ bị xóa khỏi hệ thống và không thể khôi phục tại đây. Lịch Google Calendar và email đã gửi không được thu hồi.`)) return;
+    setDeleting(true);
+    try {
+      const result = await deleteCandidate(candidate.id);
+      onCandidateDeleted?.(candidate.id);
+      onClose();
+      showToast({type:result.fileCleanupPending?'warning':'success',title:'Đã xóa hồ sơ',message:result.fileCleanupPending?'Hồ sơ đã được xóa. Quản trị viên cần kiểm tra việc dọn tệp CV.':'Đã xóa thông tin ứng viên, CV và lịch sử đánh giá.'});
+    } catch (error: any) {
+      showToast({type:'error',title:'Không xóa được hồ sơ',message:error?.response?.data?.message||'Vui lòng thử lại hoặc kiểm tra tác vụ đang xử lý.'});
+    } finally {setDeleting(false);}
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-sans">
-      <div className="bg-white border border-[#ebebeb] rounded-[12px] w-full max-w-7xl h-[92vh] flex flex-col shadow-[0px_4px_16px_rgba(0,0,0,0.08),0px_16px_32px_-4px_rgba(0,0,0,0.12)] overflow-hidden">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="candidate-details-title" tabIndex={-1} className="bg-white border border-[#ebebeb] rounded-[12px] w-full max-w-7xl h-[92vh] flex flex-col shadow-[0px_4px_16px_rgba(0,0,0,0.08),0px_16px_32px_-4px_rgba(0,0,0,0.12)] overflow-hidden">
         {/* Modal Top Bar */}
-        <div className="px-6 py-3.5 border-b border-slate-200 flex items-center justify-between bg-white">
+        <div className="px-4 sm:px-6 py-3.5 border-b border-slate-200 flex flex-wrap gap-3 items-center justify-between bg-white">
           <div className="flex items-center space-x-3.5">
             <div className="h-9 w-9 rounded-lg bg-linear-to-br from-red-600 to-rose-700 text-white flex items-center justify-center font-bold text-sm uppercase shadow-xs">
               {candidate.name[0] || 'C'}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+                <h2 id="candidate-details-title" className="text-sm font-bold text-slate-900 tracking-tight">
                   {candidate.name}
                 </h2>
                 {isPending ? (
@@ -268,7 +341,7 @@ export default function CandidateDetailModal({
                       score
                     )}`}
                   >
-                    MATCH_SCORE: {score}%
+                    {candidate.matchScore == null ? 'CHƯA CÓ ĐIỂM' : `MATCH_SCORE: ${candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}`}
                   </span>
                 )}
               </div>
@@ -290,10 +363,20 @@ export default function CandidateDetailModal({
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {canDelete && <button onClick={handleReject} disabled={rejecting || deleting || isPending || !approved || deliveryPending || schedulingMeet || archivingPool || !!rejected}
+              title={approved?'Gửi thư phản hồi từ chối qua WF_06':'Cần HR duyệt kết quả sau khi xem bằng chứng trước khi gửi thư'}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
+              <XCircle className="h-3.5 w-3.5" aria-hidden="true"/>{rejected?'Đã từ chối':rejecting?'Đang gửi yêu cầu…':'Từ chối / Gửi phản hồi'}
+            </button>}
+            {canDelete && <button onClick={handleDelete} disabled={deleting || rejecting || isPending || deliveryPending || schedulingMeet || archivingPool || reEvaluating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
+              title="Xóa thông tin ứng viên, CV và lịch sử đánh giá">
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true"/>{deleting?'Đang xóa…':'Xóa hồ sơ'}
+            </button>}
             <button
               onClick={handleScheduleMeet}
-              disabled={schedulingMeet || isPending}
+              disabled={schedulingMeet || rejecting || deleting || isPending || !approved || deliveryPending}
               className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Xếp lịch Google Meet và gửi thư mời cho ứng viên"
             >
@@ -303,7 +386,7 @@ export default function CandidateDetailModal({
 
             <button
               onClick={handleArchivePool}
-              disabled={archivingPool || isPending}
+              disabled={archivingPool || rejecting || deleting || isPending || !approved || deliveryPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Lưu kho nhân tài và gửi email phản hồi"
             >
@@ -313,7 +396,7 @@ export default function CandidateDetailModal({
 
             <button
               onClick={handleReEvaluate}
-              disabled={reEvaluating || isPending}
+              disabled={reEvaluating || rejecting || deleting || deliveryPending || isPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Gửi lại CV cho Gemini AI phân tích"
             >
@@ -343,9 +426,9 @@ export default function CandidateDetailModal({
         </div>
 
         {/* Modal Split View Body */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Left Column: Inline PDF Viewer */}
-          <div className="w-1/2 border-r border-[#ebebeb] flex flex-col bg-[#fafafa]">
+          <div className="w-full lg:w-1/2 h-48 lg:h-auto shrink-0 border-r border-[#ebebeb] flex flex-col bg-[#fafafa]">
             <div className="px-4 py-2 bg-white border-b border-[#ebebeb] flex items-center justify-between text-xs text-[#8f8f8f] font-mono">
               <span className="flex items-center font-medium text-[#171717]">
                 <FileText className="w-3.5 h-3.5 mr-1.5 text-[#0070f3]" />
@@ -380,13 +463,21 @@ export default function CandidateDetailModal({
           </div>
 
           {/* Right Column: AI Analysis & Insights */}
-          <div className="w-1/2 overflow-y-auto p-6 space-y-5 bg-white">
+          <div className="w-full lg:w-1/2 overflow-y-auto p-4 sm:p-6 space-y-5 bg-white">
+            {deliveryPending && <p role="status" className="text-sm text-slate-700">Đang kiểm tra kết quả gửi từ workflow…</p>}
+            <EvaluationPanel candidate={candidate} refreshKey={deliveryRevision} onApproved={(id) => {
+              if (onCandidateUpdated) onCandidateUpdated({ ...candidate, parsedSkillsJson: {
+                ...(parsed && !Array.isArray(parsed) ? parsed : {}), evaluation: {
+                  ...(evaluation || {}), id, status: evaluation?.status || 'DONE', approvalStatus: 'APPROVED'
+                }
+              }});
+            }} />
             {/* AI Match Score Summary Card */}
             <div className="border border-[#ebebeb] rounded-[8px] p-4 bg-[#fafafa] space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-mono text-[10px] font-medium text-[#8f8f8f] uppercase tracking-wider">
-                    ĐÁNH GIÁ TỪ GEMINI AI
+                    ĐÁNH GIÁ THEO RUBRIC VÀ BẰNG CHỨNG
                   </div>
                   <h3 className="text-xs font-semibold text-[#171717] mt-0.5">
                     Độ Tương Thích Tuyển Dụng
@@ -404,7 +495,7 @@ export default function CandidateDetailModal({
                       score
                     )}`}
                   >
-                    {score}%
+                    {candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}
                   </div>
                 )}
               </div>
@@ -432,6 +523,56 @@ export default function CandidateDetailModal({
               </div>
             </div>
 
+            {/* Enterprise Tech ATS Metrics: Salary Benchmark & Practical Project Score */}
+            {(salaryBenchmark || practicalScore !== undefined) && (
+              <div className="grid grid-cols-2 gap-3">
+                {salaryBenchmark && (
+                  <div className="border border-[#bbf7d0] bg-[#f0fdf4] rounded-[8px] p-3 space-y-1">
+                    <div className="font-mono text-[10px] font-semibold text-[#166534] uppercase tracking-wider flex items-center space-x-1">
+                      <DollarSign className="w-3 h-3 text-[#16a34a]" />
+                      <span>ĐỊNH GIÁ LƯƠNG AI</span>
+                    </div>
+                    <div className="text-xs font-bold text-[#15803d]">
+                      {salaryBenchmark.formatted || `${salaryBenchmark.minSalary} - ${salaryBenchmark.maxSalary} VND`}
+                    </div>
+                    <div className="text-[10px] text-[#166534] opacity-90">
+                      Cấp bậc: <span className="font-semibold">{salaryBenchmark.level || 'Chuyên viên'}</span>
+                    </div>
+                  </div>
+                )}
+
+                {practicalScore !== undefined && (
+                  <div className="border border-[#bfdbfe] bg-[#eff6ff] rounded-[8px] p-3 space-y-1">
+                    <div className="font-mono text-[10px] font-semibold text-[#1e40af] uppercase tracking-wider flex items-center space-x-1">
+                      <Zap className="w-3 h-3 text-[#2563eb]" />
+                      <span>THỰC CHIẾN DỰ ÁN</span>
+                    </div>
+                    <div className="text-xs font-bold text-[#1d4ed8]">
+                      {practicalScore}/100 Điểm
+                    </div>
+                    <div className="text-[10px] text-[#1e40af] opacity-90">
+                      Tư duy kiến trúc & Production
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Practical Project Highlights */}
+            {practicalHighlights && practicalHighlights.length > 0 && (
+              <div className="border border-[#ebebeb] bg-[#fafafa] rounded-[8px] p-3.5 space-y-2">
+                <div className="font-mono text-[10px] font-semibold text-[#171717] uppercase tracking-wider flex items-center space-x-1.5">
+                  <Code2 className="w-3.5 h-3.5 text-[#0070f3]" />
+                  <span>ĐIỂM SÁNG THỰC CHIẾN KỸ THUẬT</span>
+                </div>
+                <ul className="space-y-1.5 text-xs text-[#334155] list-disc list-inside">
+                  {practicalHighlights.map((h: string, i: number) => (
+                    <li key={i} className="leading-relaxed text-[11px]">{h}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Google Meet & Interview Schedule Card */}
             {interviewSchedule && (
               <div className="border border-[#0070f3]/30 bg-[#d3e5ff]/20 rounded-[8px] p-4 space-y-3">
@@ -440,8 +581,8 @@ export default function CandidateDetailModal({
                     <Calendar className="w-3.5 h-3.5" />
                     <span>LỊCH PHỎNG VẤN ĐÃ TẠO</span>
                   </div>
-                  <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-[#0070f3] text-white">
-                    CONFIRMED
+                  <span className={`font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] text-white ${interviewSchedule.rsvpStatus === 'CONFIRMED' ? 'bg-[#16a34a]' : 'bg-[#0070f3]'}`}>
+                    {interviewSchedule.rsvpStatus === 'CONFIRMED' ? '✓ ĐÃ XÁC NHẬN (RSVP)' : 'CHỜ XÁC NHẬN (PENDING)'}
                   </span>
                 </div>
 
@@ -463,6 +604,15 @@ export default function CandidateDetailModal({
                       <div className="font-mono text-[10px] text-[#8f8f8f]">
                         {interviewSchedule.interviewer.email}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Mini Code Challenge */}
+                  {interviewSchedule.miniCodeChallenge && (
+                    <div className="p-2.5 bg-white rounded-[6px] border border-[#cbd5e1] text-[11px] space-y-1">
+                      <div className="font-mono text-[10px] font-semibold text-[#0f172a] uppercase">💡 ĐỀ BÀI THẢO LUẬN KỸ THUẬT:</div>
+                      <div className="font-semibold text-[#2563eb]">{interviewSchedule.miniCodeChallenge.title}</div>
+                      <div className="text-[#475569]">{interviewSchedule.miniCodeChallenge.taskDescription}</div>
                     </div>
                   )}
 
@@ -515,7 +665,7 @@ export default function CandidateDetailModal({
                     <span>KHO LƯU TRỮ NHÂN TÀI</span>
                   </div>
                   <span className="font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-white border border-[#ebebeb] text-[#171717]">
-                    {talentPool.tier || 'ACTIVE'}
+                    {talentPool.detailedTalentTag || talentPool.tag || talentPool.tier || 'ACTIVE'}
                   </span>
                 </div>
 
@@ -530,6 +680,12 @@ export default function CandidateDetailModal({
                         : 'Lưu trữ vòng hồ sơ'}
                     </span>
                   </div>
+                  {talentPool.reEngagementDate && (
+                    <div className="flex items-center justify-between font-mono text-[11px] text-[#2563eb] font-semibold">
+                      <span>Chu kỳ tái liên hệ (6 tháng):</span>
+                      <span>{new Date(talentPool.reEngagementDate).toLocaleDateString('vi-VN')}</span>
+                    </div>
+                  )}
                   {talentPool.archivedAt && (
                     <div className="flex items-center justify-between font-mono text-[11px]">
                       <span className="text-[#8f8f8f]">Ngày lưu trữ:</span>
@@ -539,7 +695,7 @@ export default function CandidateDetailModal({
                   {talentPool.emailSent && (
                     <div className="flex items-center space-x-1 text-[#166534] pt-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>Đã gửi email thông báo từ chối tinh tế đến ứng viên</span>
+                      <span>Đã gửi email thông báo từ chối tinh tế & khảo sát CX đến ứng viên</span>
                     </div>
                   )}
                 </div>

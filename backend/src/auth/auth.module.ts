@@ -1,3 +1,4 @@
+import { jwtSecret } from './jwt-secret.js';
 import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -12,7 +13,7 @@ import { RolesGuard } from './guards/roles.guard.js';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'hr_jwt_secret_super_key_2026_antigravity',
+      secret: jwtSecret(),
       signOptions: { expiresIn: '7d' },
     }),
   ],

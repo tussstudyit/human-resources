@@ -1,7 +1,7 @@
 # 🚀 Hệ Thống 12 Workflows Tự Động Hóa Nhân Sự & Hạ Tầng (HR Automation Platform)
 
 > **Tài liệu đặc tả kiến trúc kỹ thuật và chi tiết từng node cho toàn bộ 12 Workflows n8n.**  
-> Hệ thống kết nối đồng bộ giữa **Next.js 16 (Port 3000)**, **NestJS Backend (Port 3001)**, **PostgreSQL (Port 5432)** và **n8n Automation Engine (Port 5678)** cùng công nghệ AI tiên tiến (Google Gemini).
+> Hệ thống kết nối đồng bộ giữa **Next.js 16 (Port 3000)**, **NestJS Backend (Port 3001)**, **PostgreSQL (Port 5432)** và **n8n Automation Engine (host 5679, container 5678)** cùng công nghệ AI tiên tiến (Google Gemini).
 
 ---
 
@@ -12,9 +12,9 @@
 | **Agent 5: Employee Engagement** | **WF 01** | Smart Survey Intake, Google Sheets Sync & Gemini AI Multi-Category | 12 | Webhook |
 | **Agent 5: Employee Engagement** | **WF 02** | Automated Wellbeing Action Dispatcher & Gemini AI Intervention | 11 | Webhook |
 | **Agent 5: Employee Engagement** | **WF 03** | Weekly Pulse Survey Dispatcher, Google Sheets & Gemini AI eNPS | 11 | Schedule (09:00 Thứ 2) |
-| **Agent 1: AI Recruitment (ATS)** | **WF 04** | AI Recruitment Multi-Branch Pipeline (CV Parsing & Scoring) | 17 | Webhook (`process-cv`) |
-| **Agent 1: AI Recruitment (ATS)** | **WF 05** | Enterprise Smart Interview Orchestrator & Calendar Sync | 9 | Webhook (`schedule-interview`) |
-| **Agent 1: AI Recruitment (ATS)** | **WF 06** | Polite Rejection Notification & Talent Pool Retention | 7 | Webhook (`rejection-notification`) |
+| **Agent 1: AI Recruitment (ATS)** | **WF 04** | AI Recruitment Multi-Branch Pipeline (CV Parsing & Scoring) | 45 | Webhook (`process-cv`) |
+| **Agent 1: AI Recruitment (ATS)** | **WF 05** | Enterprise Smart Interview Orchestrator & Calendar Sync | 19 | Webhook (`schedule-interview`) |
+| **Agent 1: AI Recruitment (ATS)** | **WF 06** | Polite Rejection Notification & Talent Pool Retention | 14 | Webhook (`rejection-notification`) |
 | **Agent 2: AI Onboarding** | **WF 07** | Automated IT Tool Provisioning (Okta, Jira, Slack, Email) | 12 | Webhook (`it-provisioning`) |
 | **Agent 2: AI Onboarding** | **WF 08** | First Week Check-in & Buddy Mentor Progress Tracking | 11 | Schedule (Thứ 6 hàng tuần) |
 | **Agent 3: AI Performance** | **WF 09** | 360° Feedback Reminder & Magic Link Review Pipeline | 11 | Schedule (Ngày 25 hàng tháng) |
@@ -86,60 +86,15 @@
 
 ---
 
-### 4. 🎯 [HR] WF 04 - AI Recruitment Multi-Branch Pipeline (CV Parsing & Scoring)
-*Phễu tuyển dụng thông minh: Tải file CV PDF, trích xuất text, chấm điểm đa tiêu chí qua Gemini AI và phân nhánh 3 Tiers.*
+### 4–6. Tuyển dụng Hybrid có bằng chứng (bản nâng cấp 30/10/2026)
 
-| STT | Tên Node | Loại Node (n8n Type) | Chức Năng Chi Tiết |
-| :---: | :--- | :--- | :--- |
-| **1** | `Webhook: Receive CV Application` | `n8n-nodes-base.webhook` | Tiếp nhận hồ sơ nộp từ trang tuyển dụng TopDev Careers |
-| **2** | `Download CV File` | `n8n-nodes-base.httpRequest` | Tải luồng file PDF nhị phân bảo mật từ Backend qua `x-api-key` |
-| **3** | `Extract Text From PDF` | `n8n-nodes-base.extractFromFile` | Trích xuất toàn bộ chuỗi văn bản thuần từ file PDF đính kèm |
-| **4** | `CV Has Content?` | `n8n-nodes-base.if` | Kiểm tra độ dài văn bản CV (tối thiểu 50 ký tự, tránh file rỗng) |
-| **5** | `Build Detailed Gemini Prompt` | `n8n-nodes-base.code` | Ghép bản mô tả công việc (JD) và nội dung CV thành prompt AI chuẩn |
-| **6** | `Gemini AI: Analyze CV` | `n8n-nodes-base.httpRequest` | Gọi Google Gemini API chấm điểm độ khớp (Match Score 0-100%) |
-| **7** | `Parse & Validate AI Evaluation` | `n8n-nodes-base.code` | Bóc tách JSON: `matchScore`, `techScore`, số năm kinh nghiệm, kỹ năng |
-| **8** | `Update Backend Node` | `n8n-nodes-base.httpRequest` | Cập nhật điểm AI và trạng thái `DONE` vào cơ sở dữ liệu Backend |
-| **9** | `Decision Router (3 Tiers)` | `n8n-nodes-base.switch` | Phân nhánh: Tier 1 (≥80%) / Tier 2 (50-79%) / Tier 3 (<50%) |
-| **10** | `Tier 1: Tạo Lịch Google Meet & Thư Mời` | `n8n-nodes-base.code` | Soạn thảo thư mời phỏng vấn nhanh và đề xuất lịch hẹn trực tuyến |
-| **11** | `Tier 1: Bắn Alert Tuyển Dụng Nhanh (HR Lead)` | `n8n-nodes-base.code` | Đóng gói thông báo ứng viên xuất sắc tới đội tuyển dụng |
-| **12** | `Tier 2: Phân Loại Đánh Giá Vòng 2` | `n8n-nodes-base.code` | Đưa hồ sơ tiềm năng vào hàng đợi duyệt thủ công (Manual Review) |
-| **13** | `Tier 2: Ghi Nhận Danh Sách Chờ Duyệt (HR Queue)` | `n8n-nodes-base.code` | Đánh dấu hạn xem xét CV trong 48 giờ cho Trưởng bộ phận |
-| **14** | `Tier 3: Soạn Thư Cảm Ơn & Lưu Trữ Talent Pool` | `n8n-nodes-base.code` | Soạn thư cảm ơn lịch thiệp và giữ lại mối liên hệ hợp tác |
-| **15** | `Tier 3: Đồng Bộ Vào Mạng Lưới Talent Pool` | `n8n-nodes-base.code` | Lưu hồ sơ dự phòng vào cơ sở dữ liệu nhân tài tương lai |
-| **16** | `Nhánh CV Lỗi: Báo Cáo Không Có Dữ Liệu` | `n8n-nodes-base.code` | Xử lý lỗi file PDF scan hình ảnh không có văn bản nhận diện |
-| **17** | `Update Backend (CV Lỗi)` | `n8n-nodes-base.httpRequest` | Đánh dấu hồ sơ cần ứng viên bổ sung file định dạng chuẩn |
+- **WF_04 — 45 node xử lý:** claim có xác thực, PDF parsing, JD/rubric đã duyệt, Gemini structured extraction, kiểm tra bằng chứng, scoring quy tắc, callback theo phiên và nhánh HR review.
+- **WF_05 — 19 node:** tác vụ phỏng vấn đã duyệt, Calendar/Meet thật, email và attachment ICS, lưu kết quả provider.
+- **WF_06 — 14 node:** phản hồi đã duyệt, Talent Pool, link CX có chữ ký và lưu kết quả SMTP.
 
----
+Không tự tạo điểm khi AI/PDF lỗi; không tự gửi thư từ chối chỉ dựa vào điểm. Backend tính lại điểm, giữ lịch sử và chặn callback/tác vụ trùng.
 
-### 5. 📅 [HR] WF 05 - Enterprise Smart Interview Orchestrator & Calendar Sync
-*Điều phối hội đồng phỏng vấn, tạo phòng họp Google Meet trực tuyến, gửi file lịch `.ics` và đồng bộ Backend.*
-
-| STT | Tên Node | Loại Node (n8n Type) | Chức Năng Chi Tiết |
-| :---: | :--- | :--- | :--- |
-| **1** | `Webhook: Intake Candidate (Score >= 80%)` | `n8n-nodes-base.webhook` | Tiếp nhận hồ sơ xuất sắc đạt chuẩn phỏng vấn |
-| **2** | `Smart Interviewer Panel Routing & Schedule Engine` | `n8n-nodes-base.code` | Thuật toán phân bổ người phỏng vấn theo chuyên môn & né Thứ 7/CN |
-| **3** | `Google Calendar: Tạo Sự Kiện & Meet Thật` | `n8n-nodes-base.code` | Sinh link phòng Google Meet thật chuẩn và mã định danh sự kiện lịch |
-| **4** | `Soạn Thư Mời & Tổng Hợp Packet` | `n8n-nodes-base.code` | Soạn thư mời với nút bấm Google Meet & tạo nội dung file lịch `.ics` |
-| **5** | `Stream 1: Candidate Email Dispatch` | `n8n-nodes-base.emailSend` | Gửi email thư mời phỏng vấn chính thức tới ứng viên qua SMTP |
-| **6** | `Stream 2: Interviewer Briefing Packet` | `n8n-nodes-base.code` | Đóng gói bản tóm tắt hồ sơ và trọng tâm kỹ thuật cho người phỏng vấn |
-| **7** | `Đồng Bộ Lịch Vào Backend NestJS` | `n8n-nodes-base.httpRequest` | Lưu lịch phỏng vấn và link Meet trực tiếp vào hồ sơ ứng viên |
-| **8** | `Tổng Hợp Kết Quả & Lịch Trình (Consolidator)` | `n8n-nodes-base.code` | Hợp nhất kết quả gửi mail và phản hồi trạng thái từ cơ sở dữ liệu |
-| **9** | `Phản Hồi Webhook Kết Quả` | `n8n-nodes-base.respondToWebhook` | Trả về payload xác nhận lịch hẹn đã hoàn thành tổ chức |
-
----
-
-### 6. 💌 [HR] WF 06 - Polite Rejection Notification & Talent Pool Retention
-*Soạn thư từ chối 3 kịch bản lịch thiệp dựa trên điểm số và đồng bộ vào mạng lưới nhân tài (Talent Pool).*
-
-| STT | Tên Node | Loại Node (n8n Type) | Chức Năng Chi Tiết |
-| :---: | :--- | :--- | :--- |
-| **1** | `Webhook: Tiếp Nhận Hồ Sơ` | `n8n-nodes-base.webhook` | Nhận yêu cầu thông báo kết quả cho ứng viên chưa phù hợp |
-| **2** | `Phân Loại Kịch Bản & Soạn Thư Từ Chối` | `n8n-nodes-base.code` | Phân 3 kịch bản: Lọc hồ sơ (<50%) / Sau phỏng vấn (50-69%) / Top Talent (70-79%) |
-| **3** | `Stream 1: Gửi Email Thật Qua Gmail SMTP` | `n8n-nodes-base.emailSend` | Gửi email cảm ơn và phản hồi lịch sự, trân trọng tới ứng viên |
-| **4** | `Stream 2: Gói Báo Cáo Phân Loại Cho HR Squad` | `n8n-nodes-base.code` | Phân tầng Talent Pool (General, Retained hoặc Priority) |
-| **5** | `Stream 3: Đồng Bộ Lịch Sử Vào NestJS Backend` | `n8n-nodes-base.httpRequest` | Cập nhật trạng thái `ARCHIVED` và tier lưu trữ vào Database Backend |
-| **6** | `Tổng Hợp Kết Quả (Consolidator)` | `n8n-nodes-base.code` | Kiểm tra kết quả gửi mail và mã lưu trữ nhân tài |
-| **7** | `Phản Hồi Webhook Kết Quả` | `n8n-nodes-base.respondToWebhook` | Xác nhận ứng viên đã được xử lý xong quy trình phản hồi |
+Xem **[hướng dẫn Hybrid Recruitment](docs/HYBRID_RECRUITMENT.md)** để cấu hình, duyệt rubric, demo, kiểm thử và import/publish. Các số node trong những bản backup là phiên bản cũ.
 
 ---
 

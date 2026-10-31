@@ -825,6 +825,7 @@ export default function DashboardPage() {
                       : 'bg-[#fef2f2] text-[#991b1b] border-[#fecaca]';
 
                   const stageLabel =
+                    item.aiStatus === 'FAILED' ? 'Lỗi xử lý' :
                     item.stage === 'INTERVIEW'
                       ? 'Lịch Meet'
                       : item.stage === 'TALENT_POOL'

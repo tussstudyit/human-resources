@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Job } from '@/types/topdev';
 import { applyJob } from '@/lib/api/recruitment';
 import { 
-  X, 
   Upload, 
   FileText, 
   CheckCircle2, 
@@ -29,19 +28,23 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [fullName, setFullName] = useState('Đoàn Thanh Huy');
-  const [email, setEmail] = useState('huy.dev@gmail.com');
-  const [phone, setPhone] = useState('0912345678');
-  const [salaryExpectation, setSalaryExpectation] = useState('Thương lượng (hoặc 2,500 USD)');
-  const [coverNote, setCoverNote] = useState(
-    'Kính gửi Bộ phận Tuyển dụng, tôi có hơn 4 năm kinh nghiệm làm việc thực tế với các công nghệ phù hợp với yêu cầu vị trí. Rất mong muốn được đóng góp cho công ty.'
-  );
-  
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [salaryExpectation, setSalaryExpectation] = useState('');
+  const [coverNote, setCoverNote] = useState('');
+
   const [file, setFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [appId, setAppId] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setFullName('');setEmail('');setPhone('');setSalaryExpectation('');setCoverNote('');
+    setFile(null);setErrorMsg(null);setIsDone(false);setAppId('');
+  }, [job.id, isOpen]);
 
   if (!isOpen) return null;
 
@@ -101,12 +104,13 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
   const handleReset = () => {
     setIsDone(false);
     setErrorMsg(null);
+    setFullName('');setEmail('');setPhone('');setSalaryExpectation('');setCoverNote('');setFile(null);setAppId('');
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+    <section id="job-application" tabIndex={-1} aria-label="Biểu mẫu ứng tuyển" className="scroll-mt-24 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div className="relative w-full bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
         
         {/* Modal Top Bar matching UpCareer brand */}
         <div className="px-6 py-4 bg-[#1E293B] text-white flex items-center justify-between">
@@ -115,16 +119,11 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
               UC
             </div>
             <div>
-              <h3 className="text-sm font-bold tracking-tight">Ứng Tuyển Nhanh</h3>
+              <h3 className="text-sm font-bold tracking-tight">Ứng tuyển vị trí này</h3>
               <p className="text-[11px] text-slate-300">Nền tảng tuyển dụng UpCareer Platform</p>
             </div>
           </div>
-          <button
-            onClick={handleReset}
-            className="p-1.5 text-slate-400 hover:text-white rounded-full transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
         </div>
 
         {isDone ? (
@@ -208,10 +207,10 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
             {/* Inputs Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="application-name" className="block text-xs font-bold text-slate-700 mb-1">
                   Họ và tên <span className="text-red-500">*</span>
                 </label>
-                <input
+                <input id="application-name" autoComplete="name"
                   type="text"
                   required
                   value={fullName}
@@ -222,10 +221,10 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="application-phone" className="block text-xs font-bold text-slate-700 mb-1">
                   Số điện thoại <span className="text-red-500">*</span>
                 </label>
-                <input
+                <input id="application-phone" autoComplete="tel"
                   type="tel"
                   required
                   value={phone}
@@ -238,10 +237,10 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="application-email" className="block text-xs font-bold text-slate-700 mb-1">
                   Email liên hệ <span className="text-red-500">*</span>
                 </label>
-                <input
+                <input id="application-email" autoComplete="email"
                   type="email"
                   required
                   value={email}
@@ -252,10 +251,10 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="application-salary" className="block text-xs font-bold text-slate-700 mb-1">
                   Mức lương mong muốn
                 </label>
-                <input
+                <input id="application-salary"
                   type="text"
                   value={salaryExpectation}
                   onChange={(e) => setSalaryExpectation(e.target.value)}
@@ -306,10 +305,10 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
 
             {/* Cover Note */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="application-cover" className="block text-xs font-bold text-slate-700 mb-1">
                 Thư giới thiệu / Lời nhắn tới nhà tuyển dụng (Cover Letter)
               </label>
-              <textarea
+              <textarea id="application-cover"
                 rows={3}
                 value={coverNote}
                 onChange={(e) => setCoverNote(e.target.value)}
@@ -322,10 +321,10 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
             <div className="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
               <button
                 type="button"
-                onClick={handleReset}
+                onClick={onClose}
                 className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
               >
-                Hủy bỏ
+                Xem lại mô tả công việc
               </button>
 
               <button
@@ -351,6 +350,6 @@ export const ApplicationModal: React.FC<ApplicationModalProps> = ({
         )}
 
       </div>
-    </div>
+    </section>
   );
 };

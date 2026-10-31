@@ -1,4 +1,6 @@
+import { jwtSecret } from '../../auth/jwt-secret.js';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service.js';
 import { JwtService } from '@nestjs/jwt';
 import * as crypto from 'crypto';
 
@@ -13,7 +15,7 @@ function safeCompare(a: string, b: string): boolean {
 
 @Injectable()
 export class HrOrApiKeyGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService, private readonly prisma: PrismaService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -32,10 +34,11 @@ export class HrOrApiKeyGuard implements CanActivate {
       const token = authHeader.substring(7);
       try {
         const payload = await this.jwtService.verifyAsync(token, {
-          secret: process.env.JWT_SECRET || 'hr_jwt_secret_super_key_2026_antigravity',
+          secret: jwtSecret(),
         });
-        if (payload && payload.role === 'HR') {
-          request.user = payload;
+        const user = payload?.sub ? await this.prisma.user.findUnique({where:{id:payload.sub}}) : null;
+        if (user?.isActive && ['HR', 'MANAGER'].includes(user.role)) {
+          request.user = {id:user.id, role:user.role};
           return true;
         }
       } catch {

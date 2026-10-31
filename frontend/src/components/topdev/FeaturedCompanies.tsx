@@ -1,15 +1,20 @@
 'use client';
 
 import React from 'react';
-import { CompanySpotlight } from '@/types/topdev';
+import { Job } from '@/types/topdev';
 import { SPOTLIGHT_COMPANIES } from '@/data/topdevMockData';
 import { Building2, Star, ArrowRight, MapPin } from 'lucide-react';
 
 interface FeaturedCompaniesProps {
   onSelectCompany: (companyName: string) => void;
+  jobs?: Job[];
 }
 
-export const FeaturedCompanies: React.FC<FeaturedCompaniesProps> = ({ onSelectCompany }) => {
+export const FeaturedCompanies: React.FC<FeaturedCompaniesProps> = ({ onSelectCompany, jobs = [] }) => {
+  const companies = SPOTLIGHT_COMPANIES.map(company => ({
+    ...company,
+    openJobsCount: jobs.filter(job => job.isRealFromBackend && job.company.name === company.name).length,
+  }));
   return (
     <section id="companies-section" className="py-12 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,7 +45,7 @@ export const FeaturedCompanies: React.FC<FeaturedCompaniesProps> = ({ onSelectCo
 
         {/* Company Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {SPOTLIGHT_COMPANIES.map((company) => (
+          {companies.map((company) => (
             <div
               key={company.id}
               onClick={() => onSelectCompany(company.name)}

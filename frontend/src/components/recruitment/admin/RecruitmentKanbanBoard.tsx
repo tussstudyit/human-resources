@@ -16,11 +16,13 @@ import { Candidate, InterviewScheduleInfo, TalentPoolInfo } from '@/types/recrui
 interface RecruitmentKanbanBoardProps {
   candidates: Candidate[];
   onSelectCandidate: (c: Candidate) => void;
+  jobTitles?: Record<string, string>;
 }
 
 export default function RecruitmentKanbanBoard({
   candidates,
   onSelectCandidate,
+  jobTitles,
 }: RecruitmentKanbanBoardProps) {
   // Helper to extract parsed data safely
   const getParsedData = (candidate: Candidate) => {
@@ -40,24 +42,30 @@ export default function RecruitmentKanbanBoard({
     return { skills, interviewSchedule, talentPool };
   };
 
-  // Categorize candidates into 5 columns
+  // Delivery stage is independent of the latest AI review status.
   const pendingCol: Candidate[] = [];
   const evaluatedCol: Candidate[] = [];
+  const reviewCol: Candidate[] = [];
   const interviewCol: Candidate[] = [];
   const talentPoolCol: Candidate[] = [];
   const rejectedCol: Candidate[] = [];
+  const declinedCol: Candidate[] = [];
 
   candidates.forEach((c) => {
     const { interviewSchedule, talentPool } = getParsedData(c);
 
-    if (c.aiStatus === 'PENDING') {
-      pendingCol.push(c);
-    } else if (interviewSchedule && interviewSchedule.googleMeetUrl) {
+    if (c.parsedSkillsJson && !Array.isArray(c.parsedSkillsJson) && c.parsedSkillsJson.rejection?.status==='REJECTED') {
+      declinedCol.push(c);
+    } else if (interviewSchedule && interviewSchedule.status !== 'CANCELLED' && (interviewSchedule.googleMeetUrl || interviewSchedule.status === 'SCHEDULED')) {
       interviewCol.push(c);
     } else if (talentPool && talentPool.tier) {
       talentPoolCol.push(c);
+    } else if (c.aiStatus === 'PENDING') {
+      pendingCol.push(c);
     } else if (c.aiStatus === 'FAILED') {
       rejectedCol.push(c);
+    } else if (c.parsedSkillsJson && !Array.isArray(c.parsedSkillsJson) && c.parsedSkillsJson.evaluation?.status === 'NEEDS_REVIEW') {
+      reviewCol.push(c);
     } else {
       evaluatedCol.push(c);
     }
@@ -71,6 +79,7 @@ export default function RecruitmentKanbanBoard({
       count: pendingCol.length,
       items: pendingCol,
     },
+    {id: 'review', title: 'Cần HR xem xét', icon: Clock, count: reviewCol.length, items: reviewCol},
     {
       id: 'evaluated',
       title: 'AI Đã Đánh Giá',
@@ -94,11 +103,12 @@ export default function RecruitmentKanbanBoard({
     },
     {
       id: 'rejected',
-      title: 'Không Phù Hợp',
+      title: 'Lỗi xử lý / Cần kiểm tra',
       icon: XCircle,
       count: rejectedCol.length,
       items: rejectedCol,
     },
+    {id:'declined',title:'Đã từ chối',icon:XCircle,count:declinedCol.length,items:declinedCol},
   ];
 
   const getScoreBadge = (score: number) => {
@@ -112,12 +122,14 @@ export default function RecruitmentKanbanBoard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5 h-full min-h-[600px] select-none font-sans">
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-7 gap-3.5 h-full min-h-[600px] select-none font-sans">
       {columns.map((col) => {
         const IconComponent = col.icon;
         return (
           <div
             key={col.id}
+            role="region"
+            aria-label={col.title}
             className="flex flex-col bg-white border border-[#ebebeb] rounded-[12px] overflow-hidden shadow-[0px_1px_1px_rgba(0,0,0,0.04)]"
           >
             {/* Column Header - Vercel Spec-sheet style */}
@@ -160,7 +172,7 @@ export default function RecruitmentKanbanBoard({
                         }
                       }}
                       className="group p-3 rounded-[8px] bg-white border border-[#ebebeb] hover:border-red-400/60 cursor-pointer transition-all shadow-[0px_1px_1px_rgba(0,0,0,0.04)] hover:shadow-md hover-lift focus-ring space-y-2"
-                      aria-label={`Xem chi tiết hồ sơ ${candidate.name}, điểm tương thích ${score}%`}
+                      aria-label={`Xem chi tiết hồ sơ ${candidate.name}, ${candidate.matchScore == null ? 'chưa có điểm' : `điểm tương thích ${candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}`}`}
                     >
                       {/* Name & Score */}
                       <div className="flex items-start justify-between gap-2">
@@ -172,6 +184,7 @@ export default function RecruitmentKanbanBoard({
                             <Mail className="w-3 h-3 mr-1 shrink-0 text-[#a1a1a1]" aria-hidden="true" />
                             <span className="truncate">{candidate.email}</span>
                           </p>
+                          {jobTitles?.[candidate.jobId] && <p className="mt-1 truncate text-[10px] text-slate-600" title={jobTitles[candidate.jobId]}>{jobTitles[candidate.jobId]}</p>}
                         </div>
 
                         {candidate.aiStatus === 'PENDING' ? (
@@ -185,7 +198,7 @@ export default function RecruitmentKanbanBoard({
                               score
                             )}`}
                           >
-                            {score}%
+                            {candidate.matchScore == null ? 'Chưa có điểm' : `${score}%`}
                           </span>
                         ) : null}
                       </div>
