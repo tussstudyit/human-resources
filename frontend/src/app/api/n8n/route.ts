@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
       endpoint = '/webhook/first-week-checkin';
     } else if (workflow === 'feedback_reminder') {
       endpoint = '/webhook/feedback-reminder';
-    } else if (workflow === 'course_recommender' || workflow === 'training_reminder') {
+    } else if (workflow === 'training_reminder') {
+      endpoint = '/webhook/training-reminder';
+    } else if (workflow === 'course_recommender') {
       endpoint = '/webhook/recommend-courses';
     } else if (workflow === 'engagement_survey' || workflow === 'survey_response') {
       endpoint = '/webhook/employee-survey-response';

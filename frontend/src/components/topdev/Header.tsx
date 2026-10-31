@@ -183,11 +183,11 @@ export const Header: React.FC<HeaderProps> = ({
     return getRoleBadgeInfo(role).badgeClass;
   };
 
-  const isHRPage = ['/dashboard', '/recruitment'].some(
+  const isHRPage = ['/dashboard', '/recruitment', '/performance'].some(
     p => pathname === p || pathname.startsWith(p + '/')
   );
 
-  const isEmployeePage = ['/onboarding', '/training', '/engagement', '/performance', '/bieu-mau-danh-gia-360'].some(
+  const isEmployeePage = ['/onboarding', '/training', '/engagement', '/bieu-mau-danh-gia-360'].some(
     p => pathname === p || pathname.startsWith(p + '/')
   );
 
@@ -275,16 +275,6 @@ export const Header: React.FC<HeaderProps> = ({
                         <span className="leading-tight">Tuyển Dụng & Ứng Viên (ATS)</span>
                       </Link>
                       <Link
-                        href="/onboarding"
-                        onClick={() => setHrDropdownOpen(false)}
-                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                          pathname === '/onboarding' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                        }`}
-                      >
-                        <Compass className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Tiếp Nhận & Hội Nhập Nhân Sự</span>
-                      </Link>
-                      <Link
                         href="/performance"
                         onClick={() => setHrDropdownOpen(false)}
                         className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
@@ -302,7 +292,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <GraduationCap className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Đào Tạo & Phát Triển Kỹ Năng</span>
+                        <span className="leading-tight">Quản Trị Đào Tạo & Kỹ Năng</span>
                       </Link>
                       <Link
                         href="/engagement"
@@ -312,7 +302,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <Heart className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Khảo Sát Gắn Kết & Phúc Lợi</span>
+                        <span className="leading-tight">Quản Trị Gắn Kết & Phúc Lợi</span>
                       </Link>
                     </div>
                   )}
@@ -350,7 +340,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <Compass className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Hội Nhập & Nhận Việc</span>
+                        <span className="leading-tight">Nhiệm Vụ Hội Nhập Của Tôi</span>
                       </Link>
                       <Link
                         href="/training"
@@ -360,7 +350,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <GraduationCap className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Lộ Trình Đào Tạo & Kỹ Năng</span>
+                        <span className="leading-tight">Lộ Trình Đào Tạo Của Tôi</span>
                       </Link>
                       <Link
                         href="/engagement"
@@ -370,17 +360,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <Heart className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Khảo Sát Ý Kiến & Phúc Lợi</span>
-                      </Link>
-                      <Link
-                        href="/performance"
-                        onClick={() => setHrDropdownOpen(false)}
-                        className={`mx-1 flex min-h-10 items-center gap-2.5 rounded-lg px-3.5 py-2 text-xs font-semibold hover:bg-red-50 hover:text-red-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-inset ${
-                          pathname === '/performance' ? 'bg-red-50 text-red-600 font-bold' : 'text-slate-700'
-                        }`}
-                      >
-                        <TrendingUp className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Quản Trị Hiệu Suất 360°</span>
+                        <span className="leading-tight">Gắn Kết Đời Sống & Khảo Sát Nhịp Đập</span>
                       </Link>
                       <Link
                         href="/bieu-mau-danh-gia-360"
@@ -390,7 +370,7 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <FileText className="w-4 h-4 text-slate-400" />
-                        <span className="leading-tight">Biểu Mẫu Đánh Giá 360°</span>
+                        <span className="leading-tight">Biểu Mẫu Tự Đánh Giá 360°</span>
                       </Link>
                     </div>
                   )}
@@ -546,15 +526,6 @@ export const Header: React.FC<HeaderProps> = ({
                             </Link>
 
                             <Link
-                              href="/onboarding"
-                              onClick={() => setProfileDropdownOpen(false)}
-                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                            >
-                              <Compass className="w-4 h-4 text-slate-400" />
-                              <span>Tiếp Nhận & Hội Nhập Nhân Sự</span>
-                            </Link>
-
-                            <Link
                               href="/performance"
                               onClick={() => setProfileDropdownOpen(false)}
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
@@ -569,7 +540,7 @@ export const Header: React.FC<HeaderProps> = ({
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                             >
                               <GraduationCap className="w-4 h-4 text-slate-400" />
-                              <span>Đào Tạo & Phát Triển Kỹ Năng</span>
+                              <span>Quản Trị Đào Tạo & Kỹ Năng</span>
                             </Link>
 
                             <Link
@@ -578,7 +549,7 @@ export const Header: React.FC<HeaderProps> = ({
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                             >
                               <Heart className="w-4 h-4 text-slate-400" />
-                              <span>Khảo Sát Gắn Kết & Phúc Lợi</span>
+                              <span>Quản Trị Gắn Kết & Phúc Lợi</span>
                             </Link>
                           </>
                         ) : (
@@ -589,7 +560,7 @@ export const Header: React.FC<HeaderProps> = ({
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                             >
                               <Compass className="w-4 h-4 text-slate-400" />
-                              <span>Hội Nhập & Nhận Việc</span>
+                              <span>Nhiệm Vụ Hội Nhập Của Tôi</span>
                             </Link>
 
                             <Link
@@ -598,7 +569,7 @@ export const Header: React.FC<HeaderProps> = ({
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                             >
                               <GraduationCap className="w-4 h-4 text-slate-400" />
-                              <span>Lộ Trình Đào Tạo & Kỹ Năng</span>
+                              <span>Lộ Trình Đào Tạo Của Tôi</span>
                             </Link>
 
                             <Link
@@ -607,16 +578,7 @@ export const Header: React.FC<HeaderProps> = ({
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                             >
                               <Heart className="w-4 h-4 text-slate-400" />
-                              <span>Khảo Sát Ý Kiến & Phúc Lợi</span>
-                            </Link>
-
-                            <Link
-                              href="/performance"
-                              onClick={() => setProfileDropdownOpen(false)}
-                              className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
-                            >
-                              <TrendingUp className="w-4 h-4 text-slate-400" />
-                              <span>Quản Trị Hiệu Suất 360°</span>
+                              <span>Gắn Kết Đời Sống & Khảo Sát Nhịp Đập</span>
                             </Link>
 
                             <Link
@@ -625,7 +587,7 @@ export const Header: React.FC<HeaderProps> = ({
                               className="flex items-center gap-2.5 px-4 py-2 hover:bg-red-50/60 hover:text-red-600 transition-colors"
                             >
                               <FileText className="w-4 h-4 text-slate-400" />
-                              <span>Biểu Mẫu Đánh Giá 360°</span>
+                              <span>Biểu Mẫu Tự Đánh Giá 360°</span>
                             </Link>
                           </>
                         )}
@@ -744,21 +706,12 @@ export const Header: React.FC<HeaderProps> = ({
                 </Link>
 
                 <Link
-                  href="/onboarding"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-                >
-                  <Compass className="w-4 h-4 text-slate-500" />
-                  Tiếp Nhận & Hội Nhập Nhân Sự
-                </Link>
-
-                <Link
                   href="/performance"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <TrendingUp className="w-4 h-4 text-slate-500" />
-                  Quản Trị Hiệu Suất & Đánh Giá 360°
+                  Quản Trị Hiệu Suất 360°
                 </Link>
 
                 <Link
@@ -767,7 +720,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <GraduationCap className="w-4 h-4 text-slate-500" />
-                  Đào Tạo & Phát Triển Kỹ Năng
+                  Quản Trị Đào Tạo & Kỹ Năng
                 </Link>
 
                 <Link
@@ -776,7 +729,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <Heart className="w-4 h-4 text-slate-500" />
-                  Khảo Sát Gắn Kết & Phúc Lợi
+                  Quản Trị Gắn Kết & Phúc Lợi
                 </Link>
               </>
             ) : isEmployee ? (
@@ -787,7 +740,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <Compass className="w-4 h-4 text-slate-500" />
-                  Hội Nhập & Nhận Việc
+                  Nhiệm Vụ Hội Nhập Của Tôi
                 </Link>
 
                 <Link
@@ -796,7 +749,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <GraduationCap className="w-4 h-4 text-slate-500" />
-                  Lộ Trình Đào Tạo & Kỹ Năng
+                  Lộ Trình Đào Tạo Của Tôi
                 </Link>
 
                 <Link
@@ -805,16 +758,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <Heart className="w-4 h-4 text-slate-500" />
-                  Khảo Sát Ý Kiến & Phúc Lợi
-                </Link>
-
-                <Link
-                  href="/performance"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
-                >
-                  <TrendingUp className="w-4 h-4 text-slate-500" />
-                  Quản Trị Hiệu Suất & Đánh Giá 360°
+                  Gắn Kết Đời Sống & Khảo Sát Nhịp Đập
                 </Link>
 
                 <Link
@@ -823,7 +767,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left py-2.5 px-3 text-slate-800 hover:bg-slate-100 rounded-md flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4 text-slate-500" />
-                  Biểu Mẫu Đánh Giá 360°
+                  Biểu Mẫu Tự Đánh Giá 360°
                 </Link>
               </>
             ) : null}
