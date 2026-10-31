@@ -2,7 +2,7 @@
 
 ## Phạm vi triển khai
 
-- WF_04: **45 node xử lý**, không dùng Sticky Note để tăng số lượng.
+- WF_04: **46 node xử lý**, không dùng Sticky Note để tăng số lượng.
 - WF_05: **19 node**, phỏng vấn đã duyệt, Calendar/Meet thật, attachment ICS và kết quả SMTP.
 - WF_06: **14 node**, phản hồi đã duyệt, Talent Pool và kết quả SMTP.
 - Nguồn chuẩn: `n8n/workflows`. Ba file tương ứng trong `workflows` được sinh cùng lúc và giống nhau.
@@ -11,11 +11,11 @@
 ## Luồng vận hành
 
 1. Người dùng nộp PDF qua API NestJS hiện có.
-2. Backend tạo `EvaluationRun`, chụp JD/rubric và hash PDF; liên kết phiên mới nhất vào Candidate.
+2. Backend tự tạo rubric có phiên bản từ yêu cầu JD khi đăng/sửa vị trí hoặc khi nhận CV. Nếu HR đã chỉnh rubric đúng phiên bản JD thì ưu tiên bản HR. Sau đó tạo `EvaluationRun`, chụp JD/rubric và hash PDF; liên kết phiên mới nhất vào Candidate. Không cần HR duyệt rubric trước khi chấm.
 3. Backend gửi **chỉ evaluationId** tới WF_04. Tên/email/fileUrl từ bên gọi không được tin cậy.
 4. Webhook n8n xác thực Header Auth trước; WF_04 tiếp tục chuyển header x-api-key đến API claim. Backend xác thực và claim nguyên tử **trước khi tải file hoặc gọi AI**. Yêu cầu sai bị từ chối; yêu cầu trùng không chạy lại.
 5. Sau khi claim, webhook phản hồi 202. Kết quả cuối được cập nhật qua callback riêng.
-6. Thiếu rubric đã duyệt hoặc PDF không đọc được: chuyển `NEEDS_REVIEW`, điểm `null`.
+6. JD thiếu kỹ năng đủ rõ để tạo rubric (`JD_REQUIREMENTS_REQUIRED`) hoặc PDF không đọc được: chuyển `NEEDS_REVIEW`, điểm `null`. Rubric tự động hợp lệ được dùng ngay, không chặn vì chưa duyệt.
 7. Gemini phân tích JD, trích xuất claims và đoạn dẫn chứng. Schema/type/finishReason phải hợp lệ. Output CV được sửa tối đa một lần; không fallback điểm 75.
 8. Chuẩn hóa kỹ năng, đối chiếu đoạn trích, tính điểm theo quy tắc và tạo báo cáo giải thích.
 9. Backend **tự tính lại** bằng cùng scoring engine, lưu lịch sử và chỉ cập nhật projection nếu đây là phiên mới nhất.
@@ -27,13 +27,13 @@
 
 1. Đăng nhập tài khoản **HR đã có**. Đăng ký công khai luôn tạo EMPLOYEE, không tự cấp quyền HR.
 2. Mở Tuyển dụng → chọn job → mở một ứng viên.
-3. Trong “Đánh giá có bằng chứng”, kiểm tra kỹ năng yêu cầu và bốn trọng số; tổng phải bằng 100. Bấm **Duyệt rubric phiên bản mới**.
-4. Bấm **Chấm lại AI**. Mỗi lần tạo một phiên mới; lịch sử cũ vẫn còn.
+3. Nộp CV mới: hệ thống tự tạo/lấy rubric và chấm. Trong “Đánh giá có bằng chứng”, xem nhãn rubric tự động hoặc HR đã điều chỉnh.
+4. Nếu cần, HR chỉnh kỹ năng và bốn trọng số (tổng 100), bấm **Lưu rubric điều chỉnh**, rồi **Chấm lại AI** để áp dụng cho hồ sơ cũ. Mỗi lần tạo một phiên mới; lịch sử cũ vẫn còn.
 5. Xem cột “Cần HR xem xét”, điểm từng tiêu chí, đoạn trích và lý do bất định.
 6. Chỉ khi đã đọc bằng chứng, bấm **Duyệt kết quả**. Lúc này mới mở thao tác phỏng vấn/Talent Pool.
 7. Trạng thái `ACCEPTED` chỉ là nhận yêu cầu. Xem sự kiện DELIVERY_RESULT để biết gửi SMTP thành công hay thất bại.
 
-JD thay đổi sẽ làm rubric cũ không còn áp dụng; phải duyệt rubric phù hợp và chấm lại. Không cho duyệt kết quả theo JD cũ sau khi JD đã đổi.
+JD thay đổi sẽ tự tạo rubric mới, không áp dụng rubric cũ khác source hash. Hồ sơ cũ vẫn giữ điểm/lịch sử; chấm lại khi cần áp dụng JD mới. Không cho duyệt kết quả theo JD cũ sau khi JD đã đổi.
 
 ## Rubric v1
 
@@ -54,7 +54,7 @@ Migration: `20261030140000_hybrid_evaluation_history` chỉ bổ sung cột/bả
 
 | Bảng | Mục đích |
 |---|---|
-| job_rubric_versions | JD snapshot, source hash, kỹ năng, trọng số, người duyệt |
+| job_rubric_versions | JD snapshot, source hash, kỹ năng, trọng số; approvedAt/approvedBy null cho rubric tự động, có giá trị khi HR chủ động điều chỉnh |
 | evaluation_runs | Phiên đánh giá, hash PDF, model/prompt version, report và trạng thái |
 | evaluation_events | Tiếp nhận, kết quả, HR duyệt, delivery, CX và timeout |
 

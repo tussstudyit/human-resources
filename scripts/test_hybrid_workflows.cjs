@@ -20,6 +20,13 @@ test('exports contain executable, connected nodes and no literal API keys',()=>{
  }
  assert.ok(wf.nodes.length>=45&&wf.nodes.length<=55);assert.ok(!wf.nodes.some(n=>n.type.endsWith('.stickyNote')));
 });
+test('WF04 accepts any valid versioned rubric, without requiring HR approval',()=>{
+ const gate=wf.nodes.find(n=>n.name==='Rubric Available?');
+ assert.ok(gate);const condition=gate.parameters.conditions.conditions[0].leftValue;
+ assert.ok(condition.includes('requiredSkills'));assert.ok(!condition.includes('approvedAt'));
+ assert.ok(!JSON.stringify(wf).includes('RUBRIC_APPROVAL_REQUIRED'));
+ assert.ok(wf.nodes.find(n=>n.name==='Missing Rubric Review').parameters.jsCode.includes('JD_REQUIREMENTS_REQUIRED'));
+});
 test('upstream error and truncated AI output never become valid scored extractions',async()=>{
  const previous={'Canonical Context':{ctx:{evaluationId:'synthetic'}}};
  for(const response of [{error:'rate limited'},{candidates:[{finishReason:'MAX_TOKENS',content:{parts:[{text:'{}'}]}}]},

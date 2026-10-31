@@ -7,7 +7,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 
 const labels: Record<string,string> = {skills:'Kỹ năng phù hợp JD',projects:'Dự án và giải quyết vấn đề',production:'Production và quy mô',discipline:'Kỷ luật kỹ thuật'};
 const reasons: Record<string,string> = {
-  RUBRIC_APPROVAL_REQUIRED:'Cần HR duyệt rubric của vị trí, sau đó bấm Chấm lại.',
+  RUBRIC_APPROVAL_REQUIRED:'Lượt chấm cũ bị dừng vì thiếu rubric. Bấm Chấm lại để dùng rubric tự động.',
+  JD_REQUIREMENTS_REQUIRED:'JD chưa có kỹ năng đủ rõ để tạo rubric. Bổ sung yêu cầu công việc rồi chấm lại.',
   DOCUMENT_UNREADABLE_OR_OCR_REQUIRED:'Không đọc được văn bản PDF. Cần bản CV có chữ hoặc HR đọc thủ công.',
   UNSUPPORTED_OR_DUPLICATE_EVIDENCE:'Có bằng chứng không khớp hoặc bị lặp.',
   NO_VERIFIED_EVIDENCE:'Chưa có bằng chứng hợp lệ để chấm.',
@@ -17,7 +18,7 @@ const reasons: Record<string,string> = {
   POSSIBLE_PROMPT_INJECTION:'Tài liệu có nội dung chỉ dẫn bất thường.',
   JD_CHANGED_DURING_EVALUATION:'JD đã đổi trong lúc chấm. Cần đánh giá lại.',
   PROCESSING_TIMEOUT:'Quá thời gian xử lý. Kiểm tra dịch vụ rồi chấm lại.',
-  JD_ANALYSIS_FAILED:'Dịch vụ AI không phân tích được JD. Chờ một lúc rồi chấm lại; rubric đã duyệt vẫn được giữ.',
+  JD_ANALYSIS_FAILED:'Dịch vụ AI không phân tích được JD. Chờ một lúc rồi chấm lại; rubric vị trí vẫn được giữ.',
   AI_RATE_LIMITED:'Dịch vụ AI đang giới hạn yêu cầu. Chờ ít phút rồi bấm Chấm lại, tránh bấm liên tục.',
   AI_PROVIDER_UNAVAILABLE:'Dịch vụ AI đang quá tải hoặc tạm ngừng. Vui lòng chấm lại sau.',
   AI_AUTH_FAILED:'Dịch vụ AI từ chối xác thực. Quản trị viên cần kiểm tra cấu hình kết nối.',
@@ -35,8 +36,8 @@ export default function EvaluationPanel({candidate,onApproved,refreshKey=0}:{can
     let active=true;setError('');
     Promise.all([getEvaluationHistory(candidate.id),getJobRubric(candidate.jobId)]).then(([runs,config])=>{
       if(!active)return;setHistory(runs);setRubric(config);
-      setSkills((config.approved?.requiredSkills||config.suggestedSkills).join(', '));
-      setWeights(config.approved?.weights||config.defaultWeights);
+      setSkills((config.active?.requiredSkills||config.approved?.requiredSkills||config.suggestedSkills).join(', '));
+      setWeights(config.active?.weights||config.approved?.weights||config.defaultWeights);
     }).catch(()=>{if(active)setError('Không tải được lịch sử/rubric. Vui lòng thử lại.');});
     return ()=>{active=false;};
   },[candidate.id,candidate.jobId,candidate.updatedAt,revision,refreshKey]);
@@ -49,7 +50,7 @@ export default function EvaluationPanel({candidate,onApproved,refreshKey=0}:{can
       setError('Nhập ít nhất một kỹ năng và tổng trọng số bằng 100.');return;
     }
     setBusy(true);
-    try{await approveJobRubric(candidate.jobId,required,weights);setMessage('Đã lưu rubric được duyệt. Bấm Chấm lại để áp dụng cho hồ sơ này.');setRevision(x=>x+1);}
+    try{await approveJobRubric(candidate.jobId,required,weights);setMessage('Đã lưu rubric HR điều chỉnh. Bấm Chấm lại để áp dụng cho hồ sơ này.');setRevision(x=>x+1);}
     catch{setError('Không lưu được rubric. Kiểm tra quyền HR và thử lại.');}finally{setBusy(false);}
   }
   async function approveResult() {
@@ -62,15 +63,16 @@ export default function EvaluationPanel({candidate,onApproved,refreshKey=0}:{can
     <p className="text-xs text-slate-600">Điểm được tính theo rubric. Trích dẫn xác nhận nội dung tự khai trong CV, chưa xác minh ngoài thực tế.</p>
     {error&&<p role="alert" className="text-sm text-red-700">{error} <button className="underline" onClick={()=>setRevision(x=>x+1)}>Tải lại</button></p>}
     {message&&<p role="status" className="text-sm text-green-800">{message}</p>}
-    <details open={!rubric?.approved} className="space-y-3">
-      <summary className="cursor-pointer text-sm font-medium">Rubric vị trí: {rubric?.approved?'đã duyệt':'chưa được duyệt'}</summary>
+    <details className="space-y-3">
+      <summary className="cursor-pointer text-sm font-medium">Rubric vị trí: {rubric?.approved?'HR đã điều chỉnh':rubric?.active?'tự động từ JD':'chưa có kỹ năng phù hợp trong JD'}</summary>
+      <p className="text-xs text-slate-600">CV được chấm tự động, không cần duyệt rubric trước. HR có thể chỉnh kỹ năng và trọng số khi cần.</p>
       <label className="block text-xs" htmlFor="rubric-skills">Kỹ năng yêu cầu, phân cách bằng dấu phẩy</label>
       <input id="rubric-skills" value={skills} disabled={!isHr||busy} onChange={e=>setSkills(e.target.value)} className="w-full rounded border border-slate-300 p-2 text-sm"/>
       <div className="grid grid-cols-2 gap-2">{Object.keys(weights).map(id=><label key={id} className="text-xs">{labels[id]||id}
         <input type="number" min="0" max="100" value={weights[id]} disabled={!isHr||busy} onChange={e=>setWeights(w=>({...w,[id]:Number(e.target.value)}))} className="mt-1 w-full rounded border border-slate-300 p-2"/>
       </label>)}</div>
       <p className="text-xs">Tổng trọng số: {total}/100</p>
-      {isHr&&<button onClick={approveRubric} disabled={busy} className="rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">{busy?'Đang lưu…':'Duyệt rubric phiên bản mới'}</button>}
+      {isHr&&<button onClick={approveRubric} disabled={busy} className="rounded bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">{busy?'Đang lưu…':'Lưu rubric điều chỉnh'}</button>}
     </details>
     {latest?<>
       <p className="text-sm font-medium">Trạng thái: {latest.status==='NEEDS_REVIEW'?'Cần HR xem xét':latest.status==='FAILED'?'Lỗi xử lý':latest.status==='DONE'?'Đã chấm':'Đang xử lý'}</p>

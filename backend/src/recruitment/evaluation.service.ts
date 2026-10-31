@@ -16,7 +16,6 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import {
   DEFAULT_WEIGHTS,
   normalizeSkill,
-  suggestSkills,
   validateExtraction,
   scoreExtraction,
 } from './scoring.js';
@@ -27,6 +26,7 @@ import {
 } from './dto/evaluation.dto.js';
 import { signAction, verifyAction } from './action-links.js';
 import { cleanJsonText } from './document-text.js';
+import { automaticRequiredSkills } from './automatic-rubric.js';
 
 const asJson = (value: unknown) =>
   cleanJsonText(value) as Prisma.InputJsonValue;
@@ -88,6 +88,25 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
   }
   constructor(private readonly prisma: PrismaService) {}
 
+  private async selectRubric(tx: Prisma.TransactionClient, job: {id:string;title:string;description:string;requirements:string}) {
+    const snapshot = jobSnapshot(job), sourceHash = hash(JSON.stringify(snapshot));
+    const versions = await tx.jobRubricVersion.findMany({where:{jobId:job.id,sourceHash},orderBy:{createdAt:'desc'}});
+    const existing = versions.find(v=>v.approvedAt) || versions[0];
+    if (existing) return existing;
+    const requiredSkills = automaticRequiredSkills(job);
+    if (!requiredSkills.length) return null;
+    return tx.jobRubricVersion.create({data:{jobId:job.id,sourceHash,snapshot:asJson(snapshot),requiredSkills,weights:DEFAULT_WEIGHTS}});
+  }
+
+  async ensureRubric(jobId: string) {
+    return this.prisma.$transaction(async tx=>{
+      await tx.$queryRaw`SELECT id FROM job_posts WHERE id=${jobId} FOR UPDATE`;
+      const job=await tx.jobPost.findUnique({where:{id:jobId}});
+      if(!job)throw new NotFoundException('Job not found');
+      return this.selectRubric(tx,job);
+    });
+  }
+
   async rubric(jobId: string) {
     const job = await this.prisma.jobPost.findUnique({ where: { id: jobId } });
     if (!job) throw new NotFoundException('Job not found');
@@ -102,7 +121,9 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
       sourceHash,
       snapshot,
       approved: versions.find((r) => r.approvedAt) || null,
-      suggestedSkills: suggestSkills(job.title + ' ' + job.requirements),
+      active: versions.find((r) => r.approvedAt) || versions[0] || null,
+      source: versions.some(r=>r.approvedAt) ? 'HR' : versions.length ? 'AUTOMATIC' : null,
+      suggestedSkills: automaticRequiredSkills(job),
       defaultWeights: DEFAULT_WEIGHTS,
     };
   }
@@ -137,21 +158,16 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
   async start(candidateId: string) {
     return this.prisma.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT id FROM candidates WHERE id=${candidateId} FOR UPDATE`;
-      const candidate = await tx.candidate.findUnique({
+      let candidate = await tx.candidate.findUnique({
         where: { id: candidateId },
         include: { job: true },
       });
       if (!candidate) throw new NotFoundException('Candidate not found');
+      await tx.$queryRaw`SELECT id FROM job_posts WHERE id=${candidate.jobId} FOR UPDATE`;
+      candidate = await tx.candidate.findUniqueOrThrow({where:{id:candidateId},include:{job:true}});
       const snapshot = jobSnapshot(candidate.job),
         sourceHash = hash(JSON.stringify(snapshot));
-      const rubric = await tx.jobRubricVersion.findFirst({
-        where: {
-          jobId: candidate.jobId,
-          sourceHash,
-          approvedAt: { not: null },
-        },
-        orderBy: { createdAt: 'desc' },
-      });
+      const rubric = await this.selectRubric(tx, candidate.job);
       const bytes = await readFile(
         join(process.cwd(), 'uploads', 'cv', basename(candidate.cvUrl)),
       );
@@ -168,6 +184,7 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
                   id: rubric.id,
                   weights: rubric.weights,
                   requiredSkills: rubric.requiredSkills,
+                  source: rubric.approvedAt ? 'HR' : 'AUTOMATIC',
                 }
               : null,
           }),

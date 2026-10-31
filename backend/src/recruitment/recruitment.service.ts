@@ -59,7 +59,7 @@ export class RecruitmentService {
 
   // 4. HR ONLY: Create a new job post
   async createJob(dto: CreateJobDto) {
-    return this.prisma.jobPost.create({
+    const job = await this.prisma.jobPost.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -67,6 +67,8 @@ export class RecruitmentService {
         status: dto.status || JobStatus.OPEN,
       },
     });
+    await this.evaluations.ensureRubric(job.id);
+    return job;
   }
 
   // 5. HR ONLY: Update job post
@@ -75,10 +77,12 @@ export class RecruitmentService {
     if (!existing) {
       throw new NotFoundException('Job post not found');
     }
-    return this.prisma.jobPost.update({
+    const job = await this.prisma.jobPost.update({
       where: { id },
       data: dto,
     });
+    await this.evaluations.ensureRubric(job.id);
+    return job;
   }
 
   // 6. HR ONLY: Delete job post and remove candidates' CV files from disk

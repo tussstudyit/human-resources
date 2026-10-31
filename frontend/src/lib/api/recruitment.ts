@@ -34,6 +34,8 @@ export async function getJobRubric(jobId: string): Promise<{
   suggestedSkills: string[];
   defaultWeights: Record<string, number>;
   approved: {id:string;requiredSkills:string[];weights:Record<string,number>;approvedAt:string} | null;
+  active?: {id:string;requiredSkills:string[];weights:Record<string,number>;approvedAt:string|null} | null;
+  source?: 'HR' | 'AUTOMATIC' | null;
 }> {
   return (await api.get(`/recruitment/jobs/${jobId}/rubric`)).data;
 }

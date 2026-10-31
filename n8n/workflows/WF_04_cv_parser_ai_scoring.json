@@ -203,8 +203,8 @@
       }
     },
     {
-      "id": "aef7b7ddd9ce0c72a1c0e6f6",
-      "name": "Rubric Approved?",
+      "id": "25b4163083f71593958445da",
+      "name": "Rubric Available?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
@@ -221,8 +221,8 @@
           },
           "conditions": [
             {
-              "id": "Rubric Approved?",
-              "leftValue": "={{ !!$json.ctx.rubric?.id }}",
+              "id": "Rubric Available?",
+              "leftValue": "={{ !!$json.ctx.rubric?.id && Array.isArray($json.ctx.rubric.requiredSkills) && $json.ctx.rubric.requiredSkills.length > 0 }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -246,7 +246,7 @@
         380
       ],
       "parameters": {
-        "jsCode": "return [{json:{ctx:$json.ctx||$('Canonical Context').first().json.ctx,...{status:'NEEDS_REVIEW',errorCode:'RUBRIC_APPROVAL_REQUIRED'}}}];"
+        "jsCode": "return [{json:{ctx:$json.ctx||$('Canonical Context').first().json.ctx,...{status:'NEEDS_REVIEW',errorCode:'JD_REQUIREMENTS_REQUIRED'}}}];"
       },
       "onError": "continueErrorOutput"
     },
@@ -1085,14 +1085,14 @@
       "main": [
         [
           {
-            "node": "Rubric Approved?",
+            "node": "Rubric Available?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Rubric Approved?": {
+    "Rubric Available?": {
       "main": [
         [
           {

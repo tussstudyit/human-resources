@@ -12,6 +12,14 @@ beforeEach(()=>{
   vi.mocked(getEvaluationHistory).mockResolvedValue([]);
 });
 describe('Evidence review panel',()=>{
+ it('shows automatic rubric and allows optional editing without a pre-scoring approval gate',async()=>{
+  vi.mocked(getJobRubric).mockResolvedValue({suggestedSkills:['Flutter'],defaultWeights:{skills:40,projects:30,production:20,discipline:10},approved:null,active:{id:'automatic',requiredSkills:['Flutter','Dart'],weights:{skills:40,projects:30,production:20,discipline:10},approvedAt:null},source:'AUTOMATIC'});
+  render(<EvaluationPanel candidate={candidate}/>);
+  await screen.findByText('Rubric vị trí: tự động từ JD');
+  expect(screen.getByDisplayValue('Flutter, Dart')).toBeInTheDocument();
+  expect(screen.getByText(/CV được chấm tự động, không cần duyệt rubric trước/)).toBeInTheDocument();
+  expect(screen.queryByText('Duyệt rubric phiên bản mới')).not.toBeInTheDocument();
+ });
  it('explains rate limiting without offering approval for an unscored run',async()=>{
   vi.mocked(getEvaluationHistory).mockResolvedValue([{id:'evaluation',status:'NEEDS_REVIEW',errorCode:'AI_RATE_LIMITED',createdAt:'2026-10-30',events:[],report:{matchScore:null,approvalStatus:'PENDING_HR',reviewReasons:['AI_RATE_LIMITED']}}]);
   render(<EvaluationPanel candidate={candidate}/>);
@@ -22,7 +30,7 @@ describe('Evidence review panel',()=>{
   render(<EvaluationPanel candidate={candidate}/>);
   await screen.findByDisplayValue('Node.js');
   fireEvent.change(screen.getByLabelText('Kỹ năng yêu cầu, phân cách bằng dấu phẩy'),{target:{value:''}});
-  fireEvent.click(screen.getByText('Duyệt rubric phiên bản mới'));
+  fireEvent.click(screen.getByText('Lưu rubric điều chỉnh'));
   expect(screen.getByRole('alert')).toHaveTextContent('ít nhất một kỹ năng');expect(approveJobRubric).not.toHaveBeenCalled();
  });
  it('shows document evidence and explicitly approves the selected evaluation',async()=>{
