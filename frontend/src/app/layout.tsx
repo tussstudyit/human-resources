@@ -10,17 +10,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HR Platform - Quản lý Nhân sự & Tuyển dụng AI",
-  description: "Hệ thống Quản lý Nhân sự và AI Recruitment Agent",
+  title: "UpCareer - Việc Làm IT Hàng Đầu Việt Nam & Cổng Quản Trị Nhân Sự AI",
+  description: "Hệ sinh thái Tuyển dụng & Quản trị Nhân sự IT hàng đầu Việt Nam",
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="vi"
-      className={`${inter.variable} font-sans h-full antialiased`}
+      translate="no"
+      className={`${inter.variable} font-sans h-full antialiased notranslate`}
     >
-      <body className="min-h-full flex flex-col overflow-x-hidden w-full max-w-full">
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
+      <body className="min-h-full flex flex-col overflow-x-hidden w-full max-w-full notranslate">
         {children}
         <ToastContainer />
       </body>

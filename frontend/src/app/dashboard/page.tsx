@@ -32,6 +32,7 @@ import {
   Bot,
   UserPlus,
   GraduationCap,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { RecruitmentDashboardStats } from '@/types/recruitment';
@@ -141,6 +142,43 @@ export default function DashboardPage() {
           <div className="h-4 w-4 border-2 border-[#171717] border-t-transparent rounded-full animate-spin"></div>
           <span className="text-[#4d4d4d]">VERIFYING_PERMISSIONS...</span>
         </div>
+      </div>
+    );
+  }
+
+  if (user.role === 'EMPLOYEE') {
+    return (
+      <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
+        <Header />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 mb-4 shadow-xs">
+            <Lock className="w-6 h-6 text-amber-600" />
+          </div>
+          <div className="font-mono text-[11px] text-amber-600 font-bold uppercase tracking-wider mb-1">
+            403 - Giới hạn phân quyền tài khoản
+          </div>
+          <h2 className="text-xl font-bold tracking-tight mb-2 text-slate-900">
+            Khu Vực Quản Trị Dành Cho Ban Quản Trị HR
+          </h2>
+          <p className="text-xs text-slate-600 max-w-md mb-6 leading-relaxed">
+            Bạn đang đăng nhập với tài khoản Nhân viên ({user.fullName}). Bảng điều khiển quản trị tổng quan chỉ dành cho cấp HR / Quản lý. Vui lòng chuyển sang Không Gian Nhân Viên để theo dõi hội nhập, đào tạo và khảo sát cá nhân.
+          </p>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/onboarding"
+              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-xs"
+            >
+              Vào Không Gian Nhân Viên
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors shadow-xs"
+            >
+              Về Cổng Việc Làm UpCareer
+            </Link>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }

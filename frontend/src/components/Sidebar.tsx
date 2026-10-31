@@ -74,7 +74,7 @@ export default function Sidebar() {
               <span className="text-red-600">UP</span>CAREER <span className="text-slate-700 font-semibold text-xs">HR</span>
             </span>
             <span className="font-mono text-[9px] text-slate-400 uppercase tracking-wider block">
-              Multi-Agent ATS
+              Hệ Thống Tuyển Dụng AI
             </span>
           </div>
         </Link>
@@ -224,7 +224,9 @@ export default function Sidebar() {
                 {user.fullName}
               </p>
               <p className="font-mono text-[10px] text-slate-500 truncate mt-0.5">
-                <span className="font-semibold text-red-600">{user.role}</span> • {user.email}
+                <span className="font-semibold text-red-600">
+                  {user.role === 'HR' ? 'Quản Trị HR' : user.role === 'MANAGER' ? 'Quản Lý' : 'Nhân Viên'}
+                </span> • {user.email}
               </p>
             </div>
           </div>

@@ -17,7 +17,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # (Tùy chọn) Giao diện trực quan hóa dữ liệu qua trình duyệt
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: hr_pgadmin
@@ -30,21 +29,17 @@ services:
     depends_on:
       - postgres
 
-  # Nền tảng tự động hóa Workflow & Webhook
   n8n:
-    image: docker.n8n.io/n8nio/n8n:2.39.7
+    image: docker.n8n.io/n8nio/n8n:2.45.5
     container_name: hr_n8n
     restart: unless-stopped
+    network_mode: host
     environment:
       - N8N_PORT=5678
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-      - WEBHOOK_URL=http://localhost:5679/
+      - WEBHOOK_URL=https://n8n.cvresources.tech/
       - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
       - TZ=Asia/Ho_Chi_Minh
-    ports:
-      - "${N8N_PORT}:5678"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - n8n_data:/home/node/.n8n
 
