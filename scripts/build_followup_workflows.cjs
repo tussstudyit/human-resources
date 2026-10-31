@@ -83,6 +83,9 @@ const html='<div style="font-family:-apple-system,BlinkMacSystemFont,\\\'Segoe U
 return [{json:{ctx,subject:'[UpCareer] Thư mời phỏng vấn | '+ctx.jobTitle,html,metadata:{time:plan.start,type:plan.type,googleMeetUrl:result.meetUrl||null,isRealGoogleMeet:!!result.meetUrl,googleCalendarEventId:result.eventId||null}},binary:{calendar:binary}}];`,{onError:'continueErrorOutput'});
  } else {
   code('Build Talent Pool Feedback',esc+`const ctx=$('Claim Approved Delivery').first().json;const allowed=['CV_SCREENING','POST_INTERVIEW','TECHNICAL_TEST','CULTURE_FIT','TOP_TALENT'];const scenario=allowed.includes(ctx.options.stage)?ctx.options.stage:'CV_SCREENING';const reEngagementDate=new Date(Date.now()+180*86400000).toISOString().slice(0,10);
+const isRejection=ctx.options.decision==='REJECT';
+const futureTitle=isRejection?'Thông tin hỗ trợ':'Cơ hội kết nối trong tương lai';
+const futureText=(isRejection?'':'Chúng tôi mong có cơ hội kết nối với Anh/Chị khi có vị trí phù hợp trong tương lai. ')+'Nếu có yêu cầu liên quan đến việc lưu giữ, cập nhật hoặc xóa hồ sơ, Anh/Chị vui lòng liên hệ upcareercvresources@gmail.com để được hỗ trợ.';
 const stageThanks={
  CV_SCREENING:'Cảm ơn Anh/Chị đã gửi hồ sơ và quan tâm đến cơ hội làm việc cùng chúng tôi.',
  POST_INTERVIEW:'Cảm ơn Anh/Chị đã dành thời gian tham gia buổi phỏng vấn và trao đổi cùng đội ngũ tuyển dụng.',
@@ -101,8 +104,8 @@ const html='<div style="font-family:-apple-system,BlinkMacSystemFont,\\\'Segoe U
   +'<p style="font-size:14px;color:#334155;margin:0 0 16px 0;">'+esc(stageThanks)+'</p>'
   +'<p style="font-size:14px;color:#334155;margin:0 0 20px 0;">Sau khi xem xét theo yêu cầu tuyển dụng hiện tại, chúng tôi rất tiếc chưa thể tiếp tục quy trình ứng tuyển của Anh/Chị cho vị trí này. Kết quả được đưa ra trong phạm vi đợt tuyển dụng và không phải là đánh giá tổng thể về năng lực của Anh/Chị.</p>'
   +'<div style="background:#fefce8;border:1px solid #fef08a;border-radius:12px;padding:18px 20px;margin-bottom:24px;">'
-  +'<div style="font-weight:700;font-size:13px;color:#854d0e;margin-bottom:6px;">Cơ hội kết nối trong tương lai</div>'
-  +'<p style="margin:0;font-size:13px;color:#713f12;line-height:1.5;">Chúng tôi mong có cơ hội kết nối với Anh/Chị khi có vị trí phù hợp trong tương lai. Nếu có yêu cầu liên quan đến việc lưu giữ, cập nhật hoặc xóa hồ sơ, Anh/Chị vui lòng liên hệ upcareercvresources@gmail.com để được hỗ trợ.</p>'
+  +'<div style="font-weight:700;font-size:13px;color:#854d0e;margin-bottom:6px;">' +esc(futureTitle)+'</div>'
+  +'<p style="margin:0;font-size:13px;color:#713f12;line-height:1.5;">' +esc(futureText)+'</p>'
   +'</div>'
   +'<div style="text-align:center;margin:28px 0 24px 0;">'
   +'<a href="'+esc(ctx.cxUrl)+'" style="display:inline-block;background:linear-gradient(135deg,#059669 0%,#047857 100%);color:#ffffff;font-weight:700;font-size:14px;text-decoration:none;padding:14px 32px;border-radius:8px;box-shadow:0 4px 6px -1px rgba(5,150,105,0.3);">Chia sẻ trải nghiệm tuyển dụng</a>'
@@ -115,7 +118,7 @@ const html='<div style="font-family:-apple-system,BlinkMacSystemFont,\\\'Segoe U
   +'<div style="background:#f1f5f9;padding:16px 24px;text-align:center;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;">'
   +'Cảm ơn Anh/Chị. Kính chúc Anh/Chị nhiều thành công trong công việc và định hướng nghề nghiệp.'
   +'</div></div>';
-return [{json:{ctx,subject:'[UpCareer] Thông báo kết quả ứng tuyển | '+ctx.jobTitle,html,metadata:{tier:'RETAINED_TALENT_POOL',scenario,reEngagementDate}}}];`);
+return [{json:{ctx,subject:'[UpCareer] Thông báo kết quả ứng tuyển | '+ctx.jobTitle,html,metadata:{scenario,...(isRejection?{status:'REJECTED'}:{tier:'RETAINED_TALENT_POOL',reEngagementDate})}}}];`);
  }
  const build=number===5?'Build Invitation and ICS':'Build Talent Pool Feedback';
  add('Send Candidate Email','emailSend',{fromEmail:mail.parameters.fromEmail,toEmail:'={{ $json.ctx.candidateEmail }}',subject:'={{ $json.subject }}',emailFormat:'html',html:'={{ $json.html }}',options:number===5?{attachments:'calendar'}:{}},

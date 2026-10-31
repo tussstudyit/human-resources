@@ -106,3 +106,9 @@ test('feedback addresses the actual recruitment stage without unsupported praise
   assert.ok(out.json.subject.startsWith('[UpCareer] Thông báo kết quả ứng tuyển | '));
  }
 });
+test('explicit rejection uses WF06 without talent-pool metadata or a future-contact promise',async()=>{
+ const ctx={candidateName:'TEST',jobTitle:'TEST Role',options:{stage:'CV_SCREENING',decision:'REJECT'},cxUrl:'https://example.invalid/cx'};
+ const out=await run(reject,'Build Talent Pool Feedback',{}, {'Claim Approved Delivery':ctx});
+ assert.equal(out.json.metadata.status,'REJECTED');assert.equal(out.json.metadata.tier,undefined);assert.equal(out.json.metadata.reEngagementDate,undefined);
+ assert.ok(out.json.html.includes('Thông tin hỗ trợ'));assert.ok(!out.json.html.includes('mong có cơ hội kết nối'));
+});

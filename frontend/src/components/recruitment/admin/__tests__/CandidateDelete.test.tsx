@@ -1,12 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import CandidateDetailModal from '../CandidateDetailModal';
-import { deleteCandidate, fetchCandidateCvBlob } from '@/lib/api/recruitment';
+import { deleteCandidate, fetchCandidateCvBlob, rejectCandidate } from '@/lib/api/recruitment';
 import type { Candidate } from '@/types/recruitment';
 const {showToast, auth}=vi.hoisted(()=>({showToast:vi.fn(),auth:{role:'HR'}}));
 vi.mock('@/store/useAuthStore',()=>({useAuthStore:(select:(s:unknown)=>unknown)=>select({user:auth})}));
 vi.mock('@/store/useToastStore',()=>({useToastStore:()=>({showToast})}));
-vi.mock('@/lib/api/recruitment',()=>({fetchCandidateCvBlob:vi.fn(),deleteCandidate:vi.fn(),getEvaluationHistory:vi.fn(),getJobCandidates:vi.fn(),reEvaluateCandidate:vi.fn(),scheduleCandidateInterview:vi.fn(),archiveCandidateTalentPool:vi.fn()}));
+vi.mock('@/lib/api/recruitment',()=>({fetchCandidateCvBlob:vi.fn(),deleteCandidate:vi.fn(),rejectCandidate:vi.fn(),getEvaluationHistory:vi.fn(),getJobCandidates:vi.fn(),reEvaluateCandidate:vi.fn(),scheduleCandidateInterview:vi.fn(),archiveCandidateTalentPool:vi.fn()}));
 vi.mock('../EvaluationPanel',()=>({default:()=>null}));
 const candidate={id:'test',name:'TEST Candidate',email:'test@example.invalid',aiStatus:'DONE',jobId:'job',cvUrl:'test.pdf',parsedSkillsJson:{}} as Candidate;
 beforeEach(()=>{vi.clearAllMocks();auth.role='HR';vi.mocked(fetchCandidateCvBlob).mockReturnValue(new Promise(()=>{}));});
@@ -32,4 +32,17 @@ it('does not offer deletion to an employee, or while AI is processing',()=>{
  expect(screen.queryByRole('button',{name:'Xóa hồ sơ'})).not.toBeInTheDocument();
  auth.role='HR';rerender(<CandidateDetailModal candidate={{...candidate,aiStatus:'PENDING'}} onClose={vi.fn()}/>);
  expect(screen.getByRole('button',{name:'Xóa hồ sơ'})).toBeDisabled();
+});
+it('requires an approved result and confirmation before requesting a WF06 rejection',async()=>{
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);
+ const approved={...candidate,matchScore:0,parsedSkillsJson:{evaluation:{id:'run',status:'NEEDS_REVIEW',approvalStatus:'APPROVED'}}};
+ const {rerender}=render(<CandidateDetailModal candidate={candidate} onClose={vi.fn()}/>);
+ expect(screen.getByRole('button',{name:'Từ chối / Gửi phản hồi'})).toBeDisabled();
+ rerender(<CandidateDetailModal candidate={approved} onClose={vi.fn()}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Từ chối / Gửi phản hồi'}));expect(rejectCandidate).not.toHaveBeenCalled();
+ expect(confirm).toHaveBeenCalledWith(expect.stringContaining('test@example.invalid'));
+ vi.mocked(rejectCandidate).mockResolvedValue({success:true,message:'ACCEPTED'});confirm.mockReturnValue(true);
+ fireEvent.click(screen.getByRole('button',{name:'Từ chối / Gửi phản hồi'}));
+ await waitFor(()=>expect(rejectCandidate).toHaveBeenCalledWith('test'));
+ expect(showToast).toHaveBeenCalledWith(expect.objectContaining({title:'Đã tiếp nhận yêu cầu từ chối'}));confirm.mockRestore();
 });

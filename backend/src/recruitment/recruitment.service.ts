@@ -454,6 +454,10 @@ export class RecruitmentService {
     return this.archiveTalentPool(candidateId, scenario);
   }
 
+  async rejectCandidate(id: string, scenario = 'CV_SCREENING') {
+    return this.evaluations.followup(id, 'TALENT_POOL', {stage:scenario,decision:'REJECT'});
+  }
+
   // 14. PUBLIC: Handle candidate RSVP response from interview invite email
   async handleCandidateRsvp(candidateId: string, status?: string) {
     const candidate = await this.prisma.candidate.findUnique({

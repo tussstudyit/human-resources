@@ -508,7 +508,13 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
       const prior = await tx.evaluationEvent.findUnique({
         where: { deduplicationKey: key },
       });
-      if (prior) return { duplicate: true as const, event: prior };
+      if (prior) {
+        if(action==='TALENT_POOL'){
+          const priorData=object(prior.data), priorDecision=object(priorData.options).decision || (object(priorData.metadata).status==='REJECTED'?'REJECT':'TALENT_POOL');
+          if(priorDecision!==(options.decision||'TALENT_POOL'))throw new ConflictException('Hồ sơ đã có yêu cầu phản hồi WF_06 khác. Kiểm tra lịch sử để tránh gửi thư trùng.');
+        }
+        return { duplicate: true as const, event: prior };
+      }
       await tx.evaluationEvent.create({
         data: {
           evaluationId: run.id,
@@ -646,6 +652,7 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
       if (object(event.data).status === 'SENT')
         return { duplicate: true, status: 'SENT' };
       const metadata = object(dto.metadata);
+      const rejection = dto.action==='TALENT_POOL' && object(object(event.data).options).decision==='REJECT';
       const safe =
         dto.action === 'INTERVIEW'
           ? {
@@ -657,7 +664,10 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
               interviewer: metadata.interviewer,
               status: dto.status === 'SENT' ? 'SCHEDULED' : 'DELIVERY_FAILED',
             }
-          : {
+          : rejection ? {
+              status:'REJECTED', rejectedAt:new Date().toISOString(),
+              emailSent:dto.status==='SENT', scenario:metadata.scenario || object(object(event.data).options).stage || 'CV_SCREENING',
+            } : {
               tier: metadata.tier || 'RETAINED_TALENT_POOL',
               status: 'ARCHIVED',
               archivedAt: new Date().toISOString(),
@@ -679,6 +689,7 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
         where: { id: event.id },
         data: {
           data: asJson({
+            ...object(event.data),
             action: dto.action,
             status: dto.status,
             metadata: safe,
@@ -697,12 +708,14 @@ export class EvaluationService implements OnModuleInit, OnModuleDestroy {
       });
       if (c.latestEvaluationId === id && dto.status === 'SENT') {
         const previous = object(c.parsedSkillsJson),
-          key = dto.action === 'INTERVIEW' ? 'interviewSchedule' : 'talentPool';
+          key = dto.action === 'INTERVIEW' ? 'interviewSchedule' : rejection ? 'rejection' : 'talentPool';
         await tx.candidate.update({
           where: { id: c.id },
           data: {
             parsedSkillsJson: asJson({
               ...previous,
+              rejection: undefined,
+              ...(rejection ? {talentPool:undefined} : {}),
               [key]: { ...object(previous[key]), ...safe },
             }),
           },

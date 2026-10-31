@@ -211,6 +211,13 @@ export class RecruitmentController {
     return this.recruitmentService.archiveTalentPool(id, scenario);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR, Role.MANAGER)
+  @Post('candidates/:id/reject')
+  async rejectCandidate(@Param('id') id: string, @Body('scenario') scenario?: string) {
+    return this.recruitmentService.rejectCandidate(id, scenario);
+  }
+
   // 9. PUBLIC: Apply for job with CV upload (memoryStorage, magic bytes check, rate-limited)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('apply')

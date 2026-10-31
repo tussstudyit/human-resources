@@ -5,6 +5,12 @@ import RecruitmentKanbanBoard from '../RecruitmentKanbanBoard';
 import { Candidate } from '@/types/recruitment';
 
 describe('RecruitmentKanbanBoard', () => {
+  it('places a successfully rejected candidate in the rejection stage, separately from errors and talent pool',()=>{
+    const candidate={...mockCandidates[1],parsedSkillsJson:{rejection:{status:'REJECTED',emailSent:true},evaluation:{id:'run',status:'NEEDS_REVIEW'}}} as Candidate;
+    render(<RecruitmentKanbanBoard candidates={[candidate]} onSelectCandidate={vi.fn()}/>);
+    expect(within(screen.getByRole('region',{name:'Đã từ chối'})).getByText(candidate.name)).toBeInTheDocument();
+    for(const name of ['Cần HR xem xét','Kho Nhân Tài (Pool)','Lỗi xử lý / Cần kiểm tra'])expect(within(screen.getByRole('region',{name})).queryByText(candidate.name)).not.toBeInTheDocument();
+  });
   it('keeps a scheduled interview in Meet even when AI still requires HR review',()=>{
     const candidate={...mockCandidates[1],parsedSkillsJson:{interviewSchedule:{googleMeetUrl:'https://meet.google.com/abc-defg-hij',status:'SCHEDULED'},evaluation:{id:'run',status:'NEEDS_REVIEW',approvalStatus:'PENDING_HR'}}} as Candidate;
     render(<RecruitmentKanbanBoard candidates={[candidate]} onSelectCandidate={vi.fn()}/>);
@@ -78,7 +84,7 @@ describe('RecruitmentKanbanBoard', () => {
     },
   ];
 
-  it('hiển thị đầy đủ 6 cột quy trình tuyển dụng chuẩn hóa', () => {
+  it('hiển thị đầy đủ các cột quy trình tuyển dụng chuẩn hóa', () => {
     render(
       <RecruitmentKanbanBoard
         candidates={[]}

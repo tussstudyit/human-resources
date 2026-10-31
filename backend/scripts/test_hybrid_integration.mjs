@@ -43,6 +43,17 @@ try {
  assert.equal(delivery.filter(c=>c.claimed).length,1,'one sender must own delivery');
  await service.delivery(second.id,{action:'INTERVIEW',status:'FAILED',metadata:{googleMeetUrl:'https://meet.google.com/fake',isRealGoogleMeet:false}});
  const unchanged=await db.candidate.findUniqueOrThrow({where:{id:candidate.id}});assert.equal(unchanged.parsedSkillsJson.interviewSchedule.status,'EXISTING_TEST_METADATA');
+ const rejectEvent=await db.evaluationEvent.create({data:{evaluationId:second.id,type:'DELIVERY_REQUESTED',deduplicationKey:`${second.id}:TALENT_POOL`,data:{status:'PENDING',options:{decision:'REJECT',stage:'CV_SCREENING'}}}});
+ await service.claimDelivery(second.id,'TALENT_POOL');
+ await service.delivery(second.id,{action:'TALENT_POOL',status:'FAILED',metadata:{scenario:'CV_SCREENING'}});
+ assert.equal((await db.candidate.findUniqueOrThrow({where:{id:candidate.id}})).parsedSkillsJson.rejection,undefined,'SMTP failure must not mark a candidate rejected');
+ assert.equal((await db.evaluationEvent.findUniqueOrThrow({where:{id:rejectEvent.id}})).data.options.decision,'REJECT');
+ // Simulate a confirmed provider callback in the isolated fixture, without sending mail.
+ await service.delivery(second.id,{action:'TALENT_POOL',status:'SENT',metadata:{scenario:'CV_SCREENING',tier:'SHOULD_NOT_BE_STORED'}});
+ const rejected=await db.candidate.findUniqueOrThrow({where:{id:candidate.id}});
+ assert.equal(rejected.parsedSkillsJson.rejection.status,'REJECTED');assert.equal(rejected.parsedSkillsJson.talentPool,undefined);
+ await assert.rejects(service.followup(candidate.id,'TALENT_POOL'),/tránh gửi thư trùng/);
+ assert.equal((await service.followup(candidate.id,'TALENT_POOL',{decision:'REJECT'})).delivery.data.status,'SENT');
  await service.saveCx(candidate.id,new URL(delivery.find(c=>c.claimed).cxUrl).searchParams.get('token'),4);
  assert.equal((await db.evaluationEvent.findUnique({where:{deduplicationKey:`${second.id}:CX`}})).data.score,4);
  const stale=await service.start(candidate.id);await db.evaluationRun.update({where:{id:stale.id},data:{createdAt:new Date(Date.now()-3600000)}});

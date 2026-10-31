@@ -49,11 +49,14 @@ export default function RecruitmentKanbanBoard({
   const interviewCol: Candidate[] = [];
   const talentPoolCol: Candidate[] = [];
   const rejectedCol: Candidate[] = [];
+  const declinedCol: Candidate[] = [];
 
   candidates.forEach((c) => {
     const { interviewSchedule, talentPool } = getParsedData(c);
 
-    if (interviewSchedule && interviewSchedule.status !== 'CANCELLED' && (interviewSchedule.googleMeetUrl || interviewSchedule.status === 'SCHEDULED')) {
+    if (c.parsedSkillsJson && !Array.isArray(c.parsedSkillsJson) && c.parsedSkillsJson.rejection?.status==='REJECTED') {
+      declinedCol.push(c);
+    } else if (interviewSchedule && interviewSchedule.status !== 'CANCELLED' && (interviewSchedule.googleMeetUrl || interviewSchedule.status === 'SCHEDULED')) {
       interviewCol.push(c);
     } else if (talentPool && talentPool.tier) {
       talentPoolCol.push(c);
@@ -105,6 +108,7 @@ export default function RecruitmentKanbanBoard({
       count: rejectedCol.length,
       items: rejectedCol,
     },
+    {id:'declined',title:'Đã từ chối',icon:XCircle,count:declinedCol.length,items:declinedCol},
   ];
 
   const getScoreBadge = (score: number) => {
@@ -118,7 +122,7 @@ export default function RecruitmentKanbanBoard({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3.5 h-full min-h-[600px] select-none font-sans">
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-7 gap-3.5 h-full min-h-[600px] select-none font-sans">
       {columns.map((col) => {
         const IconComponent = col.icon;
         return (

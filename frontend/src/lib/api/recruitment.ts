@@ -252,3 +252,7 @@ export async function archiveCandidateTalentPool(
   return res.data;
 }
 
+export async function rejectCandidate(candidateId: string, scenario = 'CV_SCREENING'): Promise<{success:boolean;message:string}> {
+  return (await api.post(`/recruitment/candidates/${candidateId}/reject`,{scenario})).data;
+}
+

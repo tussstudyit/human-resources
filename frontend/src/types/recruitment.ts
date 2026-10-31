@@ -102,6 +102,7 @@ export interface ParsedSkillsData {
   githubUrl?: string | null;
   interviewSchedule?: InterviewScheduleInfo;
   talentPool?: TalentPoolInfo;
+  rejection?: {status:'REJECTED';emailSent:boolean;rejectedAt?:string;scenario?:string};
   decision?: string;
   recommendation?: string;
   summary?: string;

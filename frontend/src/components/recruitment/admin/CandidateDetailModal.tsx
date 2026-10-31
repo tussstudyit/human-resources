@@ -24,6 +24,7 @@ import {
   Code2,
   Zap,
   Trash2,
+  XCircle,
 } from 'lucide-react';
 import { Candidate, InterviewScheduleInfo, TalentPoolInfo } from '@/types/recruitment';
 import {
@@ -34,6 +35,7 @@ import {
   getEvaluationHistory,
   getJobCandidates,
   deleteCandidate,
+  rejectCandidate,
 } from '@/lib/api/recruitment';
 import { useToastStore } from '@/store/useToastStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -60,6 +62,7 @@ export default function CandidateDetailModal({
   const [deliveryPending, setDeliveryPending] = useState(false);
   const [deliveryRevision, setDeliveryRevision] = useState(0);
   const [deleting, setDeleting] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
   const canDelete = useAuthStore(s => s.user?.role === 'HR' || s.user?.role === 'MANAGER');
   const updatedRef = useRef(onCandidateUpdated);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -187,6 +190,7 @@ export default function CandidateDetailModal({
   const isPending = candidate.aiStatus === 'PENDING';
   const evaluation = parsed && !Array.isArray(parsed) ? parsed.evaluation : undefined;
   const approved = evaluation?.approvalStatus === 'APPROVED';
+  const rejected = parsed && !Array.isArray(parsed) && parsed.rejection?.status === 'REJECTED';
 
   const getScoreBadge = (sc: number) => {
     if (sc >= 80) return 'bg-[#f0fdf4] text-[#166534] border-[#bbf7d0]';
@@ -265,6 +269,18 @@ export default function CandidateDetailModal({
     } finally {
       setArchivingPool(false);
     }
+  };
+
+  const handleReject = async () => {
+    if(!window.confirm(`Gửi thư từ chối ứng tuyển đến ${candidate.email} cho hồ sơ ${candidate.name}?\nWF_06 sẽ gửi email phản hồi và chuyển hồ sơ sang Đã từ chối sau khi xác nhận gửi thành công. Hồ sơ không được tự lưu vào Talent Pool.`))return;
+    setRejecting(true);
+    try{
+      const response=await rejectCandidate(candidate.id);
+      if(!response.success)throw new Error(response.message);
+      setDeliveryPending(true);
+      showToast({type:'info',title:'Đã tiếp nhận yêu cầu từ chối',message:'WF_06 đang xử lý thư phản hồi. Trạng thái gửi sẽ cập nhật trong lịch sử.'});
+    }catch(error:any){showToast({type:'error',title:'Chưa gửi được thư từ chối',message:error?.response?.data?.message||error?.message||'Vui lòng kiểm tra lịch sử và thử lại.'});}
+    finally{setRejecting(false);}
   };
 
   const handleDownload = () => {
@@ -348,14 +364,19 @@ export default function CandidateDetailModal({
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            {canDelete && <button onClick={handleDelete} disabled={deleting || isPending || deliveryPending || schedulingMeet || archivingPool || reEvaluating}
+            {canDelete && <button onClick={handleReject} disabled={rejecting || deleting || isPending || !approved || deliveryPending || schedulingMeet || archivingPool || !!rejected}
+              title={approved?'Gửi thư phản hồi từ chối qua WF_06':'Cần HR duyệt kết quả sau khi xem bằng chứng trước khi gửi thư'}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
+              <XCircle className="h-3.5 w-3.5" aria-hidden="true"/>{rejected?'Đã từ chối':rejecting?'Đang gửi yêu cầu…':'Từ chối / Gửi phản hồi'}
+            </button>}
+            {canDelete && <button onClick={handleDelete} disabled={deleting || rejecting || isPending || deliveryPending || schedulingMeet || archivingPool || reEvaluating}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
               title="Xóa thông tin ứng viên, CV và lịch sử đánh giá">
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true"/>{deleting?'Đang xóa…':'Xóa hồ sơ'}
             </button>}
             <button
               onClick={handleScheduleMeet}
-              disabled={schedulingMeet || isPending || !approved || deliveryPending}
+              disabled={schedulingMeet || rejecting || deleting || isPending || !approved || deliveryPending}
               className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Xếp lịch Google Meet và gửi thư mời cho ứng viên"
             >
@@ -365,7 +386,7 @@ export default function CandidateDetailModal({
 
             <button
               onClick={handleArchivePool}
-              disabled={archivingPool || isPending || !approved || deliveryPending}
+              disabled={archivingPool || rejecting || deleting || isPending || !approved || deliveryPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Lưu kho nhân tài và gửi email phản hồi"
             >
@@ -375,7 +396,7 @@ export default function CandidateDetailModal({
 
             <button
               onClick={handleReEvaluate}
-              disabled={reEvaluating || isPending}
+              disabled={reEvaluating || rejecting || deleting || deliveryPending || isPending}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-medium transition-colors disabled:opacity-50 shadow-xs cursor-pointer focus-ring"
               title="Gửi lại CV cho Gemini AI phân tích"
             >
