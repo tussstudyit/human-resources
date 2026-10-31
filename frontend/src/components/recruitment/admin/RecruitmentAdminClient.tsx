@@ -17,6 +17,7 @@ import {
 import { JobPost, Candidate } from '@/types/recruitment';
 import {
   getAdminJobs,
+  getAllCandidates,
   getJobCandidates,
   updateJob,
 } from '@/lib/api/recruitment';
@@ -74,8 +75,7 @@ export default function RecruitmentAdminClient() {
         setLoadingCandidates(true);
       }
       const data = jobId === 'ALL'
-        ? (await Promise.all(jobs.map(job => getJobCandidates(job.id)))).flat()
-          .sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1))
+        ? await getAllCandidates()
         : await getJobCandidates(jobId);
       if (request !== candidateRequest.current) return;
       setCandidates(data);
@@ -92,7 +92,9 @@ export default function RecruitmentAdminClient() {
         showToast({
           type: 'error',
           title: 'Lỗi nạp ứng viên',
-          message: 'Không thể tải danh sách ứng viên của vị trí này.',
+          message: err?.response?.status === 429
+            ? 'Đang tải quá nhiều lần. Vui lòng chờ một phút rồi thử lại.'
+            : 'Không thể tải danh sách ứng viên. Vui lòng thử làm mới.',
         });
       }
     } finally {
@@ -100,7 +102,7 @@ export default function RecruitmentAdminClient() {
         setLoadingCandidates(false);
       }
     }
-  }, [jobs, showToast]);
+  }, [showToast]);
 
   useEffect(() => {
     fetchJobs();

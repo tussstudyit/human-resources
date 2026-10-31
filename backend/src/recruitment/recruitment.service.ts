@@ -121,6 +121,13 @@ export class RecruitmentService {
     return { message: 'Job post deleted successfully' };
   }
 
+  // One query for the all-jobs board, including candidates of closed postings.
+  async getAllCandidates() {
+    return this.prisma.candidate.findMany({
+      orderBy: { matchScore: { sort: 'desc', nulls: 'last' } },
+    });
+  }
+
   // 7. HR ONLY: Get candidates for a job, sorted by matchScore desc (nulls last)
   async getJobCandidates(jobId: string) {
     const existing = await this.prisma.jobPost.findUnique({ where: { id: jobId } });
