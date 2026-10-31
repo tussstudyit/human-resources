@@ -166,6 +166,13 @@ export class RecruitmentController {
     return this.recruitmentService.deleteJob(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR, Role.MANAGER)
+  @Get('candidates')
+  async getAllCandidates() {
+    return this.recruitmentService.getAllCandidates();
+  }
+
   // 7. ADMIN/HR: Get candidates for a job post sorted by matchScore
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.HR, Role.MANAGER)

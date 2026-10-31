@@ -176,6 +176,11 @@ export async function deleteJob(id: string): Promise<{ message: string }> {
 /**
  * Lấy danh sách ứng viên của một tin tuyển dụng (đã sắp xếp theo matchScore)
  */
+export async function getAllCandidates(): Promise<Candidate[]> {
+  const res = await api.get<Candidate[]>('/recruitment/candidates');
+  return res.data;
+}
+
 export async function getJobCandidates(jobId: string): Promise<Candidate[]> {
   const res = await api.get<Candidate[]>(`/recruitment/jobs/${jobId}/candidates`);
   return res.data;
