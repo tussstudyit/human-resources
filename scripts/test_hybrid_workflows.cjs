@@ -83,3 +83,26 @@ test('SMTP failure is persisted instead of reported as sent',async()=>{
   assert.equal((await run(w,'Inspect SMTP Outcome',{accepted:['synthetic@example.invalid']},previous)).json.status,'SENT');
  }
 });
+test('interview wording is factual and uses the actual schedule for online and office interviews',async()=>{
+ const ctx={candidateName:'Anh <Huy>',candidateEmail:'test@example.invalid',jobTitle:'Backend & API',evaluationId:'test',rsvpUrl:'https://example.invalid/rsvp?token=x'};
+ for(const online of [true,false]){
+  const plan={ctx,online,type:online?'ONLINE':'OFFLINE',start:'2026-11-04T07:00:00.000Z',end:'2026-11-04T08:00:00.000Z'};
+  const out=await run(interview,'Build Invitation and ICS',online?{meetUrl:'https://meet.google.com/abc-defg-hij',eventId:'test'}:{},{'Plan Interview':plan},{prepareBinaryData:async()=>({data:'test'})});
+  assert.ok(out.json.subject.startsWith('[UpCareer] Thư mời phỏng vấn | '));
+  for(const text of ['Kính gửi Anh/Chị','Bộ phận Tuyển dụng UpCareer','14:00 – 15:00','UTC+7','Anh &lt;Huy&gt;','Backend &amp; API','upcareercvresources@gmail.com'])assert.ok(out.json.html.includes(text),text);
+  assert.ok(!out.json.html.includes('rất ấn tượng'));assert.ok(!out.json.html.includes('Hệ thống Quản lý Tuyển dụng AI'));
+  assert.equal(out.json.html.includes('kiểm tra camera'),online);
+  assert.ok(out.binary.calendar);assert.equal(out.json.metadata.isRealGoogleMeet,online);
+ }
+});
+test('feedback addresses the actual recruitment stage without unsupported praise or retention promises',async()=>{
+ const stages={CV_SCREENING:'đã gửi hồ sơ',POST_INTERVIEW:'tham gia buổi phỏng vấn',TECHNICAL_TEST:'bài đánh giá chuyên môn',CULTURE_FIT:'cách thức làm việc',TOP_TALENT:'tham gia quy trình tuyển dụng'};
+ for(const [stage,thanks] of Object.entries(stages)){
+  const ctx={candidateName:'<Huy>',jobTitle:'Backend & API',options:{stage},cxUrl:'https://example.invalid/cx?token=x'};
+  const out=await run(reject,'Build Talent Pool Feedback',{}, {'Claim Approved Delivery':ctx});
+  assert.equal(out.json.metadata.scenario,stage);assert.ok(out.json.metadata.reEngagementDate);
+  for(const text of [thanks,'Kính gửi Anh/Chị','&lt;Huy&gt;','Bộ phận Tuyển dụng UpCareer','hoàn toàn tự nguyện','upcareercvresources@gmail.com'])assert.ok(out.json.html.includes(text),text);
+  for(const text of ['180 ngày','đầu tiên','đánh giá rất cao','30 giây'])assert.ok(!out.json.html.includes(text),text);
+  assert.ok(out.json.subject.startsWith('[UpCareer] Thông báo kết quả ứng tuyển | '));
+ }
+});
