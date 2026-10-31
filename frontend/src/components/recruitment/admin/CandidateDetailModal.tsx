@@ -23,6 +23,7 @@ import {
   DollarSign,
   Code2,
   Zap,
+  Trash2,
 } from 'lucide-react';
 import { Candidate, InterviewScheduleInfo, TalentPoolInfo } from '@/types/recruitment';
 import {
@@ -32,19 +33,23 @@ import {
   archiveCandidateTalentPool,
   getEvaluationHistory,
   getJobCandidates,
+  deleteCandidate,
 } from '@/lib/api/recruitment';
 import { useToastStore } from '@/store/useToastStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface CandidateDetailModalProps {
   candidate: Candidate | null;
   onClose: () => void;
   onCandidateUpdated?: (updated: Candidate) => void;
+  onCandidateDeleted?: (id: string) => void;
 }
 
 export default function CandidateDetailModal({
   candidate,
   onClose,
   onCandidateUpdated,
+  onCandidateDeleted,
 }: CandidateDetailModalProps) {
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [loadingPdf, setLoadingPdf] = useState(false);
@@ -54,6 +59,8 @@ export default function CandidateDetailModal({
   const [archivingPool, setArchivingPool] = useState(false);
   const [deliveryPending, setDeliveryPending] = useState(false);
   const [deliveryRevision, setDeliveryRevision] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const canDelete = useAuthStore(s => s.user?.role === 'HR' || s.user?.role === 'MANAGER');
   const updatedRef = useRef(onCandidateUpdated);
   const dialogRef = useRef<HTMLDivElement>(null);
   updatedRef.current = onCandidateUpdated;
@@ -281,6 +288,19 @@ export default function CandidateDetailModal({
     });
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm(`Xóa hồ sơ của ${candidate.name}?\nThông tin ứng viên, CV và lịch sử đánh giá sẽ bị xóa khỏi hệ thống và không thể khôi phục tại đây. Lịch Google Calendar và email đã gửi không được thu hồi.`)) return;
+    setDeleting(true);
+    try {
+      const result = await deleteCandidate(candidate.id);
+      onCandidateDeleted?.(candidate.id);
+      onClose();
+      showToast({type:result.fileCleanupPending?'warning':'success',title:'Đã xóa hồ sơ',message:result.fileCleanupPending?'Hồ sơ đã được xóa. Quản trị viên cần kiểm tra việc dọn tệp CV.':'Đã xóa thông tin ứng viên, CV và lịch sử đánh giá.'});
+    } catch (error: any) {
+      showToast({type:'error',title:'Không xóa được hồ sơ',message:error?.response?.data?.message||'Vui lòng thử lại hoặc kiểm tra tác vụ đang xử lý.'});
+    } finally {setDeleting(false);}
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in font-sans">
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="candidate-details-title" tabIndex={-1} className="bg-white border border-[#ebebeb] rounded-[12px] w-full max-w-7xl h-[92vh] flex flex-col shadow-[0px_4px_16px_rgba(0,0,0,0.08),0px_16px_32px_-4px_rgba(0,0,0,0.12)] overflow-hidden">
@@ -328,6 +348,11 @@ export default function CandidateDetailModal({
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
+            {canDelete && <button onClick={handleDelete} disabled={deleting || isPending || deliveryPending || schedulingMeet || archivingPool || reEvaluating}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-medium hover:bg-red-50 disabled:opacity-50"
+              title="Xóa thông tin ứng viên, CV và lịch sử đánh giá">
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true"/>{deleting?'Đang xóa…':'Xóa hồ sơ'}
+            </button>}
             <button
               onClick={handleScheduleMeet}
               disabled={schedulingMeet || isPending || !approved || deliveryPending}

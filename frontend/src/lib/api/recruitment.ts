@@ -193,6 +193,10 @@ export async function reEvaluateCandidate(
   return res.data;
 }
 
+export async function deleteCandidate(candidateId: string): Promise<{success:boolean;id:string;fileCleanupPending:boolean}> {
+  return (await api.delete(`/recruitment/candidates/${candidateId}`)).data;
+}
+
 /**
  * Tải CV PDF của ứng viên dưới dạng Blob an toàn (gắn header Bearer Token)
  */

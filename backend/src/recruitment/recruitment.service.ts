@@ -274,6 +274,34 @@ export class RecruitmentService {
     };
   }
 
+  async deleteCandidate(id: string) {
+    const removed = await this.prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT id FROM candidates WHERE id=${id} FOR UPDATE`;
+      const candidate = await tx.candidate.findUnique({where:{id},include:{evaluations:{select:{status:true,events:{select:{type:true,data:true}}}}}});
+      if (!candidate) throw new NotFoundException('Candidate not found');
+      const processing = candidate.aiStatus === 'PENDING' || candidate.evaluations.some(run =>
+        ['PENDING','PROCESSING'].includes(run.status) || run.events.some(event => {
+          const data = event.data as Record<string,unknown> | null;
+          return event.type.startsWith('DELIVERY') && ['PENDING','PROCESSING','UNKNOWN'].includes(String(data?.status));
+        }));
+      if (processing) throw new ConflictException('Hồ sơ đang được xử lý hoặc có yêu cầu gửi chưa xác nhận. Vui lòng kiểm tra trạng thái trước khi xóa.');
+      const shared = await tx.candidate.count({where:{cvUrl:candidate.cvUrl,id:{not:id}}});
+      await tx.candidate.delete({where:{id}});
+      return {cvUrl:candidate.cvUrl,shared:shared>0};
+    });
+    let fileCleanupPending = false;
+    if (!removed.shared) {
+      try { await fs.promises.unlink(path.join(process.cwd(),'uploads','cv',path.basename(removed.cvUrl))); }
+      catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          fileCleanupPending = true;
+          this.logger.error(`Candidate ${id} deleted; CV file cleanup requires attention`);
+        }
+      }
+    }
+    return {success:true,id,fileCleanupPending};
+  }
+
   // 13. HR & DASHBOARD: Aggregated recruitment & n8n metrics
   async getStats() {
     const [totalJobs, openJobs, candidates] = await Promise.all([

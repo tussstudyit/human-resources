@@ -182,6 +182,13 @@ export class RecruitmentController {
     return this.recruitmentService.reEvaluateCandidate(id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.HR, Role.MANAGER)
+  @Delete('candidates/:id')
+  async deleteCandidate(@Param('id') id: string) {
+    return this.recruitmentService.deleteCandidate(id);
+  }
+
   // 8.1 ADMIN/HR: Schedule candidate interview & create Google Meet
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.HR, Role.MANAGER)

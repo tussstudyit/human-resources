@@ -677,6 +677,13 @@ export default function RecruitmentAdminClient() {
         candidate={selectedCandidate}
         onClose={() => setSelectedCandidate(null)}
         onCandidateUpdated={handleCandidateUpdated}
+        onCandidateDeleted={(id) => {
+          candidateRequest.current++;
+          setCandidates(current=>current.filter(candidate=>candidate.id!==id));
+          setSelectedCandidate(null);
+          setLoadingCandidates(false);
+          fetchJobs();
+        }}
       />
 
       {/* Create / Edit Job Modal */}
